@@ -386,6 +386,7 @@ function momoDancer(x, y, s, style, t, extra = {}) { const m = move(style, t, (e
 
 // ---------- 团子, the cat ----------
 // cat(x, y, s, o): ground point under the body. About 5s long (loaf) / 4.5s tall (sit). o.pose: sit | loaf | sleep | walk | pounce.
+// o.zzz: true floats z's over a sleeping cat.
 // o.eyes: open | closed | happy | wide (a sleeping cat defaults to happy-closed); o.flip; o.tail (phase override); o.look (-1..1).
 const CAT = '#F6D3A1', CAT_DK = '#E3A15E', CAT_LT = '#FFF1DC';
 function cat(x, y, s, o = {}) {
@@ -426,7 +427,7 @@ function cat(x, y, s, o = {}) {
     const body = pose === 'sleep' ? ellPts(0, -1.0 * s, 2.6 * s, 1.15 * s, 26) : [[-2.4 * s, 0], [-2.5 * s, -1.4 * s], [-1.6 * s, -2.2 * s], [1.8 * s, -2.1 * s], [2.5 * s, -1.2 * s], [2.4 * s, 0]];
     paint(body, { wash: CAT, ink: PAL.ink, sw: sw * .85, curv: .5 });
     for (const k of [-.6, 0, .6]) inkLine([[k * s + .5 * s, -2.05 * s], [k * s + .7 * s, -1.4 * s]], sw * .9, CAT_DK, 'marker', 0);
-    if (pose === 'sleep') { inkLine([[2.2 * s, -.6 * s], [1.2 * s, -.1 * s], [-1.4 * s, -.1 * s], [-2.3 * s, -.5 * s]], sw * 3, CAT_DK, 'marker', .6); head(-1.3 * s, -1.4 * s, .85); if (o.zzz !== false) emote('zzz', x - 1 * s, y - 3.3 * s, s * .6, 1); }
+    if (pose === 'sleep') { inkLine([[2.2 * s, -.6 * s], [1.2 * s, -.1 * s], [-1.4 * s, -.1 * s], [-2.3 * s, -.5 * s]], sw * 3, CAT_DK, 'marker', .6); head(-1.3 * s, -1.4 * s, .85); }
     else head(-1.5 * s, -2.2 * s);
   } else if (pose === 'walk' || pose === 'pounce') {
     const ph = o.walk ?? T * 2, st = pose === 'pounce' ? -.5 : 0;
@@ -437,6 +438,7 @@ function cat(x, y, s, o = {}) {
     head(-2.4 * s, -3.1 * s, .9);
   }
   pop();
+  if (pose === 'sleep' && o.zzz) emote('zzz', x - (o.flip ? -1 : 1) * 1 * s, y + (o.dy || 0) * s - 3.3 * s, s * .6, 1);   // opt-in z's
 }
 
 // ---------- the living question mark ----------

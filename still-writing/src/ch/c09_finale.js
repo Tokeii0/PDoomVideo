@@ -284,8 +284,9 @@
   }
 
   // =================================================================================================================
-  // 225.756 · She wakes with star eyes, the draft pages fly up like birds, the blanket becomes a cape — and the pages
-  // fold themselves into a giant paper plane that scoops her and 桃桃 off the desk and flies out of the window.
+  // 225.756 · She wakes with star eyes, the draft pages fly up like birds, she flings the blanket out like wings — one
+  // page flies smack into the lens (the cut to the front view hides behind it) — and the pages fold themselves into a
+  // giant paper plane; she, 桃桃 and 团子 (in his paper boat) hop aboard and it flies out of the window.
   // =================================================================================================================
   const W0 = 225.756;
   function wakeA(t, lt) {
@@ -422,11 +423,11 @@
   // one draft page flies smack into the lens (the cut hides behind it), then peels away to the upper right
   const TCUT = W0 + 1.92;
   function pageWipe(t) {
-    const a = seg(t, TCUT - .26, TCUT), b = seg(t, TCUT, TCUT + .34);
+    const a = seg(t, TCUT - .24, TCUT), b = seg(t, TCUT, TCUT + .3);
     if (a <= 0 || b >= 1) return;
     let cx, cy, sz, rot;
-    if (t < TCUT) { const e = Math.pow(a, 2.4); cx = lerp(930, 960, e); cy = lerp(760, 540, e); sz = lerp(90, 2600, e); rot = lerp(-.5, -.12, a) + Math.sin(t * 30) * .06 * (1 - a); }
-    else { const e = easeIn(b); cx = 960 + e * 2300; cy = 540 - e * 1500; sz = 2600 + 500 * b; rot = -.12 + .5 * e; }
+    if (t < TCUT) { const e = Math.pow(a, 2.4); cx = lerp(930, 960, e); cy = lerp(760, 540, e); sz = lerp(90, 2250, e); rot = lerp(-.5, -.12, a) + Math.sin(t * 30) * .06 * (1 - a); }
+    else { const e = .55 * b + .45 * b * b; cx = 960 + e * 2700; cy = 540 - e * 1700; sz = 2250 + 400 * b; rot = -.12 + .45 * e; }
     const ang = [0, 1, 2, 3].map(i => rot + Math.PI / 4 + i * Math.PI / 2), hw = sz * .5, hh = sz * .68;
     const cr = Math.cos(rot), sr = Math.sin(rot), P = (u, v) => [cx + u * hw * cr - v * hh * sr, cy + u * hw * sr + v * hh * cr];
     const flut = t < TCUT ? Math.sin(t * 40) * .08 * (1 - a) : Math.sin(t * 25) * .05;
@@ -645,7 +646,7 @@
       const cols = 3, gx = bw / cols;
       for (let r = 0; r < 4; r++) for (let c = 0; c < cols; c++) {
         const x = bx + gx * (c + .5), y = top + 175 + r * 235, h = hash(bi * 31 + r * 7 + c * 3);
-        const kind = r > 2 ? 'dark' : h < .42 ? 'momo' : h < .64 ? 'wave' : h < .8 ? 'lantern' : 'warm';
+        const kind = r > 2 ? 'dark' : r === 2 ? (h < .22 ? 'momo' : h < .45 ? 'cat' : 'warm') : h < .36 ? 'momo' : h < .58 ? 'wave' : h < .68 ? 'lantern' : h < .82 ? 'cat' : 'warm';
         out.push({ x, y, bi, r, c, kind, seed: bi * 12 + r * 3 + c });
       }
     });
@@ -661,7 +662,7 @@
     paint(rectPts(x0 - 8, y0 - 8, ww + 16, wh + 22), { wash: mixCol(BLD[w.bi][4], PAL.ink, .15), ink: PAL.ink, sw: .8 });
     paint(rectPts(x0, y0, ww, wh), { wash: mixCol('#3A3C74', '#FFE3A8', on), ink: null });
     if (on > 0) {
-      glow(w.x, w.y + 10, 170 * on, '#FFD98A', .45 * on);
+      glow(w.x, w.y + 10, 130 * on, '#FFD98A', .5 * on);
       clipTo(rectPts(x0, y0, ww, wh), () => {
         paint(rectPts(x0, y0 + wh * .62, ww, wh * .38), { wash: '#F2C79A', ink: null });                     // the room inside
         const age = t - tl, pp = backOut(seg(age, 0, .35));
@@ -675,9 +676,14 @@
         } else if (w.kind === 'wave' || w.kind === 'lantern') {                                           // someone at the window
           const lean = seg(age, .05, .4), py = y0 + wh + 46 - 80 * easeOut(lean);
           person(w.x - 8, py + 70, 15.5, { seed: w.seed + 3, eyes: 'happy', mouth: 'open', blush: .6, aR: w.kind === 'wave' ? .35 + .3 * Math.sin(t * 11 + w.seed) : .3, aL: w.kind === 'wave' ? -.9 : .3, noShadow: true, lookY: -.5 });
-        } else {                                                                                            // just warm light and a plant
-          plant(w.x + 30, y0 + wh * .66, .5, t);
+        } else if (w.kind === 'cat') {                                                                      // a cat on the sill, tail swishing
+          cat(w.x + (hash(w.seed) - .5) * 40, y0 + wh - 4, 11, { pose: hash(w.seed * 5) > .5 ? 'sit' : 'loaf', eyes: 'happy', noShadow: true, seed: w.seed, flip: hash(w.seed * 2) > .5 });
+          paint(ellPts(w.x - 40, y0 + 36, 13, 13, 10), { wash: '#FFF3C4', ink: PAL.ink, sw: .5 });
+        } else {                                                                                            // just warm light, a lamp and a little plant
           paint(ellPts(w.x - 30, y0 + 40, 14, 14, 10), { wash: '#FFF3C4', ink: PAL.ink, sw: .5 });
+          const px = w.x + 34, py = y0 + wh * .64;
+          for (let k = 0; k < 3; k++) paint(ellPts(px + (k - 1) * 9, py - 30 - (k === 1 ? 6 : 0), 7, 16, 8, 0, (k - 1) * .5), { wash: PAL.sage, ink: PAL.ink, sw: .5 });
+          paint([[px - 13, py - 16], [px + 13, py - 16], [px + 10, py + 2], [px - 10, py + 2]], { wash: '#E8A38C', ink: PAL.ink, sw: .6 });
         }
       });
     }
@@ -707,7 +713,8 @@
     farCity(t, { y: 1100, layer: 1, scroll: 300, k: () => 1, hMul: 1.9 });
     // the facades
     BLD.forEach(([bx, bw, top, col, dk], bi) => {
-      paint([[bx, 1200], [bx, top + 40], [bx + 30, top], [bx + bw - 30, top], [bx + bw, top + 40], [bx + bw, 1200]], { wash: col, fill: dk, fillOp: 80, bleed: .04, tex: .6, border: .35, ink: PAL.ink, sw: 1.3 });
+      paint([[bx, 1200], [bx, top + 40], [bx + 30, top], [bx + bw - 30, top], [bx + bw, top + 40], [bx + bw, 1200]], { grad: [mixCol(col, '#FFFFFF', .12), mixCol(col, dk, .55), Math.PI / 2], ink: PAL.ink, sw: 1.3 });
+      paint([[bx + bw - 40, top + 20], [bx + bw - 4, top + 44], [bx + bw - 4, 1200], [bx + bw - 40, 1200]], { wash: dk, washOp: 90, ink: null });     // a shaded side
       paint(rectPts(bx - 12, top - 16, bw + 24, 26, 2), { wash: mixCol(dk, PAL.ink, .15), ink: PAL.ink, sw: 1 });
       if (bi % 2 === 0) { paint(rectPts(bx + bw * .7, top - 90, 60, 76), { wash: mixCol(dk, PAL.ink, .2), ink: PAL.ink, sw: .9 }); inkLine([[bx + bw * .72, top - 90], [bx + bw * .72 + 30, top - 118], [bx + bw * .72 + 60, top - 90]], 1.4, PAL.ink, 'fine', 0); }
       else { inkLine([[bx + bw * .3, top - 16], [bx + bw * .3, top - 130]], 1.6, PAL.ink, 'fine', 0); dot(bx + bw * .3, top - 132, 5, '#FF8FA3', .6 + .4 * Math.sin(t * 4 + bi)); }
@@ -731,8 +738,9 @@
     camEnd();
   }
   // =================================================================================================================
-  // 244.956 · They land in the crescent's bowl. She sits, lifts her pencil and draws one more star in the empty part
-  // of the moon; it lights up and stays there. The dotted outline of a full moon glimmers… and is left unfinished.
+  // 244.956 · They land in the crescent's bowl (the moon opens a surprised eye; 团子's boat docks beside them). She lifts
+  // her pencil and draws one more star in the empty part of the moon; it lights up and stays there. The dotted outline
+  // of a full moon glimmers… and is left unfinished.
   // =================================================================================================================
   const M0 = 244.956, MX = 1120, MY = 300, MR = 360, MROT = 1.2;
   const moonPt = (a, k = 1) => {                        // a point on the inner (concave) edge; k < 1 pulls it inwards
@@ -873,12 +881,6 @@
         h: t > jumpH ? { eyes: 'star' } : { ...mood(t, [[C0 - 1, 'normal', null, 'grin'], [C0 + .5, 'star', '!', 'open']]), brows: t < C0 + .5 ? 'angry' : null, lookX: .6, aR: .02, aL: -.5, blush: .7, ahoge: 'perk' },
         m: { eyes: 'normal', brows: 'angry', mouth: 'grin', lookX: .6, aL: .3, aR: .3 } }) });
     }
-    const lp = seg(t, C0 + 2.9, C0 + 4.8);
-    if (lp > 0) {                                           // the empty plane swoops back across the sky
-      const qx = lerp(3300, 1100, lp), qy = 160 + Math.sin(lp * Math.PI) * -60;
-      paperPlane(qx, qy, 200, t, { el: .4, yaw: Math.PI, pitch: .05, roll: .1 * Math.sin(t * 3) });
-      for (let i = 0; i < 8; i++) sparkle(qx + 120 + i * 30, qy + (hash(i) - .5) * 40, 12, '#FFF3C0', 1 - i / 8);
-    }
     // the bouncers
     bouncer(t, 'momo', 1, jumpM, px, py);
     bouncer(t, 'hero', 2, jumpH, px, py);
@@ -937,10 +939,11 @@
     for (let i = 0; i < 5; i++) glow(200 + i * 400, 300 + Math.sin(i * 2.1) * 200, 320, '#5E4FA0', .12);
     starField(t, { x: 0, y: 0, w: W, h: H }, 120, { seed: 9 });
     const gs = SP(GX, GY), rs = GR * Z;
-    if (rs < 4000) { moonFace(1640 + (gs[0] - 960) * .05, 180, 58, { rot: -.35 }); glow(gs[0], gs[1], rs * 1.35, '#8FA8FF', .35); }
+    if (rs < 4000) fadeIn(clamp((4000 - rs) / 1800), () => { moonFace(1640 + (gs[0] - 960) * .05, 180, 58, { rot: -.35 }); glow(gs[0], gs[1], rs * 1.35, '#8FA8FF', .35); });
     // the globe
     const disc = ellPts(gs[0], gs[1], rs, rs, 72);
-    paint(disc, { wash: '#1A2562', fill: '#28388A', fillOp: 90, bleed: .02, tex: .5, border: .2, ink: null });
+    const texOK = rs < 900;                                  // textured washes only once the globe is small (they cost a lot full-screen)
+    paint(disc, texOK ? { wash: '#1A2562', fill: '#28388A', fillOp: 90, bleed: .02, tex: .5, border: .2, ink: null } : { grad: ['#1E2B6A', '#1A2460', Math.PI / 2], ink: null });
     clipTo(disc, () => {
       for (const [la, lo, dla, dlo, sd] of LANDS) {
         if (P3(la * DEG, lo * DEG)[2] < -.1) continue;                  // on the far side
@@ -951,10 +954,10 @@
           let x = q[0], y = q[1]; if (q[2] < 0) { const l = Math.hypot(x, y) || 1; x /= l; y /= l; }
           pts.push(SP(GX + GR * x, GY - GR * y));
         }
-        paint(pts, { wash: '#35607E', fill: '#4A7A8E', fillOp: 90, bleed: .02, tex: .5, border: .35, ink: null, curv: .5 });
+        paint(pts, texOK ? { wash: '#35607E', fill: '#4A7A8E', fillOp: 90, bleed: .02, tex: .5, border: .35, ink: null, curv: .5 } : { wash: '#3B6682', ink: null, curv: .5 });
       }
       // moonlit rim and the night shading
-      paint(ellPts(gs[0] + rs * .08, gs[1] - rs * .08, rs * .97, rs * .97, 60), { fill: '#AFC4FF', fillOp: 26, bleed: .02, tex: 0, border: 1, ink: null });
+      if (rs < 2500) paint(ellPts(gs[0] + rs * .08, gs[1] - rs * .08, rs * .97, rs * .97, 60), { fill: '#AFC4FF', fillOp: 26, bleed: .02, tex: 0, border: 1, ink: null });
       glow(gs[0] - rs * .3, gs[1] + rs * .35, rs * 1.1, '#0A0D2A', .45);
       // her city: the warm patch (a little map of glowing blocks while we are close)
       const c = proj(CITY[0], CITY[1]), blk = GR * Z * .35 * DEG;
@@ -980,7 +983,7 @@
             for (let q = 0; q < nL; q++) {
               const lx = bx + (hash(i * 31 + j * 17 + q) - .5) * sg * .7, ly = by + (hash(i * 17 + j * 31 + q) - .5) * sg * .7, col = wk > .1 ? WARM[(i * 3 + j * 5 + q + 60) % 6] : '#9FB2E0';
               const r = Math.max(.9, blk * (wk > .1 ? .075 + .05 * hash(q + i) : .045));
-              if (wk > .1 && blk > 6) glow(lx, ly, r * 4, col, .35 * wk);
+              if (wk > .1 && blk > 6) dot(lx, ly, r * 2.4, col, .22 * wk);                                   // a soft halo (cheap)
               dot(lx, ly, r, wk > .1 ? mixCol(col, '#FFFFFF', .35) : col, wk > .1 ? .95 * wk + .05 : .5);
             }
           }
@@ -1169,7 +1172,6 @@
     camEnd();
   }
 
-  globalThis.__c09dbg = { wakeA, wakeB, wakeBirds, windowsGlow, blankPage };   // DEBUG (remove)
   chapter('finale', 225.756, 264.5, [[225.756, wakeFly], [230.556, parade], [235.356, paintRoofs], [240.156, windowsGlow],
     [244.956, moon], [249.156, cottonClouds], [253.956, earthLights], [259.356, blankPage]]);
   transition(225.756, 'white', .5);

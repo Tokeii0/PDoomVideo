@@ -514,7 +514,7 @@
       paint(rectPts(vx0, -400, vx1 - vx0, 1400), { grad: ['#5D6688', '#9CA3BA', Math.PI / 2], ink: null });
       for (let i = 0; i < 5; i++) { const x = vx0 + ((hash(i * 7) * 3000 - t * 30) % 3000 + 3000) % 3000 - 300; paint(cloudPts(x, 120 + hash(i) * 120, 520, 90, i + 2, 7), { wash: '#7C84A0', washOp: 200, ink: null, curv: .4 }); }
     }
-    nightCity(t, { x0: S3.X0, x1: Math.min(S3.X1, vx1 + 200), y: gy, color: warm ? 1 : 0, lit: warm ? .92 : .12 });
+    nightCity(t, { x0: S3.X0, x1: Math.min(S3.X1, vx1 + 200, warm ? frontier3(t) + 260 : 1e9), y: gy, color: warm ? 1 : 0, lit: warm ? .92 : .12 });
     // street and sidewalk
     paint([[vx0, gy], [vx1, gy], [vx1, gy + 700], [vx0, gy + 700]], { wash: warm ? '#F6C9C0' : '#5A607C', ink: null });
     paint([[vx0, gy + 58], [vx1, gy + 58], [vx1, gy + 700], [vx0, gy + 700]], { wash: warm ? '#E9A9B5' : '#474C68', ink: null });
@@ -746,7 +746,7 @@
     const mo = { ...mmd, antenna: false, blush: .9, noShadow: hop > 0 && hop < 1, sq: landSq + (mmd.take || 0) + (hop > 0 && hop < 1 ? -.12 : 0), dy: hopDy,
       aL: posed ? .35 + .1 * Math.sin(t * 6) : hop > 0 && hop < 1 ? .3 : t > S4T.star ? .6 * Math.sin(seg(t, S4T.star, S4T.pose) * Math.PI) : -1.25,
       aR: posed ? -.15 : hop > 0 && hop < 1 ? .3 : t > S4T.star ? .6 * Math.sin(seg(t, S4T.star, S4T.pose) * Math.PI) : -1.25,
-      tilt: posed ? .18 : .05 * Math.sin(t * 2.5), lookX: t < S4T.land ? 0 : -.35, lookY: -.1 };
+      tilt: posed ? .18 : .05 * Math.sin(t * 2.5), lookX: t < S4T.land ? 0 : -.35, lookY: -.1, armFront: t > S4T.star && !posed ? 'both' : posed ? 'L' : null };
     const starOn = t >= S4T.star;
     // her pencil ghost stays on the page where she lay
     if (popK > 0) fadeIn(.45 * seg(t, S4T.pop, S4T.pop + .3), () => { push(); translate(footP[0], footP[1]); scale(1, .28); sketch(1, () => momo(0, 0, ms, { antenna: false, eyes: 'closed', noShadow: true, aL: -1.25, aR: -1.25 })); pop(); });
@@ -846,7 +846,8 @@
     const swing = t * 1.3, hs = 30, msz = 24;
     const drawTip = arcPt(phEnd);
     const heroO = { outfit: 'home', ...hmd, sit: true, walk: swing, blush: .8, lookX: lift > .3 ? -.85 : .35, lookY: lift > .3 ? -.55 : 0, tilt: lift > .3 ? -.14 : .1 + .05 * Math.sin(bp * Math.PI) + .12 * ease(seg(t, S5T.fade1, S5T.fade1 + .5)),
-      aL: lerp(t > S5T.down ? -.35 : -1.1, lerp(.05, .5, drawK / .44), lift), aR: -1.1, dy: -.1 * Math.abs(Math.sin(bp * Math.PI)), ahoge: t > S5T.draw1 && t < S5T.smile ? 'question' : 'normal', noShadow: true };
+      aL: lerp(t > S5T.down ? -.35 : -1.1, lerp(.05, .5, drawK / .44), lift), aR: -1.1, dy: -.1 * Math.abs(Math.sin(bp * Math.PI)), ahoge: t > S5T.draw1 && t < S5T.smile ? 'question' : 'normal', noShadow: true,
+      armFront: lift > .3 ? 'L' : null };
     const hG = [hSeatX, hSeat + 1.5 * hs];
     // the giant pencil (behind her), tip on the circle while she draws
     if (lift > .01 || t > S5T.down) {
@@ -860,7 +861,7 @@
     const toss = STARS5.reduce((a, [T0]) => Math.max(a, smooth01(t, T0 - .15, T0, T0 + .2, T0 + .45)), 0);
     const mmd = mood(t, [[86.4, 'happy', null, 'open'], [S5T.draw1, 'star', null, 'o'], [S5T.smile + .1, 'happy', null, 'open']]);
     momo(momoX, mSeat + 1.5 * msz, msz, { ...mmd, sit: true, walk: swing + .3, blush: .9, lookX: t > S5T.draw1 && t < S5T.smile + .4 ? -.8 : .4, lookY: -.3, tilt: -.08 + .06 * Math.sin(bp * Math.PI) - .12 * ease(seg(t, S5T.fade1, S5T.fade1 + .5)),
-      aR: lerp(-1.1, .55, toss), aL: -1.1 + .3 * toss, dy: -.12 * Math.abs(Math.sin(bp * Math.PI + 1)), noShadow: true });
+      aR: lerp(-1.1, .55, toss), aL: -1.1 + .3 * toss, dy: -.12 * Math.abs(Math.sin(bp * Math.PI + 1)), noShadow: true, armFront: toss > .3 ? 'R' : null });
     camEnd();
   }
 
@@ -937,10 +938,11 @@
     const mx = lerp(MX0, MX1, step), my = MY0 - rise;
     const landK = t > S6T.land ? Math.exp(-(t - S6T.land) * 9) : 0;
     const mmd = mood(t, [[90.6, 'happy', null, 'smile'], [S6T.grown - .1, 'wide', '!', 'o'], [S6T.settle - .5, 'normal', 'sweat', 'wobble'], [S6T.crouch - .1, 'normal', null, 'pout'], [S6T.poke + .05, 'star', null, 'open'], [S6T.land + .3, 'happy', null, 'open']]);
-    const cheer = t > S6T.land + .2;
+    const cheer = t > S6T.land;
     const mo = { ...mmd, sq: .22 * crouch + .25 * landK * Math.cos((t - S6T.land) * 20) + (air ? -.14 * (1 - Math.abs(jk - .5) * 2) : 0) + (mmd.take || 0), lookX: t < S6T.poke ? .3 : .05, lookY: t < S6T.poke && t > S6T.grown ? -.9 : -.2,
       brows: t > S6T.crouch - .1 && t < S6T.poke ? 'angry' : null, aL: air ? 1.0 : cheer ? 1.0 + .2 * Math.sin(t * 10) : -1.1 + (t < S6T.grown ? .4 * Math.abs(Math.sin(bp * Math.PI)) : 0),
-      aR: air ? 1.0 : cheer ? 1.0 - .2 * Math.sin(t * 10) : -1.1, dy: cheer ? -Math.abs(Math.sin(bp * Math.PI)) * .6 : 0, noShadow: air, blush: .9, walk: step > 0 && step < 1 ? t * 3 : null };
+      aR: air ? 1.0 : cheer ? 1.0 - .2 * Math.sin(t * 10) : -1.1, dy: cheer ? -Math.abs(Math.sin(bp * Math.PI)) * .6 : 0, noShadow: air, blush: .9, walk: step > 0 && step < 1 ? t * 3 : null,
+      armFront: air || cheer ? 'both' : null };
     const tipNow = antennaTip(mx, my, MS, mo, t);
     // the grey 算了 cloud: out of her mouth, drifting over the line's end, sinking; 桃桃's star pops it
     const mouth = headAt(HX, HG, HS, { tilt: -.1 - .08 * droop, dy: .12 * droop }, -.7 * .38 * HS * 1.1, 1.45 * HS);
@@ -1024,14 +1026,24 @@
       clipTo(pts, () => {
         // her dark home continent (the city stands on it), other lands, soft cloud bands, moonlit rim, shadowed side
         const cont = []; for (let j = 0; j < 44; j++) { const a = j / 44 * TAU, q = 1 + .12 * Math.sin(a * 3 + 1) + .07 * Math.sin(a * 7 + 2); cont.push(S(Math.cos(a) * .36 * R7 * q, .12 * R7 + Math.sin(a) * .22 * R7 * q)); }
-        paint(cont, { wash: '#1E2650', ink: '#3E5A8C', sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 });
+        const olk = rs < 6000 ? '#3E5A8C' : null;                           // outlines only once the planet is small (huge strokes are slow)
+        paint(cont, { wash: '#1E2650', ink: olk, sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 });
         const lands = [[-.95, .45, .36], [.5, .5, .3], [2.0, .5, .5], [3.3, .38, .36], [4.5, .55, .4]];
-        for (const [a0, rr, sz] of lands) { const bl = []; for (let j = 0; j < 16; j++) { const a = j / 16 * TAU, q = rs * sz * .45 * (1 + .22 * Math.sin(a * 3 + a0 * 5) + .1 * Math.sin(a * 7 + a0)); const cx0 = Math.cos(a0 - Math.PI / 2 + th) * rs * rr, cy0 = Math.sin(a0 - Math.PI / 2 + th) * rs * rr; bl.push([E[0] + cx0 + Math.cos(a) * q, E[1] + cy0 + Math.sin(a) * q * .8]); } paint(bl, { wash: '#2B4A72', washOp: 170, ink: '#3E6290', sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 }); }
+        for (const [a0, rr, sz] of lands) { const bl = []; for (let j = 0; j < 16; j++) { const a = j / 16 * TAU, q = rs * sz * .45 * (1 + .22 * Math.sin(a * 3 + a0 * 5) + .1 * Math.sin(a * 7 + a0)); const cx0 = Math.cos(a0 - Math.PI / 2 + th) * rs * rr, cy0 = Math.sin(a0 - Math.PI / 2 + th) * rs * rr; bl.push([E[0] + cx0 + Math.cos(a) * q, E[1] + cy0 + Math.sin(a) * q * .8]); } paint(bl, { wash: '#2B4A72', washOp: 170, ink: olk && '#3E6290', sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 }); }
         for (let j = 0; j < 5; j++) { const a = -2.4 + j * 1.25 + th + t * .02, d = rs * (.3 + .13 * j); paint(cloudPts(E[0] + Math.cos(a) * d, E[1] + Math.sin(a) * d, rs * (.36 - .03 * j), rs * .045, j + 3, 5), { wash: '#DDE6FF', washOp: 26, ink: null, curv: .5 }); }
         glow(E[0] - rs * .45, E[1] - rs * .5, rs * 1.1, '#9FB4F0', .24);
         glow(E[0] + rs * .62, E[1] + rs * .7, rs * 1.25, '#070A22', .75);
       });
-      paint(pts, { ink: '#9FB0F0', sw: clamp(rs / 260, .5, 1.6), br: 'fine' });
+      if (rs < 3000) paint(pts, { ink: '#9FB0F0', sw: clamp(rs / 260, .5, 1.6), br: 'fine' });
+      else {                                                                  // stroke only the stretch of rim that is on screen
+        const on = p => p[0] > -300 && p[0] < W + 300 && p[1] > -300 && p[1] < H + 300;
+        let run = [];
+        for (let i = 0; i <= 720; i++) {
+          const a = i / 720 * TAU, p = [E[0] + Math.cos(a) * rs, E[1] + Math.sin(a) * rs];
+          if (on(p)) run.push(p); else { if (run.length > 1) inkLine(run, 1.6, '#9FB0F0', 'fine', 0); run = []; }
+        }
+        if (run.length > 1) inkLine(run, 1.6, '#9FB0F0', 'fine', 0);
+      }
     }
     // ---- the dark city ----
     const vis = (x, y, r) => { const p = S(x, y); return p[0] > -r && p[0] < W + r && p[1] > -r && p[1] < H + r; };
@@ -1191,7 +1203,7 @@
     const mh = cheer ? Math.abs(Math.sin((t - S8T.stamp) / BEAT * Math.PI)) * 55 : Math.abs(Math.sin(bp * Math.PI)) * 8;
     const MX8 = lerp(1110, 1200, easeInOut(seg(t, S8T.w0, S8T.w1))), MY8 = 520;
     paint(ellPts(MX8, MY8 + 2, 64 - mh * .3, 16 - mh * .08, 16), { wash: PAL.ink, washOp: 55, ink: null });
-    momo(MX8, MY8 - mh, 27, { ...mmd, noShadow: true, blush: 1, lookX: t < S8T.w1 ? .4 : .5, lookY: .6, aL: cheer ? 1.05 + .2 * Math.sin(t * 12) : -.9, aR: cheer ? 1.05 - .2 * Math.sin(t * 12) : -.9 + .4 * Math.abs(Math.sin(bp * Math.PI)) * (t < S8T.w1 ? 1 : 0), sq: cheer ? .08 * pulse(t, 8) : 0, tilt: cheer ? .12 * Math.sin(t * 6) : -.08 });
+    momo(MX8, MY8 - mh, 27, { ...mmd, noShadow: true, blush: 1, lookX: t < S8T.w1 ? .4 : .5, lookY: .6, aL: cheer ? 1.05 + .2 * Math.sin(t * 12) : -.9, aR: cheer ? 1.05 - .2 * Math.sin(t * 12) : -.9 + .4 * Math.abs(Math.sin(bp * Math.PI)) * (t < S8T.w1 ? 1 : 0), sq: cheer ? .08 * pulse(t, 8) : 0, tilt: cheer ? .12 * Math.sin(t * 6) : -.08, armFront: cheer ? 'both' : null });
     // the jade 完 seal hops in on the beats, hoping to sign the line off; her own seal lands instead, so it wilts and hops away
     {
       const hops = [[B(171), 240, 520], [B(171.5), 520, 780], [B(175), 780, 520], [B(175.5), 520, 200]];

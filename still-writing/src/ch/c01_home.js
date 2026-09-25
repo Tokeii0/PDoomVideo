@@ -914,13 +914,13 @@
   }
   function shutterShop(x, w, col, t, awn) {
     const up = mixCol(col, '#3A3668', .35);
-    paint(rectPts(x, 360, w, 190), { wash: mixCol(up, PAL.ink, .05), tex: .5, ink: PAL.ink, sw: 1 });
+    paint(rectPts(x, 360, w, 190), { wash: mixCol(up, PAL.ink, .05), tex: .3, ink: PAL.ink, sw: 1 });
     paint(rectPts(x - 8, 352, w + 16, 14), { wash: mixCol(up, PAL.ink, .25), ink: PAL.ink, sw: .8 });
     paint(rectPts(x, 540, w, 345), { wash: mixCol(col, PAL.ink, .05), tex: .5, ink: PAL.ink, sw: 1 });
-    paint(rectPts(x + 18, 640, w - 36, 245), { wash: mixCol('#6E7598', '#5A6186', .25), tex: .4, ink: PAL.ink, sw: .8 });
-    for (let y = 656; y < 880; y += 14) inkLine([[x + 20, y], [x + w - 20, y]], .45, '#4A5070', 'fine', 0, .7);
+    paint(rectPts(x + 18, 640, w - 36, 245), { wash: mixCol('#6E7598', '#5A6186', .25), ink: PAL.ink, sw: .8 });
+    for (let y = 656; y < 880; y += 14) fillRectA(x + 20, y, w - 40, 1.4, '#4A5070', .6);
     paint(rectPts(x + w / 2 - 14, 866, 28, 8), { wash: '#4A5070', ink: null });
-    if (awn) { const pts = []; for (let k = 0; k <= 6; k++) pts.push([x - 10 + k * (w + 20) / 6, 600 + (k % 2) * 10]); paint([[x - 10, 572], [x + w + 10, 572], ...pts.reverse()], { wash: awn, fill: mixCol(awn, PAL.ink, .2), fillOp: 50, tex: .4, ink: PAL.ink, sw: .9 }); for (let k = 0; k < 6; k += 2) paint([[x - 10 + k * (w + 20) / 6, 572], [x - 10 + (k + 1) * (w + 20) / 6, 572], [x - 10 + (k + 1) * (w + 20) / 6, 610], [x - 10 + k * (w + 20) / 6, 600]], { wash: PAL.cream, washOp: 150, ink: null }); }
+    if (awn) { const pts = []; for (let k = 0; k <= 6; k++) pts.push([x - 10 + k * (w + 20) / 6, 600 + (k % 2) * 10]); paint([[x - 10, 572], [x + w + 10, 572], ...pts.reverse()], { wash: mixCol(awn, PAL.ink, .05), ink: PAL.ink, sw: .9 }); for (let k = 0; k < 6; k += 2) paint([[x - 10 + k * (w + 20) / 6, 572], [x - 10 + (k + 1) * (w + 20) / 6, 572], [x - 10 + (k + 1) * (w + 20) / 6, 610], [x - 10 + k * (w + 20) / 6, 600]], { wash: PAL.cream, washOp: 150, ink: null }); }
     for (let r = 0; r < 2; r++) { const lit = hash(x + r) > .5; paint(rectPts(x + 30 + r * (w - 110), 410, 50, 80), { wash: lit ? '#FFD98A' : '#3E3C6E', ink: PAL.ink, sw: .7 }); if (lit) glow(x + 55 + r * (w - 110), 450, 60, '#FFD98A', .25); inkLine([[x + 55 + r * (w - 110), 410], [x + 55 + r * (w - 110), 490]], .6, PAL.ink, 'fine', 0); }
   }
   function vendingMachine(x, t) {
@@ -934,7 +934,7 @@
     const d = ST.door;
     paint(rectPts(d - 250, 250, 500, 640), { wash: mixCol('#C9B4A8', '#A8908A', .28), tex: .5, ink: PAL.ink, sw: 1.1 });
     paint([[d - 275, 250], [d + 275, 250], [d + 250, 215], [d - 250, 215]], { wash: '#8A6A7A', ink: PAL.ink, sw: 1 });
-    for (let y = 300; y < 880; y += 34) inkLine([[d - 248, y], [d + 248, y]], .4, '#9E8A84', 'fine', 0, .5);
+    for (let y = 300; y < 880; y += 34) fillRectA(d - 248, y, 496, 1.2, '#9E8A84', .45);
     // windows: hers is the one above the door
     const lit = seg(t, 28.5, 28.62), flick = lit > 0 && lit < 1 ? (Math.sin(t * 90) > 0 ? 1 : .3) : lit;
     for (const [wx, wy, mine] of [[d - 170, 300, 0], [d + 100, 300, 0], [d - 60, 330, 1], [d - 170, 460, 0], [d + 100, 460, 0]]) {
@@ -1026,7 +1026,7 @@
     doorway(t);
     // sidewalk and the wet road
     paint([[-300, 880], [2600, 880], [2600, 915], [-300, 915]], { wash: mixCol('#57507E', '#463F6E', .3), tex: .5, ink: PAL.ink, sw: .9 });
-    for (let x = -280; x < 2600; x += 90) inkLine([[x, 882], [x - 10, 913]], .5, '#3A3462', 'fine', 0, .7);
+    for (let x = -280; x < 2600; x += 90) if (x > cam.x - 900 && x < cam.x + 900) inkLine([[x, 882], [x - 10, 913]], .5, '#3A3462', 'fine', 0, .7);
     paint([[-300, 915], [2600, 915], [2600, 1400], [-300, 1400]], { wash: mixCol('#232048', '#1A1838', .3), tex: .5, ink: PAL.ink, sw: .8 });
     paint(rectPts(-300, 915, 2900, 8), { wash: '#6A6294', ink: null });
     for (const [lx, c] of [[ST.post + 44, '#FFD98A'], [1500 + 44, '#FFD98A'], [312, '#CFE8FF'], [ST.door, '#FFD98A']]) { push(); translate(lx, 1000); scale(.35, 1.6); glow(0, 0, 150, c, .3); pop(); }
@@ -1062,7 +1062,7 @@
       for (let k = 1; k < 16; k++) {
         const u = k / 16, i = Math.min(7, Math.floor(u * 8)), f = u * 8 - i, bx = lerp(br[i][0], br[i + 1][0], f), by = lerp(br[i][1], br[i + 1][1], f), sd = k % 2 ? 1 : -1;
         const a = Math.PI / 2 + sd * .7 + (hash(lx + k) - .5) * .5, L = (30 + hash(k * 3.3 + lx) * 16) * sc;
-        paint(ellPts(bx + Math.cos(a) * L * .6, by + Math.sin(a) * L * .6, L * .62, L * .26, 12, 0, a), { wash: k % 3 ? '#20344A' : '#26405A', fill: '#162436', fillOp: 60, tex: .3, ink: '#141B30', sw: .6 });
+        paint(ellPts(bx + Math.cos(a) * L * .6, by + Math.sin(a) * L * .6, L * .62, L * .26, 12, 0, a), { wash: k % 3 ? '#1D3045' : '#233B54', ink: '#141B30', sw: .6 });
       }
       pop();
     }

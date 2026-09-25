@@ -5,7 +5,8 @@
 //   node render.mjs --frames=0:290 --workers=4                                  full-res JPEG frames → out/frames (resumable)
 //   node render.mjs --encode [--out=out/still-writing.mp4]                       frames + song → MP4
 //   node render.mjs --loop=name --len=4 [--out=out/loop_name]                   one cycle of a standalone loop (PNGs)
-// Options: --fps=24, --ffmpeg=<path>. Scripts are loaded in the order studio.html lists them.
+// Options: --fps=24, --ffmpeg=<path>, --recycle=40 (frames per worker process before a fresh one takes over).
+// Scripts are loaded in the order studio.html lists them.
 import { createCanvas, Path2D, GlobalFonts } from '@napi-rs/canvas';
 import { fork, spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, renameSync, readdirSync, rmSync } from 'node:fs';
@@ -104,19 +105,33 @@ if (args.worker) {
   const name = i => `${dir}/${args.loop ? 'l' : 'f'}${String(i).padStart(5, '0')}.${ext}`;
   const todo = []; for (let i = first; i <= last; i++) { const f = name(i); if (!existsSync(f) || statSync(f).size < 1000) todo.push(i); }
   console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers`);
+  // @napi-rs/canvas leaks native memory on every draw call (tens of MB per frame here), so each worker process is
+  // retired after --recycle frames (default 40) and a fresh one takes over.
+  const recycle = +(args.recycle || 40);
   let next = 0, done = 0; const start = Date.now();
+  const wa = ['--worker', `--fps=${fps}`]; if (args.loop) wa.push(`--loop=${args.loop}`); if (args.extra) wa.push(`--extra=${args.extra}`);
   await Promise.all(Array.from({ length: Math.min(workers, todo.length) }, () => new Promise((ok, bad) => {
-    const wa = ['--worker', `--fps=${fps}`]; if (args.loop) wa.push(`--loop=${args.loop}`); if (args.extra) wa.push(`--extra=${args.extra}`);
-    const p = fork(fileURLToPath(import.meta.url), wa, { stdio: ['ignore', 'inherit', 'inherit', 'ipc'] });
-    const feed = () => { if (next < todo.length) { const i = todo[next++]; p.send({ i, file: name(i), type: ext }); } else { p.kill(); ok(); } };
-    p.on('message', m => {
-      if (!m.ready && (++done % 48 === 0 || done === todo.length)) {
-        const el = (Date.now() - start) / 1000;
-        console.log(`frame ${done}/${todo.length}  ${(el / done * 1000).toFixed(0)} ms/frame effective  eta ${((todo.length - done) * el / done / 60).toFixed(1)} min`);
-      }
-      feed();
-    });
-    p.on('exit', c => { if (c && next < todo.length) bad(new Error('worker exited ' + c)); });
+    const spawnWorker = () => {
+      const p = fork(fileURLToPath(import.meta.url), wa, { stdio: ['ignore', 'inherit', 'inherit', 'ipc'] });
+      let sent = 0, busy = false;
+      const feed = () => {
+        if (next >= todo.length) { p.kill(); ok(); return; }
+        if (sent >= recycle) { p.kill(); spawnWorker(); return; }
+        const i = todo[next++]; sent++; busy = true; p.send({ i, file: name(i), type: ext });
+      };
+      p.on('message', m => {
+        if (!m.ready) {
+          busy = false;
+          if (++done % 48 === 0 || done === todo.length) {
+            const el = (Date.now() - start) / 1000;
+            console.log(`frame ${done}/${todo.length}  ${(el / done * 1000).toFixed(0)} ms/frame effective  eta ${((todo.length - done) * el / done / 60).toFixed(1)} min`);
+          }
+        }
+        feed();
+      });
+      p.on('exit', c => { if (c && busy) bad(new Error('worker exited ' + c + ' while painting')); });
+    };
+    spawnWorker();
   })));
   if (args.clip) {
     const [a, b] = String(args.clip).split(':').map(Number), out = resolve(args.out || join(ROOT, 'out/clip.mp4'));

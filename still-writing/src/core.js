@@ -178,13 +178,16 @@ function paint(pts, o = {}) {
 }
 // sketch(k, fn): paint fn as a pencil drawing (k = 1) or anything between drawing and painting (0..1)
 function sketch(k, fn) { const s0 = SKETCH; SKETCH = clamp(k); try { fn(); } finally { SKETCH = s0; } }
+// Solid washes blend toward paper but stay opaque, so a drawing keeps its occlusion (no lines showing through a face);
+// watercolour shading fades away, and outlines turn to graphite pencil.
+const SKETCH_PAPER = '#FFFBF3';
 function sketchify(o) {
   const k = SKETCH, q = { ...o };
-  if (q.wash) q.washOp = (q.washOp ?? 255) * (1 - k) * (1 - k);
-  if (q.grad) q.washOp = (q.washOp ?? 255) * (1 - k) * (1 - k);
+  if (q.wash) q.wash = mixCol(q.wash, SKETCH_PAPER, k);
+  if (q.grad) q.grad = [mixCol(q.grad[0], SKETCH_PAPER, k), mixCol(q.grad[1], SKETCH_PAPER, k), q.grad[2]];
   if (q.fill) q.fillOp = (q.fillOp ?? 170) * (1 - k);
   if (q.ink !== null && q.ink !== false) { q.ink = mixCol(q.ink || PAL.ink, '#6B6A78', k); if (k > .5) q.br = 'pencil'; q.sw = (q.sw ?? 1) * lerp(1, 1.25, k); }
-  else if (k > .6 && (o.wash || o.fill)) { q.ink = '#8A8996'; q.br = 'pencil'; q.sw = .5; }
+  else if (k > .6 && o.wash && !o.fill) { q.ink = '#8A8996'; q.br = 'pencil'; q.sw = .5; }   // solid shapes get a pencil edge; soft shading doesn't
   return q;
 }
 // light(x, y, r, colour, a): brightening glow (screen blend) — light falling on characters, screen glow on a face
@@ -328,14 +331,17 @@ function textWidth(txt, size, font = 'kai') { X.save(); X.font = `${size}px ${FO
 
 // ---------- layers, clipping and fades ----------
 // layer(fn): paint fn() into an offscreen full-frame canvas and return it (camera and alpha state are isolated).
-const LAYERS = [];
+// Canvases come from a pool that is rewound every frame: each call in a frame gets its own canvas (nested or not), and
+// the same few canvases are reused frame after frame, so memory stays flat.
+const LAYERS = []; let LAYER_I = 0;
 function layer(fn, clear = true) {
-  const depth = LAYERS.length; if (!LAYERS[depth]) LAYERS[depth] = ENV.canvas(W, H);
-  const cv = LAYERS[depth], cx = cv.getContext('2d'), keep = [X, CAM, ALPHA];
-  cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over';
-  if (clear) cx.clearRect(0, 0, W, H);
-  LAYERS.push(null); X = cx; CAM = null; ALPHA = 1;
-  try { fn(); } finally { [X, CAM, ALPHA] = keep; LAYERS.pop(); }
+  const i = LAYER_I++; if (!LAYERS[i]) LAYERS[i] = ENV.canvas(W, H);
+  const cv = LAYERS[i], cx = cv.getContext('2d'), keep = [X, CAM, ALPHA, SKETCH];
+  if (clear && cx.reset) cx.reset();                                 // fresh state (no clip or transform left from last use)
+  else { cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over'; if (clear) cx.clearRect(0, 0, W, H); }
+  cx.save();
+  X = cx; CAM = null; ALPHA = 1;
+  try { fn(); } finally { cx.restore(); [X, CAM, ALPHA, SKETCH] = keep; }
   return cv;
 }
 // draw a layer (or any canvas) in screen space with opacity a and optional clip polygon (screen space)
@@ -426,7 +432,8 @@ function initCore(ctx) {
 }
 // renderFrame(t): paints one complete frame into the main context.
 function renderFrame(t) {
-  X = MAIN; CAM = null; ALPHA = 1; T = t;
+  X = MAIN; CAM = null; ALPHA = 1; SKETCH = 0; T = t; LAYER_I = 0;
+  if (X.reset) X.reset();                                            // drop any state a previous frame left behind
   X.setTransform(1, 0, 0, 1, 0, 0); X.globalAlpha = 1; X.globalCompositeOperation = 'source-over';
   X.drawImage(PAPER, 0, 0);
   rseed(1000 + Math.floor(t * BOIL));

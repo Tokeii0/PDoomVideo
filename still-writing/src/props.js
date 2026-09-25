@@ -384,7 +384,7 @@ function wallClock(x, y, r, hours) {
   dot(x, y, 5, '#E2557F');
 }
 // TOP-DOWN DESK: for drawing / writing close-ups. Open sketchbook spread centred at (960, 540); pages are
-// 440x600 each. o.page(rect, side, t) paints each page (side -1 left, 1 right). o.lamp 0..1 warm pool; o.items(t).
+// 460x630 each. o.page(rect, side, t) paints each page (side -1 left, 1 right). o.lamp 0..1 warm pool; o.items(t).
 function deskTop(t, o = {}) {
   paint(rectPts(-400, -400, W + 800, H + 800), { wash: DESK, fill: DESK_DK, fillOp: 90, bleed: .03, tex: .7, border: .2, ink: null });
   for (let i = 0; i < 14; i++) { const y = -60 + i * 90 + hash(i) * 30, pts = []; for (let k = 0; k <= 10; k++) pts.push([-100 + k * 220, y + Math.sin(k * .8 + i) * 14]); inkLine(pts, .5, DESK_DK, 'fine', .5, .55); }

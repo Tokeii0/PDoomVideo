@@ -46,7 +46,6 @@
       paint(ellPts(sd * 3.33 * s, .18 * s, .28 * s, .6 * s, 12), { wash: PAL.cream, ink: null });
     }
   }
-  const headphones = (s, sw) => hpBand(s, sw);
   function phonesOn(x, y, s, o, k = 1) {                // over a back-view head (the head hook only runs for front views)
     if (k <= .01) return;
     const [hx, hy] = headAt(x, y, s, o);
@@ -331,7 +330,7 @@
     // her, turned round in her chair, listening
     const hx = 1190, fy = 1010, s = 38, seat = 2.9, m = move('sway', t);
     const md = mood(t, [[110, 'closed'], [112.956, 'happy'], [114.756, 'closed']]);
-    const ho = { sit: true, noShadow: true, outfit: 'home', rot: m.rot * 1.5, tilt: m.tilt * 1.9, aL: -1.8, aR: -1.8, ...md, mouth: 'smile', blush: .85, head: headphones, draw: holdMug(), ahoge: 'normal' };
+    const ho = { sit: true, noShadow: true, outfit: 'home', rot: m.rot * 1.5, tilt: m.tilt * 1.9, aL: -1.8, aR: -1.8, ...md, mouth: 'smile', blush: .85, head: hpBand, draw: holdMug(), ahoge: 'normal' };
     const hy = fy - (seat - 1.5) * s, hxx = hx + m.dx * s * .35;
     chair(hx, fy, s, { seat });
     hero(hxx, hy, s, ho);
@@ -429,7 +428,7 @@
     const md = mood(t, [[115.9, 'look', null, 'pout'], [116.556, 'wide', '!', 'o'], [117.156, 'sparkle', 'spark', 'open'], [117.9, 'happy', null, 'smile']]);
     const ho = { sit: true, dy: .55, sq: .04 + .02 * dig, outfit: 'home', lookX: lerp(-.75, -.45, lift), lookY: lerp(.35, -.1, lift), tilt: lerp(-.1, .1, lift),
       aL: t < 116.556 ? -.7 + .22 * dig : lerp(-.7, .95, lift), aR: -1.25, ...md, blush: lerp(.45, 1, seg(t, 117.9, 118.2)), draw: squatKnees,
-      brows: t < 116.556 ? 'worried' : null, ahoge: t > 116.556 ? 'perk' : 'normal', dy2: 0 };
+      brows: t < 116.556 ? 'worried' : null, ahoge: t > 116.556 ? 'perk' : 'normal' };
     ho.dy += t < 116.556 ? .06 * Math.abs(dig) : -.08 * bell(t, 117.156, 117.45);
     hero(x, y, s, ho);
     binFront(bx, by, bs);
@@ -476,11 +475,26 @@
     paint(ellPts(-26, 26, 15, 21, 14, 0, -.6), { wash: SKIN, ink: INK, sw: 1 });
     pop();
   }
+  // deskTop() from props.js, minus the granulation pass on the huge desk wash (at this zoom that one pass costs ~150 ms);
+  // the wash is pre-mixed to the colour the watercolour layers would give, with a few soft blotches for life
+  function deskTopLite(t, o = {}) {
+    paint(rectPts(-400, -400, W + 800, H + 800), { wash: mixCol(DESK, DESK_DK, .36), ink: null });
+    for (let i = 0; i < 8; i++) paint(ellPts(hash(i * 3.1) * W, hash(i * 5.7) * H, 240 + hash(i) * 220, 110 + hash(i * 2) * 90, 18), { wash: DESK_DK, washOp: 16, ink: null });
+    for (let i = 0; i < 14; i++) { const y = -60 + i * 90 + hash(i) * 30, pts = []; for (let k = 0; k <= 10; k++) pts.push([-100 + k * 220, y + Math.sin(k * .8 + i) * 14]); inkLine(pts, .5, DESK_DK, 'fine', .5, .55); }
+    glow(760, 380, 900, PAL.lamp, .35 * (o.lamp ?? 1));
+    paint(rrPts(480, 210, 960, 660, 12).map(p => [p[0] + 14, p[1] + 16]), { wash: INK, washOp: 60, ink: null });
+    paint(rrPts(468, 206, 984, 668, 12), { wash: '#6F86B8', ink: INK, sw: 1.3 });
+    const L = { x: 490, y: 225, w: 460, h: 630 }, R = { x: 970, y: 225, w: 460, h: 630 };
+    for (const r of [L, R]) paint(rectPts(r.x, r.y, r.w, r.h, 1), { wash: '#FFFBF2', fill: '#EFE6D6', fillOp: 50, tex: .3, ink: INK, sw: .9 });
+    paint([[950, 225], [970, 225], [970, 855], [950, 855]], { fill: INK, fillOp: 40, bleed: .2, tex: 0, ink: null });
+    for (let i = 0; i < 14; i++) paint(ellPts(960, 245 + i * 44, 9, 5, 8), { ink: INK, sw: .6 });
+    if (o.items) o.items(t);
+  }
   function tapeUp(t, lt, dur) {
     const [cx, cy, z, cr] = kf(t, [[118.6, [720, 610, 1.3, -.025]], [119.3, [790, 600, 1.3, -.02]], [120.2, [1010, 565, 1.36, -.01]], [121.4, [1105, 545, 1.46, .008]]], easeInOut);
     camBegin(cx, cy, z, cr);
     const glowK = bell(t, B(201) - .05, B(201) + .55);
-    deskTop(t, { lamp: 1, items: () => {
+    deskTopLite(t, { lamp: 1, items: () => {
       paint(ellPts(1660, 300, 70, 70, 20), { wash: '#F29BB8', ink: INK, sw: 1 });                 // mug from above
       paint(ellPts(1660, 300, 54, 54, 18), { wash: '#C58A5E', ink: null });
       pencil(1540, 860, .9, 2.2, '#F6C85F');
@@ -838,7 +852,7 @@
     if (t > DING) { glow(r.x + 392, r.y + 154, 150, '#FFE59A', .5 * bell(t, DING, DING + .5)); const ag = t - DING; if (ag < .5) for (let k = 0; k < 8; k++) { const a = k / 8 * TAU + .3, d = 84 + 60 * easeOut(ag / .5), rr = 11 * (1 - ag / .5); paint(starPts(r.x + 392 + Math.cos(a) * d, r.y + 154 + Math.sin(a) * d, rr, .42, 4, a), { wash: k % 2 ? '#FFE59A' : PAL.pinkLt, ink: INK, sw: .3 }); } }
     const tipS = toScreen(tip[0], tip[1]);
     camEnd();
-    if (t > DING) { const [dx, dy] = tipS; sfx('叮', lerp(1560, 1050, back), lerp(170, 300, back), 170 * (1 - back * .6), '#F6C85F', t - DING, { life: 1.0, rot: .14, stroke: INK, strokeW: .1 }); }
+    if (t > DING) { sfx('叮', lerp(1560, 1050, back), lerp(170, 300, back), 170 * (1 - back * .6), '#F6C85F', t - DING, { life: 1.0, rot: .14, stroke: INK, strokeW: .1 }); }
     // the hand leaves just before the camera pulls back
     const leave = easeIn(seg(t, B(216.75), B(217.1))), enter = 1 - easeOut(seg(t, 127.95, 128.3));
     if (leave < 1) bigHandFront(tipS[0] + 205 + 700 * Math.max(leave, enter), tipS[1] + 150 + 500 * Math.max(leave, enter), 0);
@@ -987,8 +1001,14 @@
         const pa = seg(age, .2, .42) * (1 - gone);
         if (pa > .01) {
           glow(P[0], P[1], 230 * cam[2], mixCol('#FFF6E6', '#FFD06B', gold), (.28 + .3 * gold) * pa);
-          const cv = layer(() => { camBegin(...cam); sketch(.49, () => { push(); translate(S.at[0], S.at[1]); scale(1.55); translate(-S.at[0], -S.at[1] - 10); steamPic(i, S.at[0], S.at[1]); pop(); }); camEnd(); X.globalCompositeOperation = 'source-in'; X.fillStyle = col; X.fillRect(0, 0, W, H); });
-          stamp(cv, pa);
+          const bw = 270 * cam[2], bh = 250 * cam[2], box = [P[0] - bw, P[1] - bh, bw * 2, bh * 2];
+          const cv = layer(() => {                 // the layer canvas is shared: keep the clip and blend mode inside save/restore
+            X.save(); X.beginPath(); X.rect(...box); X.clip();
+            camBegin(...cam); sketch(.49, () => { push(); translate(S.at[0], S.at[1]); scale(1.55); translate(-S.at[0], -S.at[1] - 10); steamPic(i, S.at[0], S.at[1]); pop(); }); camEnd();
+            X.globalCompositeOperation = 'source-in'; X.fillStyle = col; X.fillRect(...box);
+            X.restore();
+          });
+          stamp(cv, pa, rectPts(...box));
         }
       }
       // it all melts into golden candy that floats around her

@@ -41,8 +41,8 @@
     });
   }
   // a thin cool rim of window light on the back of her hair
-  function hairRim(x, y, s, tilt = 0, k = 1) {
-    push(); translate(x, y - 4.3 * s); rotate(tilt); translate(0, -2.4 * s);
+  function hairRim(x, y, s, tilt = 0, k = 1, sq = 0) {
+    push(); translate(x, y); scale(1 + sq * .5, 1 - sq); translate(0, -4.3 * s); rotate(tilt); translate(0, -2.4 * s);
     for (const [a0, a1] of [[1.02, 1.3], [1.7, 1.98]]) {
       const arc = []; for (let i = 0; i <= 8; i++) { const a = Math.PI * lerp(a0, a1, i / 8); arc.push([Math.cos(a) * 2.86 * s, -.2 * s + Math.sin(a) * 2.6 * s]); }
       inkLine(arc, clamp(s / 19, .32, 2.3) * .9, '#C4D2FA', 'marker', .5, .5 * k);
@@ -146,8 +146,8 @@
     inkLine([[-.7 * s, -4.2 * s], [0, -3.65 * s], [.7 * s, -4.2 * s]], sw * .45, HOOD_DK, 'fine', .5);
   }
   function backHair(x, y, s, o = {}) {                   // strands, shine and the star clip on the back of her head
-    const tilt = o.tilt || 0, dy = (o.dy || 0) * s;
-    push(); translate(x, y + dy); if (o.rot) rotate(o.rot); translate(0, -4.3 * s); rotate(tilt); translate(0, -2.4 * s);
+    const tilt = o.tilt || 0, dy = (o.dy || 0) * s, sq = o.sq || 0;
+    push(); translate(x, y + dy); if (o.rot) rotate(o.rot); scale(1 + sq * .5, 1 - sq); translate(0, -4.3 * s); rotate(tilt); translate(0, -2.4 * s);
     const sw = clamp(s / 19, .32, 2.3);
     for (const k of [-.55, -.2, .2, .55]) inkLine([[k * .4 * s, -2.2 * s], [k * 1.6 * s, -.4 * s], [k * 2.2 * s, 1.5 * s]], sw * .45, '#3E2724', 'fine', .6);
     for (const [a0, a1] of [[1.18, 1.38], [1.45, 1.62], [1.68, 1.84]]) {
@@ -188,11 +188,11 @@
     if (ik > 0) sparkle(620, 540, 16, '#FFF3C0', seg(t, IDEA + .05, IDEA + .6));
     // her, kneeling on the chair with her arms folded on the sill; her ahoge perks up at the end
     const hx = 386, hs = 38, hy = 776, br = Math.sin(t * 2.1) * .015, tl = .1 * sway * (1 - ik) + .16 * easeOut(seg(t, IDEA + .15, IDEA + .45));
-    const perk = t > IDEA + .2;
-    hero(hx, hy, hs, { back: true, outfit: 'home', aL: -1.35, aR: -1.35, tilt: tl, sq: br - .06 * Math.sin(seg(t, IDEA + .2, IDEA + .45) * Math.PI), noShadow: true, ahoge: perk ? 'perk' : 'normal',
+    const perk = t > IDEA + .2, hsq = br - .06 * Math.sin(seg(t, IDEA + .2, IDEA + .45) * Math.PI);
+    hero(hx, hy, hs, { back: true, outfit: 'home', aL: -1.35, aR: -1.35, tilt: tl, sq: hsq, noShadow: true, ahoge: perk ? 'perk' : 'normal',
       emote: perk ? 'spark' : null, emoteK: seg(t, IDEA + .2, IDEA + .45), draw: (s, sw) => { sillArms(s, sw); hoodBack(s, sw); } });
-    backHair(hx, hy, hs, { tilt: tl, sq: br });
-    hairRim(hx, hy, hs, tl);
+    backHair(hx, hy, hs, { tilt: tl, sq: hsq });
+    hairRim(hx, hy, hs, tl, 1, hsq);
     chair(hx, 932, hs, { seat: 3.2, backOnly: true });
     camEnd();
     vignette(.35, PAL.night);
@@ -214,7 +214,7 @@
   }
   const [MX, MY, MS] = MOMO_AT, HC = [MX, MY - 6.7 * MS];
   const CIRCLES = [
-    { tb: B(56), p: ringPath(HC[0], HC[1] - 4, 132, 124, -2.3, 1.1, 0, 1) },
+    { tb: B(56) + .12, p: ringPath(HC[0], HC[1] - 4, 132, 124, -2.3, 1.1, 0, 1) },
     { tb: B(57), p: ringPath(HC[0] - 1.05 * MS, HC[1] + .2 * MS, 21, 27, -1.9, 1.15, 0, 2) },
     { tb: B(58), p: ringPath(HC[0] + 1.05 * MS, HC[1] + .2 * MS, 21, 27, -1.9, 1.15, 0, 3) },
     { tb: B(59), p: ringPath(HC[0] - 3.35 * MS, HC[1] + 1.0 * MS, 44, 110, -1.7, 1.08, .14, 4) },
@@ -389,8 +389,8 @@
 
   // =====================================================================================
   // THE ROOM AT NIGHT: closeBook and qmarkShot share her blocking (front view of room()).
-  const SEAT = [1170, 985], HS = 34, SEAT_Y = SEAT[1] - 1.7 * HS;         // her chair; seated ground point
-  const BOOK = [1040, 704, 250], SWITCH = [1078, 812];                    // the sketchbook; the lamp's cord switch, dangling off the desk
+  const SEAT = [1200, 985], HS = 34, SEAT_Y = SEAT[1] - 1.7 * HS;         // her chair; seated ground point
+  const BOOK = [1040, 704, 250], SWITCH = [1107, 813];                    // the sketchbook; the lamp's cord switch, dangling off the desk
   const SNAP = B(66), SWIV = [B(66) + .22, B(66) + .5], CLICK = B(69), HOPOFF = [B(69) + .36, B(69) + .6], WALK_V = 190;
   const walkPos = t => { const a = Math.max(0, t - HOPOFF[1]); return [SEAT[0] - 12 - WALK_V * a, 1000 + a * 12, HS * (1 + a * .02)]; };
   // the sketchbook lying on the desk, seen from the room: th 0 = open flat .. π = closed (right half folded over)
@@ -428,7 +428,7 @@
   // the lamp's cord along the desk with a little round switch (pressed 0..1)
   function lampCord(press = 0, on = 1, sway = 0) {
     const [sx, sy] = [SWITCH[0] + sway * 6, SWITCH[1]];
-    inkLine([[930, 706], [990, 722], [1030, 740], [1050, 752], [sx - 4, sy - 16]], 1.4, '#E7D8C2', 'marker', .5);
+    inkLine([[930, 706], [995, 722], [1045, 740], [1075, 756], [sx - 4, sy - 16]], 1.4, '#E7D8C2', 'marker', .5);
     inkLine([[sx, sy + 16], [sx - 10 - sway * 4, sy + 60], [sx - 38, sy + 120], [sx - 76, 988]], 1.4, '#E7D8C2', 'marker', .5);
     push(); translate(sx, sy); rotate(-.15 + sway * .2);
     paint(rrPts(-10, -18, 20, 36 - press * 3, 9), { wash: '#FFF1DC', fill: '#E7D8C2', fillOp: 60, ink: PAL.ink, sw: .8 });
@@ -470,10 +470,11 @@
   const heldPencil = (s, sw) => { push(); rotate(-.9); pencil(.2 * s, -.3 * s, s / 95, Math.PI * .85, '#F6C85F'); pop(); };
   // the chair + her, facing the desk (back) or the room (front); sx squeezes for the swivel
   function seated(x, y, o) {
-    const back = !!o.back, cs = { seat: 3.2 };
-    if (back) chair(x, SEAT[1], HS, { ...cs, back: false }); else chair(x, SEAT[1], HS, cs);
+    const back = !!o.back, cs = { seat: 3.2 }, k = o.sx ?? 1;
+    const ch = co => { push(); translate(x, 0); scale(Math.max(.15, k), 1); translate(-x, 0); chair(x, SEAT[1], HS, co); pop(); };   // the chair turns with her
+    if (back) ch({ ...cs, back: false }); else ch(cs);
     hero(x, y, HS, { outfit: 'home', sit: true, noShadow: true, ...o });
-    if (back) chair(x, SEAT[1], HS, { ...cs, backOnly: true });
+    if (back) ch({ ...cs, backOnly: true });
   }
   function nightRoom(t, o) {
     roomWith(t, { lamp: o.lamp, book: 'none', screenOn: 0, clutter: .5, dark: o.dark }, streetView);
@@ -487,7 +488,7 @@
   function closeBook(t, lt, dur) {
     const off = t < CLICK ? 0 : t < CLICK + .05 ? .7 : t < CLICK + .09 ? .2 : t < CLICK + .13 ? .85 : 1;   // flicker, then dark
     const z = kf(t, [[38.5, 1.46], [39.9, 1.42], [40.5, 1.36], [41.7, 1.38], [43.4, 1.12]], easeInOut);
-    const cx = kf(t, [[38.5, 1010], [39.9, 1015], [40.5, 1040], [41.7, 1030], [43.4, 880]], easeInOut), cy = kf(t, [[38.5, 712], [39.9, 712], [40.5, 700], [41.7, 700], [43.4, 650]], easeInOut);
+    const cx = kf(t, [[38.5, 1035], [39.9, 1040], [40.5, 1070], [41.7, 1060], [43.4, 900]], easeInOut), cy = kf(t, [[38.5, 712], [39.9, 712], [40.5, 700], [41.7, 700], [43.4, 650]], easeInOut);
     camBegin(cx, cy, z, 0);
     nightRoom(t, { lamp: 1 - off, dark: .06 + .44 * off });
     // 团子 asleep on the cushion; the SNAP makes an ear twitch
@@ -547,7 +548,7 @@
   // She stretches like rubber, zips back into the chair, sighs… smiles. Lamp on, book open, push into the page.
   const POP = B(73), HOPQ = [B(74) - .04, B(75)], TUG = [B(75), B(75) + .3], ZIP = [B(75) + .3, B(76)];
   const SIGH = B(76) + .06, SMILE = B(76) + .4, SWIV2 = [B(77), B(77) + .24], LAMP_ON = B(77) + .4, OPEN = [B(77) + .52, B(78) + .12];
-  const DISS = [B(78) + .3, B(79) - .04];                 // dissolve into the top-down page (before chapter 3's page turn)
+  const DISS = [B(78) + .3, B(79) - .04];                 // the light bloom that carries us into the top-down page (before chapter 3's page turn)
   const QS = 14, QCOL = '#9A84DA';                       // the question mark's size and colour (lighter to read in the dark)
   // in this shot she has padded on towards bed (over by 团子's cushion), slow and sleepy
   const qWalk = t => { const a = Math.max(0, t - 43.2); return [560 - 33 * a, 1012 + a * 8, 35 + a * .3]; };
@@ -557,7 +558,6 @@
     const r = o.rot || 0, sq = o.sq || 0, SX = (o.sx ?? 1) * (1 + sq * .5), SY = 1 - sq, lx = px * s * SX, ly = py * s * SY;
     return [x + lx * Math.cos(r) - ly * Math.sin(r), y + (o.dy || 0) * s + lx * Math.sin(r) + ly * Math.cos(r)];
   };
-  const hoodAt = (x, y, s, o = {}) => bodyPt(x, y, s, 1.0, -4.4, o);
   const TUGPOSE = k => ({ rot: .42 * k, sq: -.42 * k, sx: 1 - .14 * k });
   // the question mark's left hand (world) for a given ground point / pose, and the inverse
   const qHandOff = (s, rot, sq) => { const lx = -1.9 * s * (1 + sq * .4), ly = -5.0 * s * (1 - sq); return [lx * Math.cos(rot) - ly * Math.sin(rot), lx * Math.sin(rot) + ly * Math.cos(rot)]; };
@@ -587,12 +587,17 @@
     paint(cloudPts(px, py, (40 + a * 40) * s / 34, (16 + a * 10) * s / 34, 3, 5), { wash: PAL.cream, washOp: 220 * (1 - a), fill: PAL.grayLt, fillOp: 60 * (1 - a), ink: PAL.ink, sw: .6 * (1 - a), curv: .4 });
   }
   function qmarkShot(t, lt, dur) {
-    if (t > DISS[0]) {                                   // the push ends in the top-down page
-      const k = seg(t, DISS[0], DISS[1]);
-      if (k >= 1) return pagePush(t);
-      return dissolve(k, () => qmarkRoom(t), () => pagePush(t));
+    // the push into the open book ends in a warm bloom of light from the page, which clears onto the page seen from above
+    const SW = (DISS[0] + DISS[1]) / 2;
+    if (t < SW) {
+      qmarkRoom(t);
+      const k = easeIn(seg(t, DISS[0] - .12, SW));
+      if (k > 0) { light(W / 2, H / 2 + 40, 300 + 1300 * k, '#FFE7B8', .9 * k); flash(k * k * .96, '#FFF6E2'); }
+    } else {
+      pagePush(t);
+      const k = 1 - easeOut(seg(t, SW, DISS[1] + .12));
+      if (k > 0) { light(W / 2, H / 2, 300 + 1300 * k, '#FFE7B8', .8 * k); flash(k * k * .96, '#FFF6E2'); }
     }
-    qmarkRoom(t);
   }
   function qmarkRoom(t) {
     const on = t < LAMP_ON ? 0 : t < LAMP_ON + .05 ? .6 : t < LAMP_ON + .09 ? .25 : t < LAMP_ON + .14 ? .9 : 1;
@@ -600,7 +605,7 @@
     // camera: close on the book, pull back to find her, follow her back to the chair, then push in over her shoulder
     const push = easeIn(seg(t, B(78) - .12, DISS[1] + .02));
     const z = kf(t, [[43.3, 2.5], [44.25, 2.4], [44.95, 1.16], [45.35, 1.16], [45.95, 1.42], [46.9, 1.46]], easeInOut) * (1 + 4.2 * push);
-    const cx = lerp(kf(t, [[43.3, 1040], [44.25, 1025], [44.95, 820], [45.35, 820], [45.95, 1090], [46.9, 1080]], easeInOut), 960, easeOut(push * 1.5));
+    const cx = lerp(kf(t, [[43.3, 1040], [44.25, 1025], [44.95, 820], [45.35, 820], [45.95, 1115], [46.9, 1105]], easeInOut), 960, easeOut(push * 1.5));
     const cy = lerp(kf(t, [[43.3, 660], [44.25, 660], [44.95, 680], [45.35, 680], [45.95, 700], [46.9, 700]], easeInOut), 694, easeOut(push * 1.5));
     const [bx, by] = t > ZIP[1] ? shakeXY(t, 9 * Math.exp(-(t - ZIP[1]) * 9)) : [0, 0];
     camBegin(cx + bx, cy + by, z, 0);
@@ -661,9 +666,9 @@
       const a = t - POP - .3, st = seg(t, 44.1, 44.3) * (1 - seg(t, 44.38, 44.48));
       return { x: base[0] - 10, y: base[1], sq: .25 * Math.exp(-a * 9) * Math.cos(a * 25) - .2 * st, wave: st > .3, rot: t > 44.42 ? -.22 : .06 * Math.sin(t * 9), eyes: st > .3 ? 'happy' : 'normal', stretch: st };
     }
-    if (t < HOPQ[1]) {
-      const k = seg(t, HOPQ[0], HOPQ[1]), e = easeInOut(k), [hx, hy] = hoodAt(H.x, H.y, H.s);
-      return { x: lerp(base[0] - 10, hx + 1.0 * QS, e), y: lerp(base[1], hy + 4.8 * QS, e) - Math.sin(k * Math.PI) * 260, sq: k < .15 ? .2 : -.2, rot: -k * TAU * .75 - .3, arcK: k };
+    if (t < HOPQ[1]) {                                  // lands exactly where the tug starts (its hand just behind her neck)
+      const k = seg(t, HOPQ[0], HOPQ[1]), e = easeInOut(k), [nx, ny] = bodyPt(H.x, H.y, H.s, .45, -4.45), [ex, ey] = qFromHand(nx + 40, ny - 20, QS, 0, 0);
+      return { x: lerp(base[0] - 10, ex, e), y: lerp(base[1], ey, e) - Math.sin(k * Math.PI) * 260, sq: k < .15 ? .2 : -.2 * (1 - k), rot: -k * TAU };
     }
     if (t < ZIP[1]) {
       const zk = seg(t, ZIP[0], ZIP[1]), k = easeOut(seg(t, TUG[0], TUG[0] + .22));
@@ -672,11 +677,11 @@
       const rot = zk > 0 ? P.rot * .9 : .6 * k, sq = zk > 0 ? -.3 : -.25 * k;
       const hx = zk > 0 ? nx + Math.sin(P.rot) * 290 : nx + 40 + 150 * k, hy = zk > 0 ? ny - Math.cos(P.rot) * 290 : ny - 20 - 20 * k;
       const [qx, qy] = qFromHand(hx, hy, QS, rot, sq);
-      return { x: qx, y: qy, rot, sq, grab: true, eyes: 'happy', ...(zk > .9 ? { fade: 1 } : {}) };
+      return { x: qx, y: qy, rot, sq, eyes: 'happy' };
     }
     // on her: first peeking over her shoulder, then it hops up and sits on her head, beside the ahoge
     const hx = SEAT[0], k = easeInOut(seg(t, SIGH + .02, SIGH + .32));
-    const x = lerp(hx + .3 * HS, hx - 1.12 * HS, k), y = lerp(SEAT_Y - 11.6 * HS, SEAT_Y - 9.42 * HS, k) - Math.sin(k * Math.PI) * 50;
+    const x = lerp(hx + .9 * HS, hx - 1.12 * HS, k), y = lerp(SEAT_Y - 10.3 * HS, SEAT_Y - 9.42 * HS, k) - Math.sin(k * Math.PI) * 60;
     const a = t - SIGH - .32, sit = k >= 1 ? .22 * Math.exp(-a * 8) * Math.cos(a * 22) : 0;
     return { x, y: y + (k >= 1 ? 2 * Math.sin(t * 4) : 3 * Math.sin(t * 9)), s: lerp(QS, QS * .74, k), sq: sit, rot: k >= 1 ? .08 * Math.sin(t * 3) - .2 : lerp(.1, -.2, k), eyes: t > SMILE ? 'happy' : 'normal', wave: t > SMILE + .3 && t < SWIV2[0] };
   }
@@ -696,8 +701,9 @@
     camBegin(lerp(1215, 1200, k), lerp(545, 530, k), lerp(1.5, 1.85, easeOut(k)), lerp(-.03, 0, k));
     deskTop(t, { lamp: 1, page: (r, side, tt) => side < 0 ? oldDrafts(r) : draftPage(r, tt, { full: true, glowK: .15 + .1 * Math.sin(t * 3) }), items: tt => {
       deskClutter(tt);
-      const wake = seg(t, 47.75, 47.95);
-      idea(NEST[0], NEST[1] + 4 - 6 * wake, 23, { eyes: wake > .5 ? 'normal' : 'happy', sq: wake > 0 && wake < 1 ? -.15 : 0, rot: -.1 + .05 * Math.sin(t * 2), glow: 1.2 });
+      const wake = seg(t, 47.75, 47.95), hopW = Math.sin(seg(t, 47.8, 48.1) * Math.PI);
+      idea(NEST[0], NEST[1] + 4 - 6 * wake - 18 * hopW, 23, { eyes: wake > .5 ? 'normal' : 'happy', sq: wake > 0 && wake < 1 ? -.15 : .12 * hopW, rot: -.1 + .05 * Math.sin(t * 2) + .25 * Math.sin(t * 9) * hopW, glow: 1.2 + .6 * hopW });
+      if (wake > 0) for (let i = 0; i < 3; i++) sparkle(NEST[0] + [-44, 40, 8][i], NEST[1] - [30, 22, 52][i], 11, '#FFF3C0', seg(t, 47.8 + i * .06, 48.3 + i * .06));
       const hk = easeOut(seg(t, 47.55, 48.2));
       drawingHand(lerp(1560, 1330, hk), lerp(900, 640, hk), 1 - hk * .8);
     } });
