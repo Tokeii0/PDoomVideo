@@ -1,2 +1,4 @@
 out/
 assets/fonts/
+/.*.mjs
+*.tmp

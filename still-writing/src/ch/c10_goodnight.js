@@ -1,14 +1,17 @@
 // c10_goodnight: 晚安 (264.5–290). Moonlight → a peach morning → the cover again.
 //
 // 264.5 screenOff  Close on the monitor: her hand presses the power button, 桃桃 (dozing on her feet) wakes, waves
-//                  goodnight, hugs a little crescent-moon pillow and nods off as the screen fades; the hand clicks the
-//                  desk lamp off. Cut to the reverse angle in the dark: the moon comes out, silver light falls on her;
-//                  chin on her hands, she whispers goodnight toward the window; 团子 yawns on the bed.
+//                  goodnight, hugs a tiny moon-print pillow and nods off as the screen fades; the hand clicks the desk
+//                  lamp off. Cut to the reverse angle in the dark: the moon comes out, silver light falls on her; chin on
+//                  her hands, she whispers goodnight toward the window; 团子 yawns on the bed. She dozes off (dip to dark).
 // 269.0 morning    The time-lapse through the window (indigo → peach dawn: the moon sets, the sun comes up behind the
 //                  city). Asleep at the desk, she wakes, stretches, opens the sketchbook and makes the first stroke; the
-//                  monitor boots and 桃桃 pops up to wave good morning.
-// 273.5 ending     Chapter 1's cover composition in warm morning sun, the rain stopped: the camera pulls back out of
-//                  the window; the brush title 「还没写完」 and 「未完待续」 appear on the glass; everything fades to paper.
+//                  monitor boots and 桃桃 pops up to wave good morning; she waves back.
+// 273.5 ending     Chapter 1 flies from the cover out through the glass to an office tower; here the camera flies back
+//                  from that tower (morning now, a sparrow on its antenna) through the glass into the same cover
+//                  composition, in warm sun with the rain stopped: 桃桃 in full colour where the pencil drafts were, a
+//                  new pencil star on the fresh page. The brush title 「还没写完」 and 「未完待续」 appear on the glass where
+//                  chapter 1 wrote them; the picture fades back to paper while the title soaks in as ink, then fades too.
 //
 // The room's window: room() paints its window with the shared windowView(); for the time-lapse this chapter swaps in
 // its own painter (winView: windowView's layout plus a moon, a sun, clouds and a time-of-day palette) for the duration
@@ -168,7 +171,6 @@
       bokehField(t, { x, y: y + h * .35, w, h: h * .65 }, 16, ['#FFC77A', '#FF9FB0', '#8FE3D8', '#FFE7A8'], { a: .5 * night + .1 * (1 - tau), seed: 3 });
       if (S.birds) birds(t, x, y, w, h, S.birds);
       if (rain > .01) rainStreaks(t, { x, y, w, h }, Math.round(26 * rain), '#D6E4FF', .45 * rain);
-      if (S.drops) glassDrops(t, x, y, w, h, S.drops);
       paint([[x + w * .06, y + 10], [x + w * .22, y + 10], [x + w * .1, y + h * .55], [x + w * .02, y + h * .55]], { wash: '#FFFFFF', washOp: 18 + 16 * seg(tau, .6, 1), ink: null });
     });
   }
@@ -184,20 +186,10 @@
       inkLine([[bx - s * 1.4, by - f * s * .7], [bx - s * .5, by - s * .1], [bx, by + s * .25], [bx + s * .5, by - s * .1], [bx + s * 1.4, by - f * s * .7]], .9, mixCol(PAL.ink, '#B07A80', .4), 'ink', .5, .8 * k);
     }
   }
-  // the last raindrops still clinging to the glass, glinting in the sun
-  function glassDrops(t, x, y, w, h, k) {
-    for (let i = 0; i < 26; i++) {
-      const dx = x + hash(i * 6.1 + 2) * w, dy0 = y + hash(i * 2.9 + 1) * h, slide = hash(i * 8.3) > .75 ? ((t * 14 * hash(i)) % (h * .3)) : 0, dy = dy0 + slide;
-      const r = 2.2 + hash(i * 4.7) * 3.2;
-      paint(ellPts(dx, dy, r * .85, r, 10), { wash: '#FFFFFF', washOp: 70 * k, ink: '#C9A48E', sw: .25 });
-      dot(dx - r * .3, dy - r * .35, r * .32, '#FFFFFF', .85 * k);
-      if (hash(i * 3.7) > .6) sparkle(dx + r * .2, dy - r * .5, r * 1.6, '#FFF6D8', frac(t * .35 + hash(i)) * k);
-    }
-  }
 
   // ---------- the monitor's screen ----------
   // night: a cosy desktop; 桃桃 is its little mascot, dozing on her feet. At the press the app window tucks itself away,
-  // she wakes, waves goodnight, a crescent-moon pillow poofs into her arms and she nods off hugging it.
+  // she wakes, waves goodnight, a tiny pillow poofs into her arms and she nods off hugging it.
   function momoAt(r) { return [r.x + r.w * .72, r.y + r.h - 24, 19]; }
   function taskbar(r, a = 1) {
     paint(rrPts(r.x + 10, r.y + r.h - 26, r.w - 20, 20, 8), { wash: '#FFFFFF', washOp: 60 * a, ink: null });
@@ -236,9 +228,14 @@
     const o = { ...br, ...md, digital: 1, blush: .5 + .4 * hug, rot: Math.sin(t * 1.9) * .05 * nod,
       tilt: nod * (.16 + .1 * Math.sin(t * 2.3)) + .3 * doze + Math.sin(t * 1.7) * .03, dy: .5 * doze - .25 * pulse(t - T_PRESS + .6, 8) * awake * (t < T_WAVE ? 1 : 0),
       sit: doze > .3, emote: md.emote, emoteK: md.emoteK, aL: lerp(-1.15, -1.3, hug), aR: wave > .01 ? 1.5 : lerp(-1.15, -1.3, hug) };
-    if (t > 264.34 && t < 264.7) o.aL = lerp(-1.15, 1.45, seg(t, 264.34, 264.42) * (1 - seg(t, 264.6, 264.68)));   // rubs an eye mid-yawn
+    const rub = seg(t, 264.32, 264.4) * (1 - seg(t, 264.6, 264.68));                  // rubs an eye mid-yawn
+    if (rub > .01) o.aL = 1.5;
     momo(x, y, s, o);
     const sy = y + o.dy * s;
+    if (rub > .01) {
+      const sh = [x - .95 * s, sy - 3.95 * s], ex = x - 1.0 * s + Math.sin(t * 30) * .12 * s, ey = sy - 6.45 * s;
+      sleeveArm(sh[0], sh[1], lerp(sh[0] - .3 * s, ex, rub), lerp(sh[1] + .4 * s, ey, rub), .33 * s, { col: MOMO_TOP, dk: MOMO_DK, stars: false, hand: 1.1 });
+    }
     if (wave > .01) {
       const sh = [x + .95 * s, sy - 3.95 * s], a = -.78 - .42 * Math.sin((t - T_WAVE) * 15) * wave;
       sleeveArm(sh[0], sh[1], sh[0] + Math.cos(a) * 2.6 * s * wave, sh[1] + Math.sin(a) * 2.6 * s * wave, .33 * s, { col: MOMO_TOP, dk: MOMO_DK, stars: false, hand: 1.1 });
@@ -401,7 +398,7 @@
   function catOnBed(t) {
     const x = 1455, y = 772, s = 25;
     const yk = seg(t, T_YAWN, T_YAWN + .12) * (1 - seg(t, T_YAWN + .8, T_YAWN + .95));
-    if (yk <= .01) { cat(x, y, s, { pose: 'sleep', zzz: false, eyes: 'closed' }); return; }
+    if (yk <= .01) { cat(x, y, s, { pose: 'sleep', zzz: false }); return; }
     const op = Math.sin(clamp((t - T_YAWN) / .85) * Math.PI);
     cat(x, y, s, { pose: 'loaf', eyes: 'closed', sq: -.12 * op, rot: -.08 * op, tail: .4 * op });
     // the yawn: the loaf pose's head sits at (-1.5s, -2.2s); follow the body's squash-stretch and tilt
@@ -465,7 +462,7 @@
   }
   function catOnSill(t, tau) {
     const x = 690, y = 610, s = 20;
-    if (t < T_WAKE) { cat(x, y, s, { pose: 'sleep', zzz: false, eyes: 'closed' }); return; }
+    if (t < T_WAKE) { cat(x, y, s, { pose: 'sleep', zzz: false }); return; }
     const st = seg(t, T_STRETCH, T_STRETCH + .55), sk = Math.sin(st * Math.PI);
     cat(x, y, s, { pose: 'sit', eyes: sk > .4 ? 'closed' : 'happy', sq: -.14 * sk, look: -.4, tail: .3 * sk });
   }

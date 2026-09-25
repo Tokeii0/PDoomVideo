@@ -42,6 +42,17 @@
   const blob = (cx, cy, r, seed, n = 40) => {
     const p = []; for (let i = 0; i < n; i++) { const a = i / n * TAU, rr = r * (1 + .1 * Math.sin(a * 3 + seed) + .05 * Math.sin(a * 7 + seed * 2.3)); p.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]); } return p;
   };
+  // Private offscreen layers. (core.js layer() currently allocates a new full-frame canvas on every call because its
+  // depth index is LAYERS.length, which never shrinks back; these two scratch canvases are allocated once and reused.)
+  const SCR = [];
+  function privLayer(slot, fn) {
+    if (!SCR[slot]) SCR[slot] = ENV.canvas(W, H);
+    const cv = SCR[slot], cx = cv.getContext('2d'), keep = [X, CAM, ALPHA];
+    cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over'; cx.clearRect(0, 0, W, H);
+    X = cx; CAM = null; ALPHA = 1;
+    try { fn(); } finally { [X, CAM, ALPHA] = keep; }
+    return cv;
+  }
   // a canvas-tote on her shoulder, body-local (use in the hero's draw hook)
   function tote(s, sw, side = -1, swing = 0) {
     push(); translate(side * 1.55 * s, -2.05 * s); rotate(swing);
@@ -171,7 +182,7 @@
   function titleOnGlass(t, cam) {
     if (t < 1.45 || t > MELT1 + .05) return;
     const melt = seg(t, MELT0, MELT1);
-    const cv = layer(() => { camBegin(cam.cx, cam.cy, cam.zg); titleArt(t); camEnd(); });
+    const cv = privLayer(0, () => { camBegin(cam.cx, cam.cy, cam.zg); titleArt(t); camEnd(); });
     if (melt <= 0) { stamp(cv, 1); return; }
     // the letters run: narrow columns slide and stretch downward at different speeds, fading as they go
     const [sx0, sy0] = [960 + (560 - cam.cx) * cam.zg, 540 + (150 - cam.cy) * cam.zg], [sx1, sy1] = [960 + (1360 - cam.cx) * cam.zg, 540 + (450 - cam.cy) * cam.zg];
@@ -363,8 +374,8 @@
 
   function intro(t, lt, dur) {
     const k0 = ease(seg(t, 0, .8));
-    if (k0 < .999) { const cv = layer(() => introPaint(t)); stamp(cv, k0); return; }
     introPaint(t);
+    if (k0 < .999) { X.save(); X.setTransform(1, 0, 0, 1, 0, 0); X.globalAlpha = 1 - k0; X.drawImage(PAPER, 0, 0); X.restore(); }   // fading in from the paper
   }
   function introPaint(t) {
     const cam = introCam(t);
@@ -531,6 +542,7 @@
       fillRectA(a[0], lerp(a[1], b[1], .8), b[0] - a[0], .04 * k, '#E6F2F2', .22 * near);
       inkLine([[b[0] - .14 * k, lerp(a[1], b[1], .38)], [b[0] - .14 * k, lerp(a[1], b[1], .62)]], 1.6, '#8A93A8', 'marker', 0);
     }
+    if (o0[0] < -40 && o1[0] > W + 40 && o0[1] < -40 && o1[1] > H + 40) return;     // still inside the doorway: nothing else shows
     // the building front: everything outside the doorway
     irisShape([[o0[0], o0[1]], [o1[0], o0[1]], [o1[0], o1[1]], [o0[0], o1[1]]], '#1D2248');
     glow((o0[0] + o1[0]) / 2, (o0[1] + o1[1]) / 2, (o1[0] - o0[0]) * .9, '#DFF6EE', .16);

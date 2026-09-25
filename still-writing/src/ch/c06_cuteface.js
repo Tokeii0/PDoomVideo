@@ -56,6 +56,20 @@
       }
     } });
   }
+  // the monitor from props.js, painted with flat washes (its textured frame is costly at close-up sizes)
+  function lightMonitor(cx, cy, w, h, o = {}) {
+    const x = cx - w / 2, y = cy - h / 2, sw = clamp(w / 400, .8, 2);
+    glow(cx, cy, w * .95, PAL.screen, .22);
+    paint([[cx - w * .09, y + h - 4], [cx + w * .09, y + h - 4], [cx + w * .07, y + h + 44], [cx - w * .07, y + h + 44]], { wash: '#D9CCBA', ink: PAL.ink, sw: sw * .8 });
+    paint(rrPts(cx - w * .2, y + h + 38, w * .4, 18, 8), { wash: '#CDBFAC', ink: PAL.ink, sw: sw * .8 });
+    paint(rrPts(x, y, w, h, 18, 1.5), { grad: ['#F6EDE0', '#E0D3C0', Math.PI / 2], ink: PAL.ink, sw });
+    const s = { x: x + 18, y: y + 18, w: w - 36, h: h - 50 };
+    paint(rrPts(s.x, s.y, s.w, s.h, 8), { wash: '#EAF4F2', ink: PAL.ink, sw: sw * .8 });
+    if (o.screen) clipTo(rrPts(s.x, s.y, s.w, s.h, 8), () => o.screen(s, o.t ?? T));
+    paint([[s.x + s.w * .05, s.y + 6], [s.x + s.w * .2, s.y + 6], [s.x + s.w * .08, s.y + s.h * .45], [s.x + 6, s.y + s.h * .45]], { wash: '#FFFFFF', washOp: 22, ink: null });
+    paint(ellPts(cx, y + h - 16, 5, 5, 8), { wash: PAL.sage, ink: null });
+    return s;
+  }
   // a little cream ♪ (readable on dark backgrounds too)
   function noteGlyph(x, y, s, a = 1, flip = 1) {
     if (a <= .02) return;
@@ -221,7 +235,7 @@
     const top = mixCol('#CFC8DA', '#F7D3DC', warm), bot = mixCol('#E6DEE3', '#FDE8D6', warm);
     paint(rectPts(-500, -400, W + 1000, 1300), { grad: [top, bot, Math.PI / 2], ink: null });
     glow(BALL.x - 60, 520, 900, mixCol('#FFFFFF', PAL.lamp, warm), .25 + .25 * warm);
-    paint([[-500, 740], [W + 500, 740], [W + 500, H + 500], [-500, H + 500]], { wash: mixCol('#DCD2DA', '#F5D9C8', warm), fill: mixCol('#B9AFC2', '#E8B9A5', warm), fillOp: 60, bleed: .05, tex: .5, border: .3, ink: null });
+    paint([[-500, 740], [W + 500, 740], [W + 500, H + 500], [-500, H + 500]], { grad: [mixCol('#D3C9D3', '#F1D2C1', warm), mixCol('#E3DAE0', '#F8E0CF', warm), Math.PI / 2], ink: null });
     inkLine([[-500, 742], [W + 500, 742]], .6, mixCol('#9C93AA', '#C99A86', warm), 'fine', 0, .6);
     for (let i = 0; i < 12; i++) {                                    // drifting soft lights
       const bx = (hash(i * 3.1) * 2400 - 240 + t * (8 + 10 * hash(i))) % 2400 - 240, by = 90 + hash(i * 7.7) * 560;
@@ -327,7 +341,7 @@
     const front = [...chunks.filter(c => c.z >= 0), ...bits.filter(b => b.z >= 0).map(b => ({ z: b.z, bit: b }))].sort((a, b) => a.z - b.z);
     back.forEach(c => c.bit ? drawBit(c.bit) : drawChunk(c));
     const coreA = 1 - seg(prog, .7, .92);
-    if (coreA > .01) paint(ellPts(cx, cy, R * rOut * .8, R * rOut * .78, 30), { wash: mixCol('#ABA4BE', '#E7B7C4', warm), washOp: 170 * coreA, fill: '#8D86A6', fillOp: 60 * coreA, bleed: .1, tex: .5, border: .3, ink: null });
+    if (coreA > .01) paint(ellPts(cx, cy, R * rOut * .8, R * rOut * .78, 30), { wash: mixCol('#ABA4BE', '#E7B7C4', warm), washOp: 170 * coreA, fill: '#8D86A6', fillOp: 60 * coreA, bleed: .1, tex: 0, border: .3, ink: null });
     const rev = seg(prog, .7, .9);                                     // the core: the little app icon
     if (rev > 0) {
       glow(BALL.x, BALL.floor - 120, 360, '#FFE7B0', .55 * rev);
@@ -463,10 +477,11 @@
   }
   // body with a colour bloom spreading from (bx, by) through it (clipped to its outline)
   function bloomBody(pts, grey, col, k, bx, by, rMax, sw = 1.2) {
-    paint(pts, { wash: grey, fill: mixCol(grey, PAL.ink, .15), fillOp: 60, bleed: .04, tex: .5, border: .3, ink: null });
-    if (k > .005) clipTo(pts, () => {
+    paint(pts, { grad: [mixCol(grey, '#FFFFFF', .12), mixCol(grey, PAL.ink, .08), Math.PI / 2], ink: null });
+    if (k > .995) paint(pts, { grad: [mixCol(col, '#FFFFFF', .2), col, Math.PI / 2], ink: null });
+    else if (k > .005) clipTo(pts, () => {
       const r = rMax * easeOut(k);
-      paint(ellPts(bx, by, r, r, 26), { wash: col, fill: mixCol(col, '#FFFFFF', .25), fillOp: 90, bleed: .12, tex: .4, border: .4, ink: null });
+      paint(ellPts(bx, by, r, r, 26), { wash: col, fill: mixCol(col, '#FFFFFF', .25), fillOp: 90, bleed: .12, tex: 0, border: .4, ink: null });
     });
     paint(pts, { ink: PAL.ink, sw });
   }
@@ -595,16 +610,17 @@
       const a0 = 2.05 + k * .13 + .02 * Math.sin(t * .7 + k), a1 = a0 + .045 + .02 * hash(k), o = [1900, -160];
       paint([o, [o[0] + Math.cos(a0) * 2600, o[1] + Math.sin(a0) * 2600], [o[0] + Math.cos(a1) * 2600, o[1] + Math.sin(a1) * 2600]], { wash: '#FFF4D6', washOp: (26 + 14 * (k % 2)) * sunK, ink: null });
     }
-    for (let i = 0; i < 5; i++) {
-      const cx = -300 + i * 560 + Math.sin(t * .3 + i) * 20, cy = 60 + hash(i * 5.3) * 170;
-      cloudPuff(cx, cy, .9 + hash(i) * .6, mixCol('#C9CBD6', '#FFF1EA', warm), { seed: i + 2, shade: mixCol('#A9ACBA', '#F8C9D6', warm), ink: false });
+    for (let i = 0; i < 5; i++) {                                       // soft clouds (flat washes: cheap)
+      const cx = -300 + i * 560 + Math.sin(t * .3 + i) * 20, cy = 60 + hash(i * 5.3) * 170, k = .9 + hash(i) * .6;
+      paint(cloudPts(cx, cy, 240 * k, 60 * k, i + 2, 6), { wash: mixCol('#C9CBD6', '#FFF1EA', warm), washOp: 220, ink: null, curv: .45 });
+      paint(cloudPts(cx + 10, cy + 12 * k, 200 * k, 26 * k, i + 5, 5), { wash: mixCol('#B4B7C6', '#F8CFDA', warm), washOp: 120, ink: null, curv: .45 });
     }
     for (let i = 0; i < 16; i++) {
       const bx = -500 + i * 190 + hash(i * 3.3) * 60, bw = 120 + hash(i * 7.1) * 90, bh = 150 + hash(i * 1.7) * 260;
       paint(rectPts(bx, GY2 - 110 - bh, bw, bh + 120), { wash: mixCol('#BFC2CE', ['#F7C6D2', '#FFE0B8', '#CDE8DA', '#D9D0F0'][i % 4], warm * .8), washOp: 235, ink: null });
       for (let r = 0; r < Math.floor(bh / 46); r++) for (let q = 0; q < 3; q++) if (hash(i * 31 + r * 5 + q) > .5) fillRectA(bx + 14 + q * bw / 3.2, GY2 - 90 - bh + r * 46, bw / 6, 14, mixCol('#A5A9B8', '#FFF1D0', warm), .8);
     }
-    paint([[-600, GY2 - 20], [W + 600, GY2 - 20], [W + 600, H + 500], [-600, H + 500]], { wash: mixCol('#BDBEC8', '#EFD3C3', warm), fill: mixCol('#9EA0AE', '#D9A996', warm), fillOp: 60, bleed: .05, tex: .6, border: .3, ink: PAL.ink, sw: 1 });
+    paint([[-600, GY2 - 20], [W + 600, GY2 - 20], [W + 600, H + 500], [-600, H + 500]], { grad: [mixCol('#B7B8C3', '#EACBBB', warm), mixCol('#CACBD3', '#F4DCCD', warm), Math.PI / 2], ink: PAL.ink, sw: 1 });
     for (let i = -4; i < 16; i++) inkLine([[i * 160, GY2 + 10], [i * 160 - 120, H + 400]], .5, mixCol('#8E90A0', '#C99A86', warm), 'fine', 0, .5);
     inkLine([[-600, GY2 + 40], [W + 600, GY2 + 40]], .6, mixCol('#8E90A0', '#C99A86', warm), 'fine', 0, .5);
 
@@ -738,11 +754,11 @@
     camBegin(cx, cy, z, 0);
 
     // ---- the house: dark plum, a warm floor ----
-    paint(rectPts(-900, -500, 3700, 1600), { wash: '#4A3152', fill: '#2E1D3A', fillOp: 90, bleed: .05, tex: .5, ink: null });
-    paint(rectPts(960, 240, 900, 680), { fill: '#C98A7E', fillOp: 70, bleed: .3, tex: .4, border: .1, ink: null });          // her corner of the wall
-    paint([[-900, 900], [2800, 900], [2800, 1700], [-900, 1700]], { wash: '#6A4658', fill: '#4A2E40', fillOp: 70, bleed: .04, tex: .6, border: .3, ink: PAL.ink, sw: 1 });
+    paint(rectPts(-900, -500, 3700, 1600), { grad: ['#3E2848', '#4A3152', Math.PI / 2], ink: null });
+    glow(1230, 600, 640, '#C98A7E', .5);                                                                    // her corner of the wall
+    paint([[-900, 900], [2800, 900], [2800, 1700], [-900, 1700]], { grad: ['#5E3C4C', '#6E4858', Math.PI / 2], ink: PAL.ink, sw: 1 });
     // backdrop: deep plum with a slowly turning golden sunburst behind the podium
-    paint(rectPts(-700, 60, 1610, 650), { wash: '#6B2C48', fill: '#4A1C36', fillOp: 90, bleed: .05, tex: .6, ink: null });
+    paint(rectPts(-700, 60, 1610, 650), { grad: ['#5A223C', '#6B2C48', Math.PI / 2], ink: null });
     const sun = [SC.x, 330];
     clipTo(rectPts(-700, 60, 1610, 632), () => { for (let k = 0; k < 18; k++) { const a0 = k / 18 * TAU + t * .08, a1 = a0 + TAU / 36; paint([sun, [sun[0] + Math.cos(a0) * 1100, sun[1] + Math.sin(a0) * 1100], [sun[0] + Math.cos(a1) * 1100, sun[1] + Math.sin(a1) * 1100]], { wash: '#8C3A52', washOp: 160, ink: null }); } });
     paint(ellPts(sun[0], sun[1], 105, 105, 30), { wash: '#E8B85C', fill: '#C58E36', fillOp: 70, tex: .5, ink: PAL.ink, sw: 1 });
@@ -750,7 +766,7 @@
     // the stage: floor band, gold lip, front face
     paint([[-900, 690], [900, 690], [900, 736], [-900, 736]], { wash: '#9A6A48', fill: '#6E4630', fillOp: 70, tex: .6, ink: PAL.ink, sw: 1 });
     for (let i = -8; i < 9; i++) inkLine([[i * 110, 692], [i * 110 - 30, 734]], .5, '#6E4630', 'fine', 0, .6);
-    paint([[-900, 736], [900, 736], [900, 900], [-900, 900]], { wash: '#5A2C3A', fill: '#3A1826', fillOp: 70, tex: .5, ink: PAL.ink, sw: 1.1 });
+    paint([[-900, 736], [900, 736], [900, 900], [-900, 900]], { grad: ['#4A2231', '#5A2C3A', Math.PI / 2], ink: PAL.ink, sw: 1.1 });
     paint(rectPts(-900, 736, 1800, 12), { wash: '#E0AE52', ink: PAL.ink, sw: .8 });
     for (let i = -6; i < 6; i++) paint(ellPts(i * 150 + 40, 822, 28, 28, 14), { wash: '#6E3446', ink: '#C8964A', sw: .8 });
     // spotlights on the scroll
@@ -795,7 +811,7 @@
     for (const [x0, x1, sd] of [[-700, -170, -1], [780, 900, 1]]) {
       const pts = [[x0, 40]]; for (let k = 0; k <= 8; k++) pts.push([x1 + Math.sin(k * 1.4 + t * .8) * 8 - sd * k * 4, 40 + k * 108]);
       pts.push([x0, 900]);
-      paint(pts, { wash: '#B23A52', fill: '#7A1E36', fillOp: 90, bleed: .05, tex: .6, border: .4, ink: PAL.ink, sw: 1.2, curv: .3 });
+      paint(pts, { wash: '#B23A52', fill: '#7A1E36', fillOp: 90, bleed: .05, tex: 0, border: .4, ink: PAL.ink, sw: 1.2, curv: .3 });
       for (let k = 1; k < 4; k++) inkLine([[lerp(x0, x1, k / 4), 60], [lerp(x0, x1, k / 4) + sd * 10, 880]], 1, '#7A1E36', 'fine', .3, .8);
     }
     const val = [[-700, 26], [960, 26]]; for (let k = 22; k >= 0; k--) val.push([-700 + k * 75.5, 120 + (k % 2 ? 0 : 24)]);
@@ -810,7 +826,7 @@
     paint(ellPts(1200, 952, 280, 22, 20), { fill: PAL.ink, fillOp: 70, bleed: .2, ink: null });
     for (const lx of [1005, 1395]) paint(rectPts(lx - 12, 860, 24, 92), { wash: PAL.woodDk, ink: PAL.ink, sw: .9 });
     paint([[980, 850], [1420, 850], [1420, 868], [980, 868]], { wash: PAL.wood, fill: PAL.woodDk, fillOp: 60, tex: .5, ink: PAL.ink, sw: 1.1 });
-    monitor(MON3.x, MON3.y, MON3.w, MON3.h, { on: 1, t, screen: r => appScreen(r, t, .8) });
+    lightMonitor(MON3.x, MON3.y, MON3.w, MON3.h, { t, screen: r => appScreen(r, t, .8) });
     deskLamp(1392, 850, .42, 1);
     sodaCan(1372, 850, .4, { drops: .5 });
     const stuck = t >= tNote;
@@ -901,12 +917,12 @@
       bokeh(bx, (by + 1300) % 1300 - 110, 18 + 22 * hash(i * 1.7), [PAL.pinkLt, '#FFE3B8', PAL.cream, '#D8F0E4'][i % 4], .35 + .2 * Math.sin(t * 2 + i));
     }
     // ---- the desk and the monitor with the finished app ----
-    paint([[-600, 880], [W + 600, 880], [W + 600, H + 600], [-600, H + 600]], { wash: '#F3C9B8', fill: '#E0A38E', fillOp: 50, bleed: .05, tex: .5, ink: null });
-    paint(ellPts(960, 948, 520, 30, 24), { fill: PAL.ink, fillOp: 50, bleed: .2, ink: null });
+    paint([[-600, 880], [W + 600, 880], [W + 600, H + 600], [-600, H + 600]], { grad: ['#EDBDAB', '#F6D0C0', Math.PI / 2], ink: null });
+    paint(ellPts(960, 948, 520, 30, 24), { wash: PAL.ink, washOp: 34, ink: null, curv: .4 });
     for (const lx of [600, 1320]) paint(rectPts(lx - 14, 790, 28, 150), { wash: PAL.woodDk, ink: PAL.ink, sw: 1 });
     paint([[560, 770], [1360, 770], [1360, 792], [560, 792]], { wash: PAL.wood, fill: PAL.woodDk, fillOp: 60, tex: .5, ink: PAL.ink, sw: 1.2 });
     glow(MON4.x, MON4.y, 520, PAL.screen, .25 + .2 * pulse(t, 3));
-    const scr = monitor(MON4.x, MON4.y, MON4.w, MON4.h, { on: 1, t, screen: r => {
+    lightMonitor(MON4.x, MON4.y, MON4.w, MON4.h, { t, screen: r => {
       appScreen(r, t, 1, { pop: seg(t, 148.9, 149.5), momoEyes: t > 149.5 ? 'star' : 'happy' });
       for (const [a, b] of [[B(249) - .15, .5], [B(250) - .25, .55]]) {             // light sweeps across the glass
         const g = seg(t, a, a + b); if (g <= 0 || g >= 1) continue;

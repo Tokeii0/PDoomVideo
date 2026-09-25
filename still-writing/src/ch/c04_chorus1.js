@@ -476,12 +476,11 @@
     inkLine([[-r * .7, r * 1.4], [0, r * 2.1], [r * .7, r * 1.4]], clamp(w / 110, .7, 1.5), PAL.ink, 'ink', .5);
     pop();
   }
-  function flowerAt(x, y, r, col, k, rot = 0) {
-    if (k <= .01) return; const p = backOut(k);
-    push(); translate(x, y); rotate(rot); scale(p);
-    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; paint(ellPts(Math.cos(a) * r * .62, Math.sin(a) * r * .62, r * .48, r * .48, 9), { wash: col, ink: PAL.ink, sw: .45 }); }
-    paint(ellPts(0, 0, r * .36, r * .36, 8), { wash: '#FFE08A', ink: PAL.ink, sw: .35 });
-    pop();
+  function flowerAt(x, y, r, col, k, rot = 0) {                     // cheap: dots with a darker rim
+    if (k <= .01) return; const p = backOut(k), rr = r * p, dk = mixCol(col, PAL.ink, .45);
+    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + rot; dot(x + Math.cos(a) * rr * .62, y + Math.sin(a) * rr * .62, rr * .56, dk, .9); }
+    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + rot; dot(x + Math.cos(a) * rr * .62, y + Math.sin(a) * rr * .62, rr * .46, col); }
+    dot(x, y, rr * .34, '#E8B04A'); dot(x, y, rr * .26, '#FFE08A');
   }
   function lampPost(x, gy, lit, t, i) {
     inkLine([[x, gy + 8], [x, gy - 330]], 4.5, lit ? '#5E4A6E' : '#3A3F5E', 'marker', 0);
@@ -547,7 +546,7 @@
     camEnd();
     grade(.6, 'saturation', '#808080');
     grade(.22, 'screen', '#8C95B4');
-    rainStreaks(t, { x: 0, y: 0, w: W, h: H }, 70, '#D5DCF0', .55, { fall: true });
+    rainStreaks(t, { x: 0, y: 0, w: W, h: H }, 48, '#D5DCF0', .6, { fall: true });
     camBegin(cx, cy, zoom);
     // the painted stretch: a band from where she started to the brush's reach, with ragged bristle edges
     if (F > P0 + 5) {
@@ -556,7 +555,7 @@
       for (let y = 1600; y >= -500; y -= 40) band.push([P0 + ed(y, 4) + (y - 540) * .05, y]);
       clipTo(band, () => {
         streetWorld(t, true, cx, zoom);
-        camEnd(); petals(t, 22, 3, [PAL.pinkLt, '#FFE3C8', '#FFFFFF', PAL.sakura], { a: .85, vx: 40, vy: 40 }); camBegin(cx, cy, zoom);
+        camEnd(); petals(t, 14, 3, [PAL.pinkLt, '#FFE3C8', '#FFFFFF', PAL.sakura], { a: .85, vx: 40, vy: 40 }); camBegin(cx, cy, zoom);
       });
       // wet rims
       inkLine(band.slice(0, 53).map(([x, y]) => [x - 6, y]), 3, '#F58CA8', 'dry', .3, .8);
@@ -808,7 +807,7 @@
   function crescent(t, lt) {
     const bp = bpOf(t), { x: MX, y: MY, r: MR } = M5;
     const z = kf(t, [[86.556, 1.28], [S5T.lift, 1.24], [S5T.draw1, 1.02], [S5T.smile + .2, 1.04], [90.9, 1.34]], easeInOut) + .01 * pulse(t, 6);
-    const cx = kf(t, [[86.556, 1150], [S5T.lift, 1130], [S5T.draw1, 960], [S5T.smile + .2, 980], [90.9, 1150]], easeInOut);
+    const cx = kf(t, [[86.556, 1210], [S5T.lift, 1190], [S5T.draw1, 1000], [S5T.smile + .2, 1020], [90.9, 1220]], easeInOut);
     const cy = kf(t, [[86.556, 610], [S5T.lift, 600], [S5T.draw1, 420], [S5T.smile + .2, 430], [90.9, 610]], easeInOut);
     camBegin(cx, cy, z, .02 * Math.sin(t * .5));
     nightSky5(t);
@@ -829,8 +828,8 @@
     // ---- the moon ----
     moonFace(MX, MY, MR, { rot: M5.rot });
     // ---- 桃桃's stars: tossed up, they stick and twinkle ----
-    const momoX = 1230;
-    const mSeat = moonSeat(momoX), hSeatX = 1060, hSeat = moonSeat(hSeatX);
+    const momoX = 1318;
+    const mSeat = moonSeat(momoX), hSeatX = 1172, hSeat = moonSeat(hSeatX);
     for (const [T0, sx, sy, i] of STARS5) {
       const fly = seg(t, T0, T0 + .35); if (fly <= 0) continue;
       const hx0 = momoX + 60, hy0 = mSeat - 190, px = lerp(hx0, sx, easeOut(fly)), py = lerp(hy0, sy, easeOut(fly)) - Math.sin(fly * Math.PI) * 90;
@@ -847,13 +846,13 @@
     const swing = t * 1.3, hs = 30, msz = 24;
     const drawTip = arcPt(phEnd);
     const heroO = { outfit: 'home', ...hmd, sit: true, walk: swing, blush: .8, lookX: lift > .3 ? -.85 : .35, lookY: lift > .3 ? -.55 : 0, tilt: lift > .3 ? -.14 : .1 + .05 * Math.sin(bp * Math.PI) + .12 * ease(seg(t, S5T.fade1, S5T.fade1 + .5)),
-      aL: lerp(-1.1, lerp(.05, .5, drawK / .44), lift), aR: -1.1, dy: -.1 * Math.abs(Math.sin(bp * Math.PI)), ahoge: t > S5T.draw1 && t < S5T.smile ? 'question' : 'normal', noShadow: true };
+      aL: lerp(t > S5T.down ? -.35 : -1.1, lerp(.05, .5, drawK / .44), lift), aR: -1.1, dy: -.1 * Math.abs(Math.sin(bp * Math.PI)), ahoge: t > S5T.draw1 && t < S5T.smile ? 'question' : 'normal', noShadow: true };
     const hG = [hSeatX, hSeat + 1.5 * hs];
     // the giant pencil (behind her), tip on the circle while she draws
     if (lift > .01 || t > S5T.down) {
       const hand = handAt(hG[0], hG[1], hs, heroO, -1);
-      const rest = [hand[0] - 260, hand[1] + 150], tip = drawK > .003 && t < S5T.down ? drawTip : t >= S5T.down ? [lerp(rest[0], drawTip[0], lift), lerp(rest[1], drawTip[1], lift)] : [lerp(rest[0], arcPt(Math.PI / 2)[0], lift), lerp(rest[1], arcPt(Math.PI / 2)[1], lift)];
-      pencil(tip[0], tip[1], 3.6, pencilRot(tip[0], tip[1], hand[0], hand[1]));
+      const rest = [hand[0] - 70, hand[1] - 540], tip = drawK > .003 && t < S5T.down ? drawTip : t >= S5T.down ? [lerp(rest[0], drawTip[0], lift), lerp(rest[1], drawTip[1], lift)] : [lerp(rest[0], arcPt(Math.PI / 2)[0], lift), lerp(rest[1], arcPt(Math.PI / 2)[1], lift)];
+      pencil(tip[0], tip[1], 4.1, pencilRot(tip[0], tip[1], hand[0], hand[1]));
       if (drawK > .003 && fade < .2) glow(tip[0], tip[1], 50, '#FFF3C0', .7);
     }
     hero(hG[0], hG[1], hs, heroO);

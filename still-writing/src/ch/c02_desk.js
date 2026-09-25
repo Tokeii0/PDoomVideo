@@ -43,8 +43,10 @@
   // a thin cool rim of window light on the back of her hair
   function hairRim(x, y, s, tilt = 0, k = 1) {
     push(); translate(x, y - 4.3 * s); rotate(tilt); translate(0, -2.4 * s);
-    const arc = []; for (let i = 0; i <= 12; i++) { const a = Math.PI * (1.12 + i / 12 * .76); arc.push([Math.cos(a) * 2.9 * s, -.2 * s + Math.sin(a) * 2.62 * s]); }
-    inkLine(arc, clamp(s / 19, .32, 2.3) * 1.6, '#B8C8F8', 'marker', .5, .55 * k);
+    for (const [a0, a1] of [[1.02, 1.3], [1.7, 1.98]]) {
+      const arc = []; for (let i = 0; i <= 8; i++) { const a = Math.PI * lerp(a0, a1, i / 8); arc.push([Math.cos(a) * 2.86 * s, -.2 * s + Math.sin(a) * 2.6 * s]); }
+      inkLine(arc, clamp(s / 19, .32, 2.3) * .9, '#C4D2FA', 'marker', .5, .5 * k);
+    }
     pop();
   }
   // soft pale light falling from the window onto the floor
@@ -290,7 +292,9 @@
     });
     if (rev > HC[1] - 5.6 * MS) {
       clipTo(rectPts(r.x - 10, r.y - 10, r.w + 20, rev - r.y + 10), () => {
-        sketch(1 - .28 * glowK, () => momo(MX, MY, MS, { eyes: glowK > .3 ? 'happy' : 'normal', mouth: 'smile', aL: -.45, aR: -.45, noShadow: true, blush: .6, starGlow: 0, swMul: 1.6 }));
+        const mo = { eyes: glowK > .3 ? 'happy' : 'normal', mouth: 'smile', aL: -.45, aR: -.45, noShadow: true, blush: .6, starGlow: 0, swMul: 1.5 };
+        sketch(1 - .28 * glowK, () => momo(MX, MY, MS, mo));
+        fadeIn(.55, () => sketch(1, () => { push(); translate(1.2, -.8); momo(MX, MY, MS, { ...mo, swMul: 1.0 }); pop(); }));   // a second, sketchier pass
       });
       if (!o.full && t < REVEAL[1]) inkLine([[r.x + 40, rev + jit(2)], [r.x + r.w - 40, rev + jit(2)]], .5, PENCIL_COL, 'pencil', 0, .35);
     }
@@ -549,7 +553,19 @@
     return [x + lx * Math.cos(r) - ly * Math.sin(r), y + (o.dy || 0) * s + lx * Math.sin(r) + ly * Math.cos(r)];
   };
   const hoodAt = (x, y, s, o = {}) => bodyPt(x, y, s, 1.0, -4.4, o);
-  const TUGPOSE = k => ({ rot: .72 * k, sq: -.46 * k, sx: 1 - .18 * k });
+  const TUGPOSE = k => ({ rot: .42 * k, sq: -.42 * k, sx: 1 - .14 * k });
+  // the question mark's left hand (world) for a given ground point / pose, and the inverse
+  const qHandOff = (s, rot, sq) => { const lx = -1.9 * s * (1 + sq * .4), ly = -5.0 * s * (1 - sq); return [lx * Math.cos(rot) - ly * Math.sin(rot), lx * Math.sin(rot) + ly * Math.cos(rot)]; };
+  const qFromHand = (hx, hy, s, rot, sq) => { const [ox, oy] = qHandOff(s, rot, sq); return [hx - ox, hy - oy]; };
+  // the hood, stretched like taffy from her neck to the question mark's hand
+  function taffyHood(nx, ny, hx, hy, s, k) {
+    if (k <= .02) return;
+    const dx = hx - nx, dy = hy - ny, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux, w0 = .75 * s, w1 = .42 * s;
+    const mid = [nx + dx * .5 + px * 6, ny + dy * .5 + py * 6];
+    paint([[nx + px * w0, ny + py * w0], [mid[0] + px * w1 * .8, mid[1] + py * w1 * .8], [hx + px * w1, hy + py * w1], [hx + ux * .3 * s, hy + uy * .3 * s], [hx - px * w1, hy - py * w1], [mid[0] - px * w1 * .8, mid[1] - py * w1 * .8], [nx - px * w0, ny - py * w0]], { wash: HOOD, fill: HOOD_DK, fillOp: 50, tex: .3, ink: PAL.ink, sw: .9, curv: .35 });
+    inkLine([[nx + dx * .2, ny + dy * .2], [nx + dx * .75, ny + dy * .75]], .7, HOOD_DK, 'fine', .3);
+    for (let i = 0; i < 3; i++) { const f = .3 + i * .2; inkLine([[nx + dx * f + px * (w0 + 10), ny + dy * f + py * (w0 + 10)], [nx + dx * f + px * (w0 + 22), ny + dy * f + py * (w0 + 22)]], .8, PAL.cream, 'fine', 0, .7 * k); }
+  }
   // her position/pose in the question-mark shot
   function qHero(t) {
     if (t < TUG[0]) { const [x, y, s] = qWalk(t); return { x, y, s, phase: 'walk' }; }
@@ -560,9 +576,9 @@
     }
     return { x: SEAT[0], y: SEAT_Y, s: HS, phase: 'seat' };
   }
-  function sighPuff(x, y, s, a) {                        // a small sigh cloud drifting away
+  function sighPuff(x, y, s, a) {                        // a small sigh cloud drifting away from her mouth
     if (a <= 0 || a >= 1) return;
-    const px = x - 1.2 * s - a * 70, py = y - a * 50;
+    const px = x - a * 150, py = y - a * 70 - Math.sin(a * 5) * 6;
     paint(cloudPts(px, py, (40 + a * 40) * s / 34, (16 + a * 10) * s / 34, 3, 5), { wash: PAL.cream, washOp: 220 * (1 - a), fill: PAL.grayLt, fillOp: 60 * (1 - a), ink: PAL.ink, sw: .6 * (1 - a), curv: .4 });
   }
   function qmarkShot(t, lt, dur) {
@@ -602,23 +618,25 @@
     if (H.phase === 'walk') {
       hero(H.x, H.y, H.s, { outfit: 'home', eyes: 'sleepy', mouth: 'tiny', lookX: -.8, walk: walkM.walk, dy: walkM.dy * .6, aL: walkM.aL * .6 - .4, aR: walkM.aR * .6 - .4, rot: -.03 + .03 * Math.sin(t * 10), ahoge: 'droop', blush: .4 });
     } else if (H.phase === 'tug') {
-      const k = H.k, P = TUGPOSE(k), [nx, ny] = bodyPt(H.x, H.y, H.s, .45, -4.45, P), [hx, hy] = [qm.x - 1.3 * QS, qm.y - 5.2 * QS];
-      paint([[nx, ny - .35 * H.s], [lerp(nx, hx, .5), lerp(ny, hy, .5) - .18 * H.s], [hx, hy - .3 * H.s], [hx + .2 * H.s, hy + .25 * H.s], [lerp(nx, hx, .5), lerp(ny, hy, .5) + .12 * H.s], [nx, ny + .3 * H.s]], { wash: HOOD_LT, fill: HOOD_DK, fillOp: 50, ink: PAL.ink, sw: .8, curv: .4 });   // the hood, stretched like taffy
-      hero(H.x, H.y, H.s, { outfit: 'home', eyes: 'wide', mouth: 'O', lookX: .9, ...P, aL: -.2 + .7 * k, aR: -.5, ahoge: 'droop', blush: .3, emote: '!', emoteK: seg(t, TUG[0], TUG[0] + .2) });
-      for (let i = 0; i < 3; i++) inkLine([[H.x - 2.2 * H.s - i * 10, H.y - (1 + i * 1.6) * H.s], [H.x - 3.2 * H.s - i * 14, H.y - (1.2 + i * 1.6) * H.s]], .9, PAL.cream, 'fine', 0, .7 * k);
+      const k = H.k, P = TUGPOSE(k), [nx, ny] = bodyPt(H.x, H.y, H.s, .45, -4.45, P), [hx, hy] = qHandPos(qm);
+      taffyHood(nx, ny, hx, hy, H.s, k);
+      hero(H.x, H.y, H.s, { outfit: 'home', eyes: 'wide', mouth: 'O', lookX: .9, ...P, aL: -.2 + .9 * k, aR: -.6 + .5 * k, ahoge: 'droop', blush: .3, emote: '!', emoteK: seg(t, TUG[0], TUG[0] + .2), brows: 'worried' });
+      for (let i = 0; i < 3; i++) inkLine([[H.x - 2.0 * H.s - i * 12, H.y - (1 + i * 1.5) * H.s], [H.x - 3.2 * H.s - i * 16, H.y - (1.15 + i * 1.5) * H.s]], .9, PAL.cream, 'fine', 0, .75 * k);
     } else if (H.phase === 'zip') {
       const k = H.k, rot = k < .5 ? lerp(.72, 1.3, easeOut(k * 2)) : lerp(1.3, 0, easeIn((k - .5) * 2));
       for (let i = 0; i < 7; i++) { const yy = H.y - (1.5 + i * 1.2) * H.s + 30; inkLine([[H.x - 80 - 300 * (1 - k) - i * 14, yy], [H.x - 40 - i * 8, yy]], 1.3, PAL.cream, 'fine', 0, .8); }
-      hero(H.x, H.y, H.s, { outfit: 'home', eyes: k < .6 ? 'x' : 'wide', mouth: 'O', rot, sq: lerp(-.46, 0, k), sx: 1.1, aL: 1.0, aR: .6, ahoge: 'droop', noShadow: true, blush: .3 });
+      const P = { rot, sq: lerp(-.42, 0, k), sx: 1.1 }, [nx, ny] = bodyPt(H.x, H.y, H.s, .45, -4.45, P), [hx, hy] = qHandPos(qm);
+      taffyHood(nx, ny, hx, hy, H.s, 1 - k);
+      hero(H.x, H.y, H.s, { outfit: 'home', eyes: k < .6 ? 'x' : 'wide', mouth: 'O', ...P, aL: 1.0, aR: .6, ahoge: 'droop', noShadow: true, blush: .3 });
     } else {
       const a = t - ZIP[1], land = .28 * Math.exp(-a * 7) * Math.cos(a * 20);
       const sw = seg(t, SWIV2[0], SWIV2[1]), backNow = sw > .5, sxk = Math.max(.08, Math.abs(Math.cos(sw * Math.PI)));
       const md = mood(t, [[ZIP[1], 'x', null, 'O'], [SIGH, 'closed', null, 'wobble'], [SMILE, 'happy', 'heart', 'smile']]);
       const aq = backOut(seg(t, SMILE + .02, SMILE + .32));
-      sighPuff(H.x - .8 * H.s, H.y - 6.1 * H.s, H.s, seg(t, SIGH + .05, SIGH + .6));
       if (!backNow) {
         seated(H.x, H.y, { ...md, take: 0, sx: sxk, sq: land + (md.take || 0) + (t > SIGH && t < SMILE ? .06 * seg(t, SIGH, SIGH + .15) : 0), aL: -1.0, aR: -1.0, dy: t > SIGH && t < SMILE ? .06 : 0,
           blush: t > SMILE ? .9 : .4, tilt: t > SMILE ? .08 * Math.sin((t - SMILE) * 5) : 0, ahoge: 'none', head: ahogeMorph('droop', 'question', aq), lookY: t > SMILE ? -.3 : 0 });
+        sighPuff(H.x - 1.9 * H.s, H.y - 5.3 * H.s, H.s, seg(t, SIGH + .05, SIGH + .6));
       } else {
         const reachL = kf(t, [[SWIV2[1], -1.1], [LAMP_ON - .12, -.5], [LAMP_ON, -.42], [LAMP_ON + .18, -.6], [OPEN[0], .45], [OPEN[0] + .12, .75], [OPEN[1], .2], [OPEN[1] + .3, -.1]]);
         seated(H.x, H.y, { back: true, sx: sxk, aL: reachL, aR: -1.0, ahoge: 'question', sq: Math.sin(t * 2.2) * .015, tilt: -.05, draw: hoodBack });
@@ -641,17 +659,22 @@
       const k = seg(t, HOPQ[0], HOPQ[1]), e = easeInOut(k), [hx, hy] = hoodAt(H.x, H.y, H.s);
       return { x: lerp(base[0] - 10, hx + 1.0 * QS, e), y: lerp(base[1], hy + 4.8 * QS, e) - Math.sin(k * Math.PI) * 260, sq: k < .15 ? .2 : -.2, rot: -k * TAU * .75 - .3, arcK: k };
     }
-    if (t < ZIP[0]) {
-      const k = easeOut(seg(t, TUG[0], TUG[0] + .22)), [hx, hy] = hoodAt(H.x, H.y, H.s, TUGPOSE(k));
-      return { x: hx + (1.3 + 2.4 * k) * QS, y: hy + 5.0 * QS + .3 * QS * k, rot: .55 * k, sq: -.25 * k, grab: true, eyes: 'happy' };
+    if (t < ZIP[1]) {
+      const zk = seg(t, ZIP[0], ZIP[1]), k = easeOut(seg(t, TUG[0], TUG[0] + .22));
+      const P = zk > 0 ? { rot: zk < .5 ? lerp(.72, 1.3, easeOut(zk * 2)) : lerp(1.3, 0, easeIn((zk - .5) * 2)), sq: lerp(-.42, 0, zk), sx: 1.1 } : TUGPOSE(k);
+      const [nx, ny] = bodyPt(H.x, H.y, H.s, .45, -4.45, P);
+      const rot = zk > 0 ? P.rot * .9 : .6 * k, sq = zk > 0 ? -.3 : -.25 * k;
+      const hx = zk > 0 ? nx + Math.sin(P.rot) * 290 : nx + 40 + 150 * k, hy = zk > 0 ? ny - Math.cos(P.rot) * 290 : ny - 20 - 20 * k;
+      const [qx, qy] = qFromHand(hx, hy, QS, rot, sq);
+      return { x: qx, y: qy, rot, sq, grab: true, eyes: 'happy', ...(zk > .9 ? { fade: 1 } : {}) };
     }
-    if (t < ZIP[1]) { const k = seg(t, ZIP[0], ZIP[1]); return { x: H.x + 3.6 * QS + 40 * (1 - k), y: H.y - 2.2 * QS, rot: 1.1, sq: -.3, grab: true, eyes: 'happy' }; }
     // on her: first peeking over her shoulder, then it hops up and sits on her head, beside the ahoge
     const hx = SEAT[0], k = easeInOut(seg(t, SIGH + .02, SIGH + .32));
-    const x = lerp(hx + 2.3 * HS, hx - 1.3 * HS, k), y = lerp(SEAT_Y - 3.4 * HS, SEAT_Y - 9.35 * HS, k) - Math.sin(k * Math.PI) * 90;
+    const x = lerp(hx + .3 * HS, hx - 1.12 * HS, k), y = lerp(SEAT_Y - 11.6 * HS, SEAT_Y - 9.42 * HS, k) - Math.sin(k * Math.PI) * 50;
     const a = t - SIGH - .32, sit = k >= 1 ? .22 * Math.exp(-a * 8) * Math.cos(a * 22) : 0;
-    return { x, y: y + (k >= 1 ? 2 * Math.sin(t * 4) : 0), s: lerp(QS, QS * .74, k), sq: sit, rot: k >= 1 ? .08 * Math.sin(t * 3) - .2 : -.3 + k * 6, eyes: t > SMILE ? 'happy' : 'normal', wave: t > SMILE + .3 && t < SWIV2[0] };
+    return { x, y: y + (k >= 1 ? 2 * Math.sin(t * 4) : 3 * Math.sin(t * 9)), s: lerp(QS, QS * .74, k), sq: sit, rot: k >= 1 ? .08 * Math.sin(t * 3) - .2 : lerp(.1, -.2, k), eyes: t > SMILE ? 'happy' : 'normal', wave: t > SMILE + .3 && t < SWIV2[0] };
   }
+  const qHandPos = q => { const [ox, oy] = qHandOff(q.s || QS, q.rot || 0, q.sq || 0); return [q.x + ox, q.y + oy]; };
   function drawQmark(t, q) {
     if (q.hide) return;
     const s = q.s || QS;

@@ -6,7 +6,7 @@
 // back at the desk she writes one glowing line, waves the 落款 seal off and turns to a fresh blank page.
 (() => {
   const B = n => beatT(n);
-  const PAPER = '#FFF9EE', PAPER_SH = '#DCD3E6', PAPER_DK = '#B9AECB', LINE = '#8FA3C8', MARGIN = '#F2A0B4';
+  const SHEET = '#FFF9EE', SHEET_SH = '#DCD3E6', SHEET_DK = '#B9AECB', RULE = '#8FA3C8', MARGIN = '#F2A0B4';
   const CAPE = '#8FA8D8', CAPE_DK = '#6F86B8', CAPE_STAR = '#FFF1A8';
   const WARM = ['#F7B6C8', '#FFD9A0', '#BFE3D0', '#FFE3B8', '#E3C8F0', '#F9CEDC'];
 
@@ -29,9 +29,9 @@
   function paperPlane(x, y, s, t, o = {}) {
     const P = planeProj(x, y, s, o), sw = clamp(s / 300, .5, 1.6), fl = o.flutter ?? 1;
     const f = k => .035 * fl * Math.sin(t * 13 + k) + .015 * fl * Math.sin(t * 29 + k * 2);
-    const N = [1.08, 0, 0], T = [-1, 0, 0];
-    const wing = sd => [N, [-.35, sd * .36, .04 + f(1) * .3], [-1, sd * .66, .09 + f(sd)], [-1.02, sd * .36, .05 + f(sd + 2)], T];
-    const keel = [N, T, [-1, 0, -.3], [-.4, 0, -.2]];
+    const NOSE = [1.08, 0, 0], TAIL = [-1, 0, 0];
+    const wing = sd => [NOSE, [-.35, sd * .36, .04 + f(1) * .3], [-1, sd * .66, .09 + f(sd)], [-1.02, sd * .36, .05 + f(sd + 2)], TAIL];
+    const keel = [NOSE, TAIL, [-1, 0, -.3], [-.4, 0, -.2]];
     const faces = [
       { k: 'wing', sd: 1, pts: wing(1) }, { k: 'wing', sd: -1, pts: wing(-1) }, { k: 'keel', pts: keel }
     ].map(F => { const pp = F.pts.map(P); return { ...F, pp, d: pp.reduce((a, p) => a + p[2], 0) / pp.length }; });
@@ -46,16 +46,16 @@
       const a = pts[0], b = pts[F.k === 'keel' ? 1 : 4], c = pts[F.k === 'keel' ? 2 : 2];
       const cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
       const top = F.k === 'keel' ? false : (cross * (F.sd || 1)) > 0;
-      const col = F.k === 'keel' ? PAPER_SH : top ? PAPER : mixCol(PAPER_SH, PAPER, .35);
-      paint(pts, { wash: col, fill: top ? '#EFE4D6' : PAPER_DK, fillOp: top ? 70 : 90, bleed: .03, tex: .35, border: .25, ink: PAL.ink, sw: sw * 1.1 });
+      const col = F.k === 'keel' ? SHEET_SH : top ? SHEET : mixCol(SHEET_SH, SHEET, .35);
+      paint(pts, { wash: col, fill: top ? '#EFE4D6' : SHEET_DK, fillOp: top ? 70 : 90, bleed: .03, tex: .35, border: .25, ink: PAL.ink, sw: sw * 1.1 });
       if (F.k === 'wing') {
         // the draft page's ruled lines, a pink margin, a scribble of handwriting and the fold crease, all in the wing plane
-        const sd = F.sd, W = u => .66 * (1 - u) / 2;                                      // half-span at x = u
+        const sd = F.sd, halfSpan = u => .66 * (1 - u) / 2;                               // half-span at x = u
         clipTo(pts, () => {
           for (let i = 0; i < 7; i++) {
-            const u = .78 - i * .27, w = W(u) * 2.02;
+            const u = .78 - i * .27, w = halfSpan(u) * 2.02;
             const p0 = P([u, sd * .02, 0]), p1 = P([u - .12, sd * w, .09 * w / .66]);
-            inkLine([[p0[0], p0[1]], [p1[0], p1[1]]], sw * .7, LINE, 'pencil', 0, .55);
+            inkLine([[p0[0], p0[1]], [p1[0], p1[1]]], sw * .7, RULE, 'pencil', 0, .55);
           }
           const m0 = P([.7, sd * .1, .01]), m1 = P([-1, sd * .18, .02]);
           inkLine([[m0[0], m0[1]], [m1[0], m1[1]]], sw * .6, MARGIN, 'fine', 0, .55);
@@ -135,10 +135,10 @@
     const head = [[.62, 0, 0], [.95, 0, -.08], [.55, 0, -.16]].map(P);
     for (const w of ws) {
       const pts = w.pp.map(p => [p[0], p[1]]);
-      paint(pts, { wash: w.d > 0 ? mixCol(PAPER, PAPER_SH, .6) : PAPER, ink: PAL.ink, sw, curv: .15 });
-      for (let k = 1; k <= 3; k++) { const u = .45 - k * .25, p0 = P([u, 0, 0]), p1 = P([u - .18, w.sd * .85 * ca, .85 * sa]); inkLine([[p0[0], p0[1]], [p1[0], p1[1]]], sw * .6, LINE, 'pencil', 0, .6); }
+      paint(pts, { wash: w.d > 0 ? mixCol(SHEET, SHEET_SH, .6) : SHEET, ink: PAL.ink, sw, curv: .15 });
+      for (let k = 1; k <= 3; k++) { const u = .45 - k * .25, p0 = P([u, 0, 0]), p1 = P([u - .18, w.sd * .85 * ca, .85 * sa]); inkLine([[p0[0], p0[1]], [p1[0], p1[1]]], sw * .6, RULE, 'pencil', 0, .6); }
       if (o.doodle && w.d <= 0) { const c = P([-.1, w.sd * .45 * ca, .45 * sa]); paint(heartPts(c[0], c[1], s * .14), { ink: PAL.rose, sw: sw * .6, br: 'pencil' }); }
-      if (w === ws[0]) paint(head.map(p => [p[0], p[1]]), { wash: PAPER_SH, ink: PAL.ink, sw: sw * .8 });
+      if (w === ws[0]) paint(head.map(p => [p[0], p[1]]), { wash: SHEET_SH, ink: PAL.ink, sw: sw * .8 });
     }
   }
 
@@ -146,14 +146,14 @@
   function paperBoat(x, y, s, t, o = {}) {
     const sw = clamp(s / 90, .4, 1.4), r = o.rot || 0;
     push(); translate(x, y); rotate(r);
-    paint([[-.55 * s, 0], [-.1 * s, -.95 * s], [.35 * s, 0]], { wash: PAPER_SH, fill: PAPER_DK, fillOp: 60, tex: .3, ink: PAL.ink, sw });   // the peak (behind)
+    paint([[-.55 * s, 0], [-.1 * s, -.95 * s], [.35 * s, 0]], { wash: SHEET_SH, fill: SHEET_DK, fillOp: 60, tex: .3, ink: PAL.ink, sw });   // the peak (behind)
     inkLine([[-.1 * s, -.95 * s], [-.1 * s, 0]], sw * .5, PAL.ink, 'fine', 0, .5);
     pop();
     if (o.inside) { push(); translate(x, y); rotate(r); translate(-x, -y); o.inside(); pop(); }
     push(); translate(x, y); rotate(r);
     const hull = [[-1.05 * s, -.18 * s], [1.05 * s, -.18 * s], [.62 * s, .42 * s], [-.62 * s, .42 * s]];
-    paint(hull, { wash: PAPER, fill: '#EFE4D6', fillOp: 70, tex: .3, ink: PAL.ink, sw });
-    for (let k = 0; k < 3; k++) inkLine([[-.8 * s + k * .05 * s, -.05 * s + k * .14 * s], [.8 * s - k * .05 * s, -.05 * s + k * .14 * s]], sw * .6, LINE, 'pencil', 0, .55);
+    paint(hull, { wash: SHEET, fill: '#EFE4D6', fillOp: 70, tex: .3, ink: PAL.ink, sw });
+    for (let k = 0; k < 3; k++) inkLine([[-.8 * s + k * .05 * s, -.05 * s + k * .14 * s], [.8 * s - k * .05 * s, -.05 * s + k * .14 * s]], sw * .6, RULE, 'pencil', 0, .55);
     inkLine([[-1.05 * s, -.18 * s], [-.45 * s, .1 * s], [0, -.18 * s], [.45 * s, .1 * s], [1.05 * s, -.18 * s]], sw * .45, PAL.ink, 'fine', 0, .45);
     pop();
   }
@@ -331,7 +331,7 @@
       inkLine([[960, 902], [960, 960]], .8, PAL.ink, 'fine', 0);
       const flut = seg(t, bPop, B(377.5)) * (1 - seg(t, B(377.5), B(377.5) + .1));
       for (let k = 0; k < 3; k++) { const a = Math.sin(t * 24 + k * 2) * .5 * flut; inkLine([[960, 905], [960 + (140 - k * 30) * Math.cos(a), 905 - (140 - k * 30) * Math.abs(Math.sin(a)) * .4]], .6, PAL.steel, 'fine', 0, .7 * flut); }
-      for (let k = 0; k < 4; k++) inkLine([[810 + k * 10, 915 + k * 11], [950, 915 + k * 11]], .5, LINE, 'pencil', 0, .6);
+      for (let k = 0; k < 4; k++) inkLine([[810 + k * 10, 915 + k * 11], [950, 915 + k * 11]], .5, RULE, 'pencil', 0, .6);
       // 桃桃, small (just out of the screen), napping against the soda can, then hopping with joy
       sodaCan(1420, 935, .9, { drops: .6 });
       const mwake = seg(t, bPop + .1, bPop + .25), mh = mwake > 0 ? Math.abs(Math.sin((t - bPop) * Math.PI / .3)) : 0;
@@ -1025,7 +1025,7 @@
     const letters = Math.max(2, Math.round((x1 - x0) / 26)), n = letters * 9, pts = [];
     for (let i = 0; i <= n * k; i++) {
       const u = i / n, li = Math.floor(u * letters), ph = u * TAU * letters + seed, amp = .7 + .5 * hash(li * 3.1 + seed), asc = hash(li * 7.7 + seed) > .72 ? 1 : 0;
-      pts.push([lerp(x0, x1, u) - 9 * Math.sin(ph), y - 2 + 10 * amp * Math.cos(ph) - asc * 12 * Math.pow(Math.max(0, -Math.cos(ph)), 2)]);
+      pts.push([lerp(x0, x1, u) + 9 * Math.sin(ph), y + 10 * amp * Math.cos(ph) - asc * 14 * Math.pow(Math.max(0, -Math.cos(ph)), 2)]);
     }
     return pts;
   }
@@ -1118,7 +1118,7 @@
     if (t > SEAL_IN) {
       const tremble = rear >= 1 && !sad ? Math.sin(t * 40) * 2 : 0;
       const sx = lerp(1900, 1500, easeOut(sIn)) - easeOut(rear) * 110 * (1 - droop) + tremble, sy = lerp(800, 770, sIn) - hop * 60 - easeOut(rear) * 150 * (1 - droop) + droop * 60;
-      if (rear > 0 && !sad) {                                // where it wants to land: a faint, pulsing 完 at the end of her line
+      if (rear > 0 && t < FLIP0 + .1) {                      // where it wants to land: a faint, pulsing 完 at the end of her line
         paint(ellPts(sx - 20, LINE_Y + 40, 70 * (1 - .3 * rear), 20, 16), { fill: PAL.ink, fillOp: 40 * rear, bleed: .3, ink: null });
         sealPrint(1335, LINE_Y + 8, .5, .3 * rear * (.75 + .25 * Math.sin(t * 14)));
       }
