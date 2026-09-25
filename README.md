@@ -56,3 +56,7 @@ node render.mjs --encode --out=out/pdoom.mp4   # join the frames and the song in
 ```
 
 If Chrome isn't installed at the default Windows path, add `--chrome=<path to chrome>`.
+
+## 还没写完
+
+[`still-writing/`](still-writing/) holds a second music video made the same way, for the song 《还没写完》 by tokeii: a chibi watercolour story about a night-shift creator and the pink-haired mascot she draws. It uses a CPU-friendly Canvas 2D version of the painter, so it renders without a GPU. See [`still-writing/README.md`](still-writing/README.md).
