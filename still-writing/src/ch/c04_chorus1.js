@@ -1015,29 +1015,23 @@
     paint(rectPts(-40, -40, W + 80, H + 80), { grad: [mixCol('#171B3E', '#0E1130', spaceK), mixCol('#34356A', '#1A1C46', spaceK), Math.PI / 2], ink: null });
     starField(t, { x: 0, y: 0, w: W, h: H }, Math.round(40 + 60 * spaceK), { seed: 17, a: .5 + .5 * spaceK });
     if (spaceK > .01) fadeIn(spaceK, () => { for (let i = 0; i < 5; i++) glow(200 + i * 380, 180 + 120 * Math.sin(i * 1.7), 260, ['#6E5BA8', '#3E5A9E', '#8A5A96'][i % 3], .18); });
-    // ---- the planet ----
-    const E = S(0, R7), rs = R7 * Z;
-    if (rs < 4000) {
+    // ---- the planet: one disc at every zoom (360 points keep the rim smooth even at street level) ----
+    const E = S(0, R7), rs = R7 * Z, ground = S(0, 0);
+    if (ground[1] < H + 400) {
+      const pts = []; for (let i = 0; i < 360; i++) { const a = i / 360 * TAU; pts.push([E[0] + Math.cos(a) * rs, E[1] + Math.sin(a) * rs]); }
       glow(E[0], E[1], rs * 1.28, '#7A8CE0', .35 * seg(L, -2.5, -4));
-      const pts = []; for (let i = 0; i < 180; i++) { const a = i / 180 * TAU; pts.push([E[0] + Math.cos(a) * rs, E[1] + Math.sin(a) * rs]); }
       paint(pts, { grad: ['#34488E', '#141B44', th + Math.PI / 2 + .7], ink: null });
       clipTo(pts, () => {
-        // night-side land, soft cloud bands, moonlit rim and the shadowed side
-        const lands = [[-.95, .5, .42], [.4, .55, .34], [2.0, .5, .5], [3.3, .38, .36], [4.5, .6, .4], [5.5, .25, .26]];
+        // her dark home continent (the city stands on it), other lands, soft cloud bands, moonlit rim, shadowed side
+        const cont = []; for (let j = 0; j < 44; j++) { const a = j / 44 * TAU, q = 1 + .12 * Math.sin(a * 3 + 1) + .07 * Math.sin(a * 7 + 2); cont.push(S(Math.cos(a) * .36 * R7 * q, .12 * R7 + Math.sin(a) * .22 * R7 * q)); }
+        paint(cont, { wash: '#1E2650', ink: '#3E5A8C', sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 });
+        const lands = [[-.95, .45, .36], [.5, .5, .3], [2.0, .5, .5], [3.3, .38, .36], [4.5, .55, .4]];
         for (const [a0, rr, sz] of lands) { const bl = []; for (let j = 0; j < 16; j++) { const a = j / 16 * TAU, q = rs * sz * .45 * (1 + .22 * Math.sin(a * 3 + a0 * 5) + .1 * Math.sin(a * 7 + a0)); const cx0 = Math.cos(a0 - Math.PI / 2 + th) * rs * rr, cy0 = Math.sin(a0 - Math.PI / 2 + th) * rs * rr; bl.push([E[0] + cx0 + Math.cos(a) * q, E[1] + cy0 + Math.sin(a) * q * .8]); } paint(bl, { wash: '#2B4A72', washOp: 170, ink: '#3E6290', sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 }); }
         for (let j = 0; j < 5; j++) { const a = -2.4 + j * 1.25 + th + t * .02, d = rs * (.3 + .13 * j); paint(cloudPts(E[0] + Math.cos(a) * d, E[1] + Math.sin(a) * d, rs * (.36 - .03 * j), rs * .045, j + 3, 5), { wash: '#DDE6FF', washOp: 26, ink: null, curv: .5 }); }
         glow(E[0] - rs * .45, E[1] - rs * .5, rs * 1.1, '#9FB4F0', .24);
         glow(E[0] + rs * .62, E[1] + rs * .7, rs * 1.25, '#070A22', .75);
       });
       paint(pts, { ink: '#9FB0F0', sw: clamp(rs / 260, .5, 1.6), br: 'fine' });
-    } else {
-      // close to the ground: only the visible arc, closed far below
-      const ph0 = Math.atan2(C[0], R7 - C[1]), dph = Math.min(Math.PI, 1600 / Z / R7 * 1.4), pts = [];
-      for (let i = 0; i <= 60; i++) { const ph = ph0 - dph + 2 * dph * i / 60; pts.push(S(Math.sin(ph) * R7, R7 - Math.cos(ph) * R7)); }
-      const inner = []; for (let i = 60; i >= 0; i--) { const ph = ph0 - dph + 2 * dph * i / 60; inner.push(S(Math.sin(ph) * (R7 - 60), R7 - Math.cos(ph) * (R7 - 60))); }
-      const far = S(0, R7 * .5);
-      paint([...pts, [far[0] + 5000, far[1] + 5000], [far[0] - 5000, far[1] + 5000]], { wash: '#141836', ink: null });
-      paint([...pts, ...inner], { wash: '#2A2E52', ink: Z > .08 ? PAL.ink : null, sw: 1, br: 'fine' });
     }
     // ---- the dark city ----
     const vis = (x, y, r) => { const p = S(x, y); return p[0] > -r && p[0] < W + r && p[1] > -r && p[1] < H + r; };
@@ -1066,26 +1060,29 @@
         if (f === 7 && c === 0) continue;
         const x = c * 140 - 35, y = -(f + 1) * 110 + 16;
         fillRectA(x, y, 70, 77, '#1B1F42', 1);
-        if (70 * Z > 14) { paint(rectPts(x, y, 70, 77), { ink: '#4A4E80', sw: .5 / Z, br: 'fine' }); fillRectA(x - 6, y + 77, 82, 7, '#474B7C', 1); paint([[x + 8, y + 8], [x + 26, y + 8], [x + 12, y + 50], [x + 4, y + 50]], { wash: '#2C3262', ink: null }); }
+        const dk = seg(70 * Z, 10, 20);
+        if (dk > 0) fadeIn(dk, () => { paint(rectPts(x, y, 70, 77), { ink: '#4A4E80', sw: .5 / Z, br: 'fine' }); fillRectA(x - 6, y + 77, 82, 7, '#474B7C', 1); paint([[x + 8, y + 8], [x + 26, y + 8], [x + 12, y + 50], [x + 4, y + 50]], { wash: '#2C3262', ink: null }); });
       }
       if (Z > .12) { inkLine([[470, 0], [470, -330]], 1.8 / Z * Math.min(1, Z), '#3A3E6C', 'marker', 0); paint(rectPts(462, -350, 40, 22), { wash: '#3A3E6C', ink: null }); }
       pop();
     }
     // ---- her window: the warm room inside (drawn natively), frame, curtains, light ----
     const wpx = WIN7.w * Z, wTL = S(WIN7.x, WIN7.y);
-    if (wpx > 24) {
+    const winK = seg(wpx, 16, 34);
+    if (winK > 0) fadeIn(winK, () => {
       push(); translate(wTL[0], wTL[1]); rotate(th); scale(wpx / NW);
       clipTo(rectPts(0, 0, NW, NH), () => {
         paint(rectPts(-10, -10, NW + 20, NH + 20), { grad: ['#F7C3A6', '#EE9FB0', Math.PI / 2], ink: null });
         glow(160, 120, 520, '#FFE2A8', .6);
         for (let i = 0; i < 7; i++) { const x = 60 + i * 130, y = 90 + 26 * Math.sin(i * 1.3); glow(x, y, 40, ['#FFD98A', '#FFB3C6', '#BFF0E0'][i % 3], .7); dot(x, y, 9, ['#FFE7A8', '#FFC9D8', '#D6FFF2'][i % 3]); }
         inkLine(Array.from({ length: 8 }, (_, i) => [i * 130, 80 + 26 * Math.sin(i * 1.3) - 8]), .8, PAL.ink, 'fine', .5);
-        if (wpx > 120) {
+        const figK = seg(wpx, 70, 130);
+        if (figK > 0) fadeIn(figK, () => {
           const wave = Math.sin(bp * Math.PI), md = mood(t, [[95.4, 'happy', null, 'open'], [96.3, 'sparkle', null, 'smile']]);
           hero(320, 1175, 82, { outfit: 'home', ...md, aR: .2 + .3 * Math.abs(wave), aL: -1.2, lookX: .1, blush: .8, tilt: .06 * wave, noShadow: true });
           cat(535, 994, 30, { pose: 'loaf', eyes: 'happy', noShadow: true, tail: Math.sin(t * 3) * .4 });
           momo(690, 990 + 1.5 * 46, 46, { eyes: 'happy', mouth: 'open', sit: true, walk: t * 1.3, aR: .25 + .35 * Math.abs(Math.sin(bp * Math.PI * 1)), aL: -1.1, tilt: -.1 * wave, blush: 1, noShadow: true });
-        }
+        });
       });
       // curtains, frame and sill
       clipTo(rectPts(0, 0, NW, NH), () => { for (const sd of [-1, 1]) { const x0 = sd < 0 ? -30 : NW + 30, x1 = sd < 0 ? 120 : NW - 120; paint([[x0, -30], [x1, -30], [x1 - sd * 20, 380], [x0 - sd * 40, 560], [x0, 1000]], { wash: '#F29BB8', fill: '#E27A92', fillOp: 70, tex: .3, ink: PAL.ink, sw: 1.2, curv: .35 }); } });
@@ -1093,11 +1090,12 @@
       paint(rectPts(-40, -40, NW + 80, NH + 80), { ink: PAL.ink, sw: 1.6 }); paint(rectPts(0, 0, NW, NH), { ink: PAL.ink, sw: 1.2 });
       paint(rectPts(-70, NH + 10, NW + 140, 44, 2), { wash: '#F8EEDF', fill: '#D9C6AE', fillOp: 80, tex: .3, ink: PAL.ink, sw: 1.3 });
       pop();
-    }
+    });
     // the one warm light in the dark: spill glow, then a tiny pink point
     const wc = S(W7c[0], W7c[1]), gr = Math.max(wpx * 1.4, 26);
     glow(wc[0], wc[1], gr * 1.6, '#FF9FC0', wpx > 200 ? .25 : .55);
-    if (wpx < 30) { glow(wc[0], wc[1], Math.max(10, gr * .45), '#FFE3EE', .9); dot(wc[0], wc[1], Math.max(2.4, wpx * .45), '#FFD2E2', 1); }
+    const dotK = 1 - seg(wpx, 22, 40);
+    if (dotK > 0) { glow(wc[0], wc[1], Math.max(10, gr * .45), '#FFE3EE', .9 * dotK); dot(wc[0], wc[1], Math.max(2.4, wpx * .45), '#FFD2E2', dotK); }
     // 叮: it twinkles on the beat
     const T7 = B(167), tw = seg(t, T7 - .05, T7 + .7);
     if (tw > 0 && tw < 1) {
@@ -1194,9 +1192,26 @@
     const MX8 = lerp(1110, 1200, easeInOut(seg(t, S8T.w0, S8T.w1))), MY8 = 520;
     paint(ellPts(MX8, MY8 + 2, 64 - mh * .3, 16 - mh * .08, 16), { wash: PAL.ink, washOp: 55, ink: null });
     momo(MX8, MY8 - mh, 27, { ...mmd, noShadow: true, blush: 1, lookX: t < S8T.w1 ? .4 : .5, lookY: .6, aL: cheer ? 1.05 + .2 * Math.sin(t * 12) : -.9, aR: cheer ? 1.05 - .2 * Math.sin(t * 12) : -.9 + .4 * Math.abs(Math.sin(bp * Math.PI)) * (t < S8T.w1 ? 1 : 0), sq: cheer ? .08 * pulse(t, 8) : 0, tilt: cheer ? .12 * Math.sin(t * 6) : -.08 });
-    // the jade 完 seal peeks in hopefully from the left, then droops and slides away
-    const peek = smooth01(t, S8T.peek0, S8T.peek0 + .35, S8T.lift + .4, S8T.lift + .9);
-    if (peek > 0) sealStamp(lerp(560, 760, easeOut(peek)), 900, .62, { face: t > S8T.lift ? 'sad' : 'stern', rot: .25 - .1 * peek + (t > S8T.lift ? .15 * Math.sin(t * 3) : 0) });
+    // the jade 完 seal hops in on the beats, hoping to sign the line off; her own seal lands instead, so it wilts and hops away
+    {
+      const hops = [[B(171), 240, 520], [B(171.5), 520, 780], [B(175), 780, 520], [B(175.5), 520, 200]];
+      let jx = 240, jy = 790, jsq = 0, jrot = .1, away = false;
+      for (const [T0, a, b] of hops) {
+        if (t < T0) break;
+        const k = seg(t, T0, T0 + .3); jx = lerp(a, b, k); away = b < a;
+        jy = 790 - Math.sin(k * Math.PI) * 70; jsq = k < 1 ? -.08 : .18 * Math.exp(-(t - T0 - .3) * 12);
+        jrot = (away ? -.18 : .14) * Math.sin(k * Math.PI);
+      }
+      const waiting = t > B(171.5) + .3 && t < B(175);
+      if (waiting) { jsq += .05 * pulse(t, 6); jrot = t < S8T.stamp ? .1 + .04 * Math.sin(t * 5) : -.05; }
+      const sagK = seg(t, S8T.stamp, S8T.stamp + .3);
+      jsq += .1 * sagK * (t < B(175) ? 1 : 0);
+      if (t > B(171) - .1 && t < B(176)) {
+        paint(ellPts(jx, 792, 70, 16, 16), { wash: PAL.ink, washOp: 50, ink: null });
+        sealStamp(jx, jy, .8, { face: t > S8T.stamp ? 'sad' : 'stern', rot: jrot, sq: jsq });
+        if (t > S8T.stamp) emote('sweat', jx + 70, jy - 190, 12, seg(t, S8T.stamp + .1, S8T.stamp + .3) * (1 - seg(t, B(175.5), B(176))));
+      }
+    }
     // her hand: writing with the pencil, then coming back with her own seal to stamp it on the beat
     if (t < S8T.swap0 + .2) {
       const out = easeIn(seg(t, S8T.swap0 - .05, S8T.swap0 + .2)), inn = 1 - easeOut(seg(t, 100.956, S8T.w0));
@@ -1227,10 +1242,6 @@
     flash(.7 * (1 - easeOut(seg(t, 100.956, 101.3))), '#FFE3EE');
   }
 
-  // ======================================================================================
-  // placeholders for the shots still to paint
-  // ======================================================================================
-  const todo = name => (t, lt) => { dreamSky(t, lt * 60); letter(name, 960, 520, 90, PAL.rose, { font: 'kai' }); };
   
 
   chapter('chorus1', 67.356, 105.756, [[67.356, seal], [72.156, noTrade], [76.956, paintCity], [81.756, momoBorn], [86.556, crescent], [90.756, sighPop], [95.556, zoomOut], [100.956, myLine]]);

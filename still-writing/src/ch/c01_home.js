@@ -209,7 +209,7 @@
     const L = 1.2 + lampK * .5;
     if (part === 'wall') {
       const wc = '#2A3050';
-      for (const r of [[-900, -900, 3800, 990], [-900, 88, 1262, 640], [1558, 88, 1400, 640]]) paint(rectPts(...r), { wash: wc, fill: '#353C66', fillOp: 90, bleed: .04, tex: .6, border: 0, ink: null });
+      for (const r of [[-900, -900, 3800, 990], [-900, 88, 1262, 640], [1558, 88, 1400, 640]]) paint(rectPts(...r), { wash: mixCol(wc, '#353C66', .35), tex: .6, ink: null });
       glow(960, 400, 980, '#6E7FC0', .22);
       if (lampK > .01) { glow(300, 560, 760, PAL.lamp, .36 * lampK); glow(360, 700, 420, '#FFD9A0', .25 * lampK); }
       return;
@@ -231,7 +231,7 @@
   function deskSurface(t, cam, lampK) {
     const vm = clamp((1 - cam.m * 1.15) / .42, 0, 1); if (vm < .02) return;       // the part of the desk still in front of the camera
     const q = [deskPt(cam, -900, 0), deskPt(cam, 2800, 0), deskPt(cam, 960 + 1840 * lerp(1, 1.45, vm), vm), deskPt(cam, 960 - 1860 * lerp(1, 1.45, vm), vm)];
-    paint(q, { wash: mixCol('#5E4C48', '#8A6A50', lampK), fill: '#6E5240', fillOp: 90, bleed: .03, tex: .7, border: .2, ink: null });
+    paint(q, { wash: mixCol(mixCol('#5E4C48', '#8A6A50', lampK), '#6E5240', .3), tex: .7, ink: null });
     for (let k = -8; k <= 9; k++) {                                        // plank seams, converging toward the window
       const u = 960 + k * 150, a = deskPt(cam, u, 0), b = deskPt(cam, 960 + (u - 960) * lerp(1, 1.45, vm), vm);
       inkLine([a, b], .7, '#4A3528', 'fine', 0, .6);
@@ -448,10 +448,10 @@
   function corridorBox(t, cz) {
     const { X: cx, Yf, Yc, Zend } = CO, z0 = Math.max(0, cz + .1);
     const Q = (a, b, c, d) => [pj(...a, cz), pj(...b, cz), pj(...c, cz), pj(...d, cz)];
-    paint(Q([-cx, Yc, z0], [cx, Yc, z0], [cx, Yc, Zend], [-cx, Yc, Zend]), { wash: '#D3DDDA', fill: '#BFCCC9', fillOp: 60, bleed: .05, tex: .3, border: .2, ink: null });
-    paint(Q([-cx, Yf, z0], [cx, Yf, z0], [cx, Yf, Zend], [-cx, Yf, Zend]), { wash: '#D6E2DE', fill: '#B7C8C4', fillOp: 60, bleed: .05, tex: .35, border: .2, ink: null });
-    paint(Q([-cx, Yc, z0], [-cx, Yc, Zend], [-cx, Yf, Zend], [-cx, Yf, z0]), { wash: '#E3ECE8', fill: '#C9D6D2', fillOp: 60, bleed: .05, tex: .3, border: .2, ink: null });
-    paint(Q([cx, Yc, z0], [cx, Yc, Zend], [cx, Yf, Zend], [cx, Yf, z0]), { wash: '#F1F5F2', fill: '#D5E0DC', fillOp: 55, bleed: .05, tex: .3, border: .2, ink: null });
+    paint(Q([-cx, Yc, z0], [cx, Yc, z0], [cx, Yc, Zend], [-cx, Yc, Zend]), { wash: mixCol('#D3DDDA', '#BFCCC9', .25), tex: .3, ink: null });
+    paint(Q([-cx, Yf, z0], [cx, Yf, z0], [cx, Yf, Zend], [-cx, Yf, Zend]), { wash: mixCol('#D6E2DE', '#B7C8C4', .25), tex: .35, ink: null });
+    paint(Q([-cx, Yc, z0], [-cx, Yc, Zend], [-cx, Yf, Zend], [-cx, Yf, z0]), { wash: mixCol('#E3ECE8', '#C9D6D2', .25), tex: .3, ink: null });
+    paint(Q([cx, Yc, z0], [cx, Yc, Zend], [cx, Yf, Zend], [cx, Yf, z0]), { wash: mixCol('#F1F5F2', '#D5E0DC', .22), tex: .3, ink: null });
     // end wall with a dark door and a little green exit light
     paint(rectPts(...pj(-cx, Yc, Zend, cz), 2 * cx * CO.f / (Zend - cz), (Yf - Yc) * CO.f / (Zend - cz)), { wash: '#DDE7E3', ink: PAL.ink, sw: .5 });
     const d0 = pj(-.45, -.55, Zend, cz), d1 = pj(.45, Yf, Zend, cz);
@@ -593,12 +593,12 @@
   // deep breath, and drops it into her tote.
   const POP = B(26), CATCH = B(27);
   function officeSheet(t) {
-    paint(rectPts(-200, -200, 2320, 1110), { wash: '#DCE3E6', fill: '#C5CFD4', fillOp: 70, bleed: .04, tex: .5, border: .2, ink: null });
+    paint(rectPts(-200, -200, 2320, 1110), { wash: mixCol('#DCE3E6', '#C5CFD4', .28), tex: .5, ink: null });
     for (let y = 60; y < 900; y += 120) inkLine([[-200, y], [2120, y]], .5, '#B2BEC4', 'fine', 0, .6);
     for (let x = -60; x < 2000; x += 240) inkLine([[x, -200], [x, 900]], .5, '#B2BEC4', 'fine', 0, .5);
     for (const [x0, x1] of [[-100, 420], [1400, 2020]]) for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {    // cold office windows
       const wx = x0 + 40 + c * (x1 - x0 - 60) / 3, wy = 70 + r * 220;
-      paint(rectPts(wx, wy, (x1 - x0 - 60) / 3 - 30, 150), { wash: '#F2FBF8', fill: '#CFE3DE', fillOp: 50, ink: '#8A98A4', sw: .7 });
+      paint(rectPts(wx, wy, (x1 - x0 - 60) / 3 - 30, 150), { wash: mixCol('#F2FBF8', '#CFE3DE', .2), ink: '#8A98A4', sw: .7 });
       fillRectA(wx + 10, wy + 14, (x1 - x0 - 60) / 3 - 50, 6, '#FFFFFF', .9);
     }
     // the entrance: a bright lobby behind glass
@@ -616,7 +616,7 @@
     paint(rectPts(470, 150, 860, 44, 2), { wash: '#A9B6BE', fill: '#8C9AA4', fillOp: 60, tex: .4, ink: PAL.ink, sw: 1 });
     fillRectA(490, 190, 820, 5, '#FFFFFF', .8);
     // the plaza, washed in the lobby's light
-    paint([[-200, 905], [2120, 905], [2120, 1300], [-200, 1300]], { wash: '#C9D3D8', fill: '#AEBBC2', fillOp: 60, tex: .5, ink: PAL.ink, sw: .8 });
+    paint([[-200, 905], [2120, 905], [2120, 1300], [-200, 1300]], { wash: mixCol('#C9D3D8', '#AEBBC2', .25), tex: .5, ink: PAL.ink, sw: .8 });
     for (let k = -6; k < 8; k++) inkLine([[900 + k * 180, 905], [900 + k * 330, 1300]], .5, '#9AA8B0', 'fine', 0, .6);
     paint([[520, 905], [1280, 905], [1500, 1200], [300, 1200]], { fill: '#F2FBF8', fillOp: 80, bleed: .2, tex: .2, border: 0, ink: null });
   }
@@ -643,7 +643,7 @@
     for (let i = 0; i < 11; i++) {
       const bx = -120 + i * 205 + hash(i) * 40, bw = 150 + hash(i * 2.3) * 60, bh = 110 + hash(i * 4.1) * 150;
       const roof = hash(i * 5.5) > .45;
-      paint([[bx, 880], [bx, 880 - bh], ...(roof ? [[bx + bw / 2, 880 - bh - 60]] : []), [bx + bw, 880 - bh], [bx + bw, 880]], { wash: '#2B2D63', fill: '#232657', fillOp: 70, tex: .4, ink: null });
+      paint([[bx, 880], [bx, 880 - bh], ...(roof ? [[bx + bw / 2, 880 - bh - 60]] : []), [bx + bw, 880 - bh], [bx + bw, 880]], { wash: '#292B61', tex: .4, ink: null });
       for (let k = 0; k < 4; k++) if (hash(i * 9 + k) > .45) { const wx = bx + 22 + (k % 2) * (bw - 70), wy = 880 - bh + 30 + Math.floor(k / 2) * 52; const on = seg(t, POP + .6 + hash(i + k) * 1.4, POP + .7 + hash(i + k) * 1.4); if (on > 0) { fillRectA(wx, wy, 26, 20, '#FFD98A', .85 * on); glow(wx + 13, wy + 10, 40, '#FFD98A', .25 * on); } }
     }
     // round trees and warm street lamps
@@ -651,7 +651,7 @@
       paint(rectPts(tx - 8 * ts, 780, 16 * ts, 110), { wash: '#3A2F4E', ink: null });
       paint(cloudPts(tx, 760, 220 * ts, 150 * ts, tx * .1, 7).map(([x, y]) => [x, y + 40 * ts]), { wash: '#2C4A5A', fill: '#1F3848', fillOp: 70, tex: .4, ink: null, curv: .4 });
     }
-    paint([[-200, 880], [2120, 880], [2120, 1300], [-200, 1300]], { wash: '#3A3668', fill: '#2C2A58', fillOp: 70, tex: .5, ink: null });
+    paint([[-200, 880], [2120, 880], [2120, 1300], [-200, 1300]], { wash: '#363263', tex: .5, ink: null });
     for (const [lx, t0] of [[430, B(28)], [1440, B(29)], [2000, B(28) + .3]]) {
       const on = t < t0 ? 0 : clamp(backOut(seg(t, t0, t0 + .25))) * (t - t0 < .2 && Math.sin((t - t0) * 80) > .2 ? .6 : 1);
       inkLine([[lx, 885], [lx, 520], [lx + 30, 490]], 3.4, '#2A2748', 'marker', 0);
@@ -708,9 +708,9 @@
       const flap = gone.map(refl);
       if (flap.length > 2) {
         X.save(); X.setTransform(1, 0, 0, 1, 0, 0);
-        paint(flap.map(([x, y]) => [x + 12, y + 16]), { fill: PAL.ink, fillOp: 90, bleed: .15, tex: .2, border: 0, ink: null });
-        paint(flap, { grad: ['#D9CDBB', '#F7F0E4', Math.atan2(dy, dx)], ink: PAL.ink, sw: 1.2 });
-        paint(flap, { fill: '#C9B8A6', fillOp: 60, bleed: .1, tex: .5, border: .5, ink: null });
+        paint(flap.map(([x, y]) => [x + 12, y + 16]), { wash: PAL.ink, washOp: 45, ink: null });
+        paint(flap.map(([x, y]) => [x + 5, y + 7]), { wash: PAL.ink, washOp: 35, ink: null });
+        paint(flap, { grad: ['#D2C4B1', '#F5EDE0', Math.atan2(dy, dx)], tex: .7, ink: PAL.ink, sw: 1.2 });
         X.restore();
       }
     }
@@ -914,10 +914,10 @@
   }
   function shutterShop(x, w, col, t, awn) {
     const up = mixCol(col, '#3A3668', .35);
-    paint(rectPts(x, 360, w, 190), { wash: up, fill: mixCol(up, PAL.ink, .2), fillOp: 60, tex: .5, ink: PAL.ink, sw: 1 });
+    paint(rectPts(x, 360, w, 190), { wash: mixCol(up, PAL.ink, .05), tex: .5, ink: PAL.ink, sw: 1 });
     paint(rectPts(x - 8, 352, w + 16, 14), { wash: mixCol(up, PAL.ink, .25), ink: PAL.ink, sw: .8 });
-    paint(rectPts(x, 540, w, 345), { wash: col, fill: mixCol(col, PAL.ink, .2), fillOp: 60, tex: .5, ink: PAL.ink, sw: 1 });
-    paint(rectPts(x + 18, 640, w - 36, 245), { wash: '#6E7598', fill: '#5A6186', fillOp: 60, tex: .4, ink: PAL.ink, sw: .8 });
+    paint(rectPts(x, 540, w, 345), { wash: mixCol(col, PAL.ink, .05), tex: .5, ink: PAL.ink, sw: 1 });
+    paint(rectPts(x + 18, 640, w - 36, 245), { wash: mixCol('#6E7598', '#5A6186', .25), tex: .4, ink: PAL.ink, sw: .8 });
     for (let y = 656; y < 880; y += 14) inkLine([[x + 20, y], [x + w - 20, y]], .45, '#4A5070', 'fine', 0, .7);
     paint(rectPts(x + w / 2 - 14, 866, 28, 8), { wash: '#4A5070', ink: null });
     if (awn) { const pts = []; for (let k = 0; k <= 6; k++) pts.push([x - 10 + k * (w + 20) / 6, 600 + (k % 2) * 10]); paint([[x - 10, 572], [x + w + 10, 572], ...pts.reverse()], { wash: awn, fill: mixCol(awn, PAL.ink, .2), fillOp: 50, tex: .4, ink: PAL.ink, sw: .9 }); for (let k = 0; k < 6; k += 2) paint([[x - 10 + k * (w + 20) / 6, 572], [x - 10 + (k + 1) * (w + 20) / 6, 572], [x - 10 + (k + 1) * (w + 20) / 6, 610], [x - 10 + k * (w + 20) / 6, 600]], { wash: PAL.cream, washOp: 150, ink: null }); }
@@ -932,7 +932,7 @@
   }
   function apartment(t) {                                // her building: warm cream walls, a wooden door, her window above
     const d = ST.door;
-    paint(rectPts(d - 250, 250, 500, 640), { wash: '#C9B4A8', fill: '#A8908A', fillOp: 70, bleed: .04, tex: .5, border: .3, ink: PAL.ink, sw: 1.1 });
+    paint(rectPts(d - 250, 250, 500, 640), { wash: mixCol('#C9B4A8', '#A8908A', .28), tex: .5, ink: PAL.ink, sw: 1.1 });
     paint([[d - 275, 250], [d + 275, 250], [d + 250, 215], [d - 250, 215]], { wash: '#8A6A7A', ink: PAL.ink, sw: 1 });
     for (let y = 300; y < 880; y += 34) inkLine([[d - 248, y], [d + 248, y]], .4, '#9E8A84', 'fine', 0, .5);
     // windows: hers is the one above the door
@@ -1025,9 +1025,9 @@
     apartment(t);
     doorway(t);
     // sidewalk and the wet road
-    paint([[-300, 880], [2600, 880], [2600, 915], [-300, 915]], { wash: '#57507E', fill: '#463F6E', fillOp: 70, tex: .5, ink: PAL.ink, sw: .9 });
+    paint([[-300, 880], [2600, 880], [2600, 915], [-300, 915]], { wash: mixCol('#57507E', '#463F6E', .3), tex: .5, ink: PAL.ink, sw: .9 });
     for (let x = -280; x < 2600; x += 90) inkLine([[x, 882], [x - 10, 913]], .5, '#3A3462', 'fine', 0, .7);
-    paint([[-300, 915], [2600, 915], [2600, 1400], [-300, 1400]], { wash: '#232048', fill: '#1A1838', fillOp: 70, tex: .5, ink: PAL.ink, sw: .8 });
+    paint([[-300, 915], [2600, 915], [2600, 1400], [-300, 1400]], { wash: mixCol('#232048', '#1A1838', .3), tex: .5, ink: PAL.ink, sw: .8 });
     paint(rectPts(-300, 915, 2900, 8), { wash: '#6A6294', ink: null });
     for (const [lx, c] of [[ST.post + 44, '#FFD98A'], [1500 + 44, '#FFD98A'], [312, '#CFE8FF'], [ST.door, '#FFD98A']]) { push(); translate(lx, 1000); scale(.35, 1.6); glow(0, 0, 150, c, .3); pop(); }
     for (let i = 0; i < 7; i++) { const px = -100 + i * 420 + hash(i) * 120; paint(ellPts(px, 975 + hash(i * 3) * 50, 110 + hash(i * 5) * 60, 12, 16), { wash: '#3A3668', washOp: 150, ink: null }); }

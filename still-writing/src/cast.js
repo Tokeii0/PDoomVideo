@@ -109,7 +109,7 @@ function chibi(x, y, s, o) {
   pop();
   if (fL) arm(-1, o.aL ?? -1.2, o.handL); if (fR) arm(1, o.aR ?? -1.2, o.handR);    // raised arms that must cover the head
   pop();
-  if (o.emote) emote(o.emote, x + (o.flip ? -1 : 1) * 3.4 * s, y + (o.dy || 0) * s - 10.2 * s, s * .9, o.emoteK ?? 1);
+  if (o.emote) emote(o.emote, x + (o.flip ? -1 : 1) * (o.emoteSide ?? 1) * 3.4 * s, y + (o.dy || 0) * s - 10.2 * s, s * .9, o.emoteK ?? 1);
 }
 
 function outfitDetail(s, sw, o, back) {
@@ -340,7 +340,10 @@ function emote(kind, x, y, s, k = 1) {
   else if (kind === 'spark') { paint(starPts(0, 0, 1.5 * s, .4, 4, 0), { wash: '#FFF3C0', ink: PAL.ink, sw: sw * .5 }); paint(starPts(1.8 * s, 1.1 * s, .7 * s, .4, 4, 0), { wash: PAL.ochre, ink: PAL.ink, sw: sw * .4 }); }
   else if (kind === 'heart') paint(heartPts(0, 0, s * 1.6), { wash: '#EE5A83', ink: PAL.ink, sw: sw * .6 });
   else if (kind === 'anger') for (let i = 0; i < 4; i++) { push(); rotate(i * Math.PI / 2 + Math.PI / 4); inkLine([[.4 * s, -.5 * s], [1.3 * s, -.2 * s], [1.3 * s, .4 * s]], sw * .9, '#D8394E', 'ink', .5); pop(); }
-  else if (kind === 'music') { paint(ellPts(0, 1.2 * s, .7 * s, .5 * s, 12, 0, -.3), { wash: PAL.ink, ink: null }); inkLine([[.6 * s, 1.1 * s], [.6 * s, -1.6 * s], [1.6 * s, -1 * s]], sw * .8, PAL.ink, 'ink', 0); }
+  else if (kind === 'music') {                                            // cream halo first, so the note reads on dark rooms too
+    paint(ellPts(0, 1.2 * s, .95 * s, .75 * s, 12, 0, -.3), { wash: PAL.cream, washOp: 200, ink: null }); inkLine([[.6 * s, 1.1 * s], [.6 * s, -1.6 * s], [1.6 * s, -1 * s]], sw * 2, PAL.cream, 'marker', 0, .8);
+    paint(ellPts(0, 1.2 * s, .7 * s, .5 * s, 12, 0, -.3), { wash: PAL.ink, ink: null }); inkLine([[.6 * s, 1.1 * s], [.6 * s, -1.6 * s], [1.6 * s, -1 * s]], sw * .8, PAL.ink, 'ink', 0);
+  }
   else if (kind === 'swirl') { const sp = []; for (let i = 0; i < 18; i++) { const a = i * .6 + T * 5, r = i * .09 * s; sp.push([Math.cos(a) * r, Math.sin(a) * r]); } inkLine(sp, sw * .7, PAL.violet, 'fine', .6); }
   else if (kind === 'bulb') { glow(0, 0, 2.4 * s, '#FFE59A', .5); paint(ellPts(0, -.3 * s, 1 * s, 1.1 * s, 16), { wash: '#FFE59A', ink: PAL.ink, sw: sw * .6 }); paint(rectPts(-.45 * s, .75 * s, .9 * s, .5 * s), { wash: PAL.gray, ink: PAL.ink, sw: sw * .5 }); }
   else if (kind === 'flower') { for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; paint(ellPts(Math.cos(a) * .7 * s, Math.sin(a) * .7 * s, .55 * s, .55 * s, 10), { wash: PAL.pinkLt, ink: PAL.ink, sw: sw * .4 }); } paint(ellPts(0, 0, .45 * s, .45 * s, 10), { wash: '#F6C85F', ink: null }); }

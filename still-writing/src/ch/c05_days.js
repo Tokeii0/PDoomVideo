@@ -371,8 +371,12 @@
     const P = PIECE[key];
     push(); translate(x, y); rotate(rot); scale(sc); translate(-P.c[0], -P.c[1]);
     if (o.shadow !== false) paint(P.poly.map(p => [p[0] + 7, p[1] + 10]), { wash: INK, washOp: 45, ink: null });
-    paint(P.poly, { wash: '#FFFBF2', fill: '#EFE3CF', fillOp: 45, tex: .3, bleed: .02, ink: null });
-    clipTo(P.poly, () => { sheetArt(o.art); if (o.glow) glow(P.c[0], P.c[1], 260, '#FFE59A', .5 * o.glow); });
+    paint(P.poly, { wash: '#FCF6EA', ink: null });
+    clipTo(P.poly, () => {
+      if (o.cheap) for (let k = 0; k < 5; k++) inkLine([[-120 + k * 50, P.c[1] - 30 + 20 * Math.sin(k)], [-80 + k * 50, P.c[1] + 10 + 15 * Math.cos(k * 2)], [-40 + k * 50, P.c[1] - 10]], 2.4, k % 2 ? PAL.pink : PAL.steel, 'pencil', .5);
+      else sheetArt(o.art);
+      if (o.glow) glow(P.c[0], P.c[1], 260, '#FFE59A', .5 * o.glow);
+    });
     paint(P.poly, { ink: INK, sw: .8 });
     pop();
   }
@@ -382,14 +386,14 @@
   // =====================================================================================
   const BIN = [720, 1002, .82];
   function binBack(x, y, s) {
-    paint(ellPts(x, y + 4, 100 * s, 14 * s, 18), { fill: INK, fillOp: 70, bleed: .2, tex: .2, ink: null });
-    paint(ellPts(x, y - 230 * s, 108 * s, 25 * s, 24), { wash: '#4B4F78', fill: '#34385E', fillOp: 70, ink: INK, sw: 1 });
+    paint(ellPts(x, y + 4, 100 * s, 14 * s, 18), { wash: INK, washOp: 60, ink: null });
+    paint(ellPts(x, y - 230 * s, 108 * s, 25 * s, 24), { wash: '#3E4270', ink: INK, sw: 1 });
   }
   function binFront(x, y, s) {
     const top = y - 230 * s;
     const below = []; for (let i = 0; i <= 14; i++) { const a = i / 14 * Math.PI; below.push([x + Math.cos(a) * 108 * s, top + Math.sin(a) * 25 * s]); }
     const front = [...below, [x - 86 * s, y], [x + 86 * s, y]];
-    paint(front, { wash: '#A9BCE4', fill: '#7F95C8', fillOp: 90, bleed: .04, tex: .5, border: .4, ink: INK, sw: 1.1 });
+    paint(front, { grad: ['#A3B7E0', '#8499CB', 0], ink: INK, sw: 1.1 });
     clipTo(front, () => {
       for (let i = -6; i <= 6; i++) inkLine([[x + i * 22 * s - 30 * s, top], [x + i * 22 * s + 30 * s, y]], .6, '#7385B8', 'fine', 0);
       for (let i = -6; i <= 6; i++) inkLine([[x + i * 22 * s + 30 * s, top], [x + i * 22 * s - 30 * s, y]], .6, '#7385B8', 'fine', 0);
@@ -404,14 +408,14 @@
     const [bx, by, bs] = BIN, top = by - 230 * bs;
     const k1 = easeInOut(seg(t, 115.95, 117.2)), k2 = easeInOut(seg(t, 117.3, 118.8));
     camBegin(lerp(lerp(880, 845, k1), 832, k2), lerp(lerp(800, 768, k1), 755, k2), lerp(lerp(1.48, 1.68, k1), 1.8, k2), lerp(0, -.015, k2));
-    room(t, { lamp: 1, night: 1, rain: .6, clutter: .9, book: 'open', screenOn: .8 });
-    glow(820, 780, 520, PAL.lamp, .28);
+    room(t, { lamp: 1, night: 1, rain: .6, clutter: .5, book: 'open', screenOn: .8 });
+    glow(860, 800, 330, PAL.lamp, .3);
     binBack(bx, by, bs);
     // what's inside: crumpled balls and torn strips that start to glow
     const shine = seg(t, 117.6, 118.2);
     if (shine > 0) { glow(bx, top - 10, 300, '#FFE59A', .6 * shine); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * .38, L = 90 + 50 * shine + 20 * Math.sin(t * 5 + i); inkLine([[bx + Math.cos(a) * 40, top + Math.sin(a) * 10], [bx + Math.cos(a) * L * 1.4, top + Math.sin(a) * L]], 2, '#FFE59A', 'marker', 0, .55 * shine); } }
-    piece('A', bx - 40, top + 8, -.35, .34, { shadow: false, glow: shine });
-    piece('D', bx + 50, top + 4, .4, .3, { shadow: false, glow: shine });
+    piece('A', bx - 40, top + 8, -.35, .34, { shadow: false, glow: shine, cheap: true });
+    piece('D', bx + 50, top + 4, .4, .3, { shadow: false, glow: shine, cheap: true });
     for (const [dx, dy, sc, sd] of [[-70, 10, 1.1, 1], [10, -6, 1.2, 2], [74, 16, 1.0, 3], [-20, 22, 1.1, 4]]) paperBall(bx + dx, top + dy + 16, sc, sd);
     // balls flying out over her shoulder while she digs
     [115.95, 116.25, 116.52].forEach((t0, i) => {
@@ -464,7 +468,8 @@
   }
   function bigHandTop(x, y, rot, o = {}) {       // her hand seen from above, coming in from the lower right with a tape roll
     push(); translate(x, y); rotate(rot);
-    paint([[30, 22], [52, -26], [640, 250], [590, 350]], { wash: PAL.sage, fill: '#7EA78E', fillOp: 60, tex: .4, ink: INK, sw: 1.2 });   // sleeve
+    paint([[30, 22], [52, -26], [640, 250], [590, 350]], { wash: '#A9CFB5', ink: INK, sw: 1.2 });   // sleeve
+    inkLine([[60, 10], [610, 290]], 6, '#8FBA9E', 'marker', 0, .7);
     paint(rrPts(18, -40, 70, 86, 24).map(([a, b]) => [a + b * .4, b]), { wash: mixCol(PAL.sage, PAL.cream, .3), ink: INK, sw: 1.1 });  // cuff
     if (o.roll !== false) { paint(ellPts(-40, -30, 30, 30, 20), { wash: '#F4E6B0', washOp: 220, ink: INK, sw: 1 }); paint(ellPts(-40, -30, 14, 14, 14), { wash: DESK, ink: INK, sw: .8 }); }
     paint(ellPts(0, 0, 46, 42, 22), { wash: SKIN, ink: INK, sw: 1.2 });
@@ -536,12 +541,13 @@
   // =====================================================================================
   const SCR = { x: 100, y: 60, w: 1720, h: 830 };
   function bigMonitor(t, content, bg = '#F7F5EF') {
-    paint(rectPts(-700, -500, W + 1400, H + 1000), { wash: '#262B57', fill: '#1B2147', fillOp: 90, tex: .4, bleed: .03, ink: null });
+    paint(rectPts(-700, -500, W + 1400, H + 1000), { wash: '#232955', ink: null });
     glow(-150, 1000, 900, PAL.lamp, .4);
     glow(SCR.x + SCR.w / 2, SCR.y + SCR.h / 2, 1300, PAL.screen, .22);
     const bz = 36;
     paint([[SCR.x + SCR.w / 2 - 160, SCR.y + SCR.h + 60], [SCR.x + SCR.w / 2 + 160, SCR.y + SCR.h + 60], [SCR.x + SCR.w / 2 + 120, SCR.y + SCR.h + 260], [SCR.x + SCR.w / 2 - 120, SCR.y + SCR.h + 260]], { wash: '#D9CCBA', ink: INK, sw: 1.4 });
-    paint(rrPts(SCR.x - bz, SCR.y - bz, SCR.w + bz * 2, SCR.h + bz * 2 + 34, 40), { wash: '#F1E6D6', fill: '#CDBFAC', fillOp: 80, bleed: .03, tex: .5, border: .4, ink: INK, sw: 1.8 });
+    paint(rrPts(SCR.x - bz, SCR.y - bz, SCR.w + bz * 2, SCR.h + bz * 2 + 34, 40), { wash: '#E6DACA', ink: INK, sw: 1.8 });
+    paint(rrPts(SCR.x - bz + 10, SCR.y - bz + 8, SCR.w + bz * 2 - 20, 22, 11), { wash: '#F6EEE2', washOp: 170, ink: null });
     paint(rrPts(SCR.x, SCR.y, SCR.w, SCR.h, 16), { wash: bg, ink: INK, sw: 1.2 });
     clipTo(rrPts(SCR.x, SCR.y, SCR.w, SCR.h, 16), () => content(SCR));
     paint([[SCR.x + SCR.w * .05, SCR.y + 10], [SCR.x + SCR.w * .13, SCR.y + 10], [SCR.x + SCR.w * .07, SCR.y + SCR.h * .42], [SCR.x + 10, SCR.y + SCR.h * .42]], { wash: '#FFFFFF', washOp: 22, ink: null });
@@ -697,7 +703,7 @@
   const BALLOONS = [['rocket', B(210) - .05, [610, 250], -.18, 1.0], ['arrow', B(210.5) - .05, [990, 205], .1, 1.0], ['crown', B(211) - .05, [1390, 235], -.08, .9], ['globe', B(211.5) - .05, [820, 440], 0, .95]];
   function meetingRoom(t) {
     paint(rectPts(-500, -400, W + 1000, 1300), { grad: ['#E4EAF0', '#C9D3DE', Math.PI / 2], ink: null });
-    paint(rectPts(-500, -400, W + 1000, 1300), { fill: '#AFBCCB', fillOp: 50, bleed: .05, tex: .5, ink: null });
+
     for (const lx of [200, 760, 1320, 1880]) { paint(rrPts(lx - 150, 40, 300, 30, 10), { wash: '#F7FBFF', ink: INK, sw: .8 }); glow(lx, 70, 300, '#EAF6FF', .5); }
     paint(rectPts(1180, 160, 700, 330, 2), { grad: ['#D5DEE8', '#B9C6D4', Math.PI / 2], ink: INK, sw: 1.1 });          // window: a grey day
     clipTo(rectPts(1180, 160, 700, 330), () => { for (let i = 0; i < 8; i++) { const bh = 90 + hash(i * 3.1) * 150; paint(rectPts(1170 + i * 92, 490 - bh, 78, bh + 10), { wash: '#A7B3C3', ink: null }); for (let r2 = 0; r2 < 4; r2++) fillRectA(1182 + i * 92, 500 - bh + r2 * 30, 50, 10, '#C9D3DE', .8); } });
@@ -707,7 +713,7 @@
     inkLine([[160, 540], [320, 470], [430, 500], [560, 360], [700, 250]], 2, '#4F8FD6', 'marker', .3);
     inkLine([[700, 250], [660, 262]], 2, '#4F8FD6', 'marker', 0); inkLine([[700, 250], [694, 292]], 2, '#4F8FD6', 'marker', 0);
     inkLine([[160, 250], [160, 550], [760, 550]], 1.2, INK, 'fine', 0);
-    paint([[-500, 900], [W + 500, 900], [W + 500, 1500], [-500, 1500]], { wash: '#A9B4C4', fill: '#8E9AAE', fillOp: 60, tex: .5, ink: INK, sw: 1 });
+    paint([[-500, 900], [W + 500, 900], [W + 500, 1500], [-500, 1500]], { wash: '#A3AEC0', ink: INK, sw: 1 });
   }
   function bigTalk(t, lt, dur) {
     const pan = easeInOut(seg(t, B(211.3), B(212) + .08));
@@ -727,7 +733,7 @@
       balloonShape(kind, p[0], p[1] + jig, sc * lerp(.12, 1, inf) * (1 + .05 * Math.sin(t * 5 + t0)), rot + Math.sin(t * 2 + t0) * .05);
     }
     // the sleepers: heads down on folded arms along the table
-    paint([[740, 792], [W + 400, 792], [W + 400, 850], [740, 850]], { wash: '#E3E8EF', fill: '#C3CCD8', fillOp: 60, tex: .4, ink: INK, sw: 1.2 });     // table top
+    paint([[740, 792], [W + 400, 792], [W + 400, 850], [740, 850]], { wash: '#DCE2EA', ink: INK, sw: 1.2 });     // table top
     const sleepers = [[890, 2, .95, '#E8B86B'], [1180, 4, -.9, '#9CC9A0']];
     sleepers.forEach(([sx, seed, tl, c], i) => {
       paint(rrPts(sx - 20 * Math.sign(tl) - 105, 772, 210, 44, 22), { wash: c, ink: INK, sw: .9 });                                   // folded arms
@@ -743,7 +749,7 @@
     const md = mood(t, [[126, 'tired', null, 'flat'], [B(212) - .05, 'closed', null, 'yawn'], [B(212) + .55, 'tired', null, 'flat']]);
     hero(1560, 968, 38, { sit: true, outfit: 'office', noShadow: true, ...md, tears: yk * .7, aR: lerp(-1.1, .42, yk), aL: lerp(-1.0, .42, yk), sq: -.08 * yk, dy: -.25 * yk, tilt: -.14 * yk, ahoge: 'droop', blush: .3 });
     if (yk > .3) for (let i = 0; i < 3; i++) inkLine([[1560 - 150 - i * 20, 700 - 40 + i * 40], [1560 - 185 - i * 26, 700 - 55 + i * 42]], 1.2, INK, 'ink', 0, (yk - .3) * 1.4);
-    paint([[740, 850], [W + 400, 850], [W + 400, 1500], [740, 1500]], { wash: '#B9C3D0', fill: '#97A3B6', fillOp: 60, tex: .4, ink: INK, sw: 1.2 });
+    paint([[740, 850], [W + 400, 850], [W + 400, 1500], [740, 1500]], { grad: ['#B3BECC', '#98A4B7', Math.PI / 2], ink: INK, sw: 1.2 });
     camEnd();
     grade(.12, 'color', '#7F9CC0');
   }
@@ -789,7 +795,8 @@
   }
   function bigHandFront(x, y, rot) {             // her hand in front of the screen, holding a tiny brush (screen space)
     push(); translate(x, y); rotate(rot);
-    paint([[40, 60], [120, -40], [900, 500], [700, 700]], { wash: PAL.sage, fill: '#7EA78E', fillOp: 60, tex: .4, ink: INK, sw: 1.8 });
+    paint([[40, 60], [120, -40], [900, 500], [700, 700]], { wash: '#A9CFB5', ink: INK, sw: 1.8 });
+    inkLine([[100, 40], [820, 560]], 9, '#8FBA9E', 'marker', 0, .7);
     paint(rrPts(30, -60, 120, 150, 40).map(([a, b]) => [a + b * .5, b]), { wash: mixCol(PAL.sage, PAL.cream, .3), ink: INK, sw: 1.6 });
     // the brush: handle, ferrule, soft pink tip (tip at local (-205, -150))
     inkLine([[-40, -30], [-150, -110]], 8, INK, 'marker', 0); inkLine([[-40, -30], [-150, -110]], 5.5, '#F6C85F', 'marker', 0);
@@ -845,7 +852,7 @@
     glow(1700, 700, 700, '#FFD9A0', .45);
     nightCity(t, { x0: 1180, x1: 2600, y: 860, color: .75, lit: .6 });
     // the café facade
-    paint(rectPts(-300, 90, 1400, 810), { wash: '#F2E2CC', fill: '#D9C0A0', fillOp: 70, tex: .6, ink: INK, sw: 1.3 });
+    paint(rectPts(-300, 90, 1400, 810), { grad: ['#F4E6D2', '#E6D0B2', Math.PI / 2], ink: INK, sw: 1.3 });
     for (let i = 0; i < 11; i++) paint([[-260 + i * 120, 150], [-140 + i * 120, 150], [-150 + i * 120, 250], [-250 + i * 120, 250]], { wash: i % 2 ? '#F7F0E6' : '#EE8A8A', ink: INK, sw: .9 });   // awning
     for (let i = 0; i < 11; i++) paint(ellPts(-200 + i * 120, 252, 60, 16, 12, 0).filter(p => p[1] >= 252), { wash: i % 2 ? '#F7F0E6' : '#EE8A8A', ink: INK, sw: .8 });
     const win = { x: 80, y: 300, w: 900, h: 470 };
@@ -853,7 +860,7 @@
     clipTo(rectPts(win.x, win.y, win.w, win.h), () => {
       paint(rectPts(win.x, win.y, win.w, win.h), { grad: ['#FFE3B8', '#F2B98A', Math.PI / 2], ink: null });
       for (const lx of [230, 810]) { inkLine([[lx, win.y], [lx, win.y + 70]], .8, INK, 'fine', 0); paint([[lx - 34, win.y + 100], [lx + 34, win.y + 100], [lx + 18, win.y + 70], [lx - 18, win.y + 70]], { wash: '#E8A038', ink: INK, sw: .8 }); glow(lx, win.y + 120, 150, '#FFE3A0', .6); }
-      paint(rectPts(win.x, win.y + 330, win.w, 140), { wash: '#C98E5E', fill: '#A8703E', fillOp: 60, tex: .5, ink: INK, sw: .9 });   // counter
+      paint(rectPts(win.x, win.y + 330, win.w, 140), { wash: '#BF8656', ink: INK, sw: .9 });   // counter
       for (const [px2, s2] of [[150, 1], [890, .9]]) plant(px2, win.y + 330, s2, t);
     });
     return win;
@@ -891,7 +898,7 @@
       heart(p[0], p[1], 46 * hk * (1 + .1 * Math.sin(t * 20)), '#EE5A83');
     }
     // her on the pavement
-    paint([[-600, 860], [3000, 860], [3000, 1500], [-600, 1500]], { wash: '#CDB7A8', fill: '#A89080', fillOp: 60, tex: .6, ink: INK, sw: 1.1 });
+    paint([[-600, 860], [3000, 860], [3000, 1500], [-600, 1500]], { grad: ['#C9B2A2', '#B39C8C', Math.PI / 2], ink: INK, sw: 1.1 });
     for (let i = 0; i < 18; i++) inkLine([[-300 + i * 170, 862], [-420 + i * 190, 1500]], .5, '#A89080', 'fine', 0);
     inkLine([[1180, 860], [1180, 380]], 5, '#5E6784', 'marker', 0); paint(ellPts(1180, 370, 36, 22, 14), { wash: '#FFE3A0', ink: INK, sw: 1 }); glow(1180, 380, 180, '#FFE3A0', .5);
     const got = t > B(219.35), jump = seg(t, B(220), B(220) + .5), jk = Math.sin(jump * Math.PI);
@@ -955,7 +962,8 @@
     const ho = { sit: true, noShadow: true, outfit: 'home', ...md, aL: -1.8, aR: -1.8, draw: holdMug('#F7B6C8'), blush: .6 + .4 * melt, sq: .1 * melt + jelly + .015 * Math.sin(t * 2.2), dy: .16 * melt, tilt: .06 * Math.sin(t * .9) - .08 * melt, ahoge: melt > .35 ? 'heart' : 'normal' };
     hero(hx, hy, s, ho);
     light(hx, hy - 380, 460, PAL.lamp, .22);
-    paint([[-300, 842], [W + 300, 842], [W + 300, 1500], [-300, 1500]], { wash: DESK, fill: DESK_DK, fillOp: 70, bleed: .04, tex: .6, border: .4, ink: INK, sw: 1.4 });
+    paint([[-300, 842], [W + 300, 842], [W + 300, 1500], [-300, 1500]], { grad: [DESK, mixCol(DESK, DESK_DK, .45), Math.PI / 2], ink: INK, sw: 1.4 });
+    inkLine([[-300, 866], [W + 300, 866]], .7, DESK_DK, 'fine', 0);
     const cup = bodyPt(hx, hy, s, ho, 0, -2.85 * s);
     camEnd();
     // steam threads and pictures (screen space, re-applying the camera inside the layers)

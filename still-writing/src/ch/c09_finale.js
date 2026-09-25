@@ -135,9 +135,9 @@
     const head = [[.62, 0, 0], [.95, 0, -.08], [.55, 0, -.16]].map(P);
     for (const w of ws) {
       const pts = w.pp.map(p => [p[0], p[1]]);
-      paint(pts, { wash: w.d > 0 ? mixCol(SHEET, SHEET_SH, .6) : SHEET, ink: PAL.ink, sw, curv: .15 });
-      for (let k = 1; k <= 3; k++) { const u = .45 - k * .25, p0 = P([u, 0, 0]), p1 = P([u - .18, w.sd * .85 * ca, .85 * sa]); inkLine([[p0[0], p0[1]], [p1[0], p1[1]]], sw * .6, RULE, 'pencil', 0, .6); }
-      if (o.doodle && w.d <= 0) { const c = P([-.1, w.sd * .45 * ca, .45 * sa]); paint(heartPts(c[0], c[1], s * .14), { ink: PAL.rose, sw: sw * .6, br: 'pencil' }); }
+      paint(pts, { wash: w.d > 0 ? mixCol(SHEET, SHEET_SH, .6) : SHEET, ink: PAL.ink, sw });
+      for (let k = 1; k <= 2; k++) { const u = .5 - k * .33, p0 = P([u, 0, 0]), p1 = P([u - .18, w.sd * .85 * ca, .85 * sa]); inkLine([[p0[0], p0[1]], [p1[0], p1[1]]], sw * .5, RULE, 'fine', 0, .7); }
+      if (o.doodle && w.d <= 0) { const c = P([-.1, w.sd * .45 * ca, .45 * sa]); paint(heartPts(c[0], c[1], s * .14, 14), { ink: PAL.rose, sw: sw * .6, br: 'fine' }); }
       if (w === ws[0]) paint(head.map(p => [p[0], p[1]]), { wash: SHEET_SH, ink: PAL.ink, sw: sw * .8 });
     }
   }
@@ -1148,6 +1148,7 @@
     camEnd();
   }
 
+  globalThis.__c09dbg = { wakeA, wakeB, wakeBirds, windowsGlow, blankPage };   // DEBUG (remove)
   chapter('finale', 225.756, 264.5, [[225.756, wakeFly], [230.556, parade], [235.356, paintRoofs], [240.156, windowsGlow],
     [244.956, moon], [249.156, cottonClouds], [253.956, earthLights], [259.356, blankPage]]);
   transition(225.756, 'white', .5);

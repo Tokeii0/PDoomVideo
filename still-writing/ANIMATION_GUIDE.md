@@ -113,6 +113,7 @@ the frame to show only the head and shoulders).
   the arm) for holding pencils, cans, cups; `head(s, sw)` in head-local space (head centre 0,0; the face spans about ±2.5s).
   `armFront: 'L' | 'R' | 'both'` paints that arm (and what it holds) over the head, for raised hands and props.
 - **Emote:** `emote` + `emoteK`: sweat, spark, heart, anger, music, swirl, zzz, bulb, flower, !, ?, !?, !!, … .
+  `emoteSide: -1` pops it on the left (when someone stands on her right).
 - **Mood changes:** never snap between faces. Use `mood(t, [[t0, 'normal'], [t1, 'sparkle', 'spark', 'open'], ...])`
   (eyes, emote, mouth); spread the result into the options for a blink-squash-and-pop change.
 - **Motion:** `move(style, t, seed)` returns beat-synced pose offsets: idle, breathe, sway, bounce, hop, cheer, walk, run,
@@ -173,6 +174,8 @@ closed, happy, wide; `look`, `flip`, `tail` (phase), `dy`, `sq`, `rot`. About 5s
 - **Text-light:** no captions, no labels, no signs that repeat the lyric. A handful of sound effects in the whole video.
 - **Performance:** aim for ≤ 400 ms per frame (the sheet prints ms/frame; the first frame of a run includes warm-up).
   Hundreds of shapes are fine; thousands of watercolour `fill`s are not. Prefer `glow`/`dot`/`bokeh` for many small lights.
+  A textured `fill`/`tex` on a full-screen background costs ~90 ms under a zoomed camera, while a plain `wash` or `grad`
+  is nearly free; canvas `filter: blur()` costs ~40 ms per shape. Use layered gradient shapes for soft beams instead.
 
 ## Checking your work
 

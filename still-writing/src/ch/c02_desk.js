@@ -403,6 +403,7 @@
     paint(L, { wash: PG, ink: PAL.ink, sw: .9 });
     inkLine([[cx - hw * .7, y - 9], [cx - hw * .3, y - 12]], .5, PAL.steel, 'pencil', 0);
     if (o.glow) light(cx - hw * .45, y - 20, 90 + 40 * o.glow, '#FFE3A0', .5 * o.glow);
+    if (o.pageGlow && th < Math.PI / 2) { const c0 = Math.cos(th); light(cx + hw * .5 * c0, y - 16 - hw * .5 * Math.sin(th), 70, '#FFE3A0', .45 * o.pageGlow); dot(cx + hw * .5 * c0, y - 12 - hw * .45 * Math.sin(th), 3, '#FFF1C2', .8 * o.pageGlow); }
     if (th >= Math.PI - .005) {                                            // closed: page edge + the top cover with its star
       paint(dn(L, 1), { wash: PG, ink: PAL.ink, sw: .5 });
       paint(dn(L, -3), { wash: BL_LT, fill: BL, fillOp: 80, tex: .5, ink: PAL.ink, sw: .9 });
@@ -411,9 +412,13 @@
     }
     const c = Math.cos(th), sn = Math.sin(th);
     const Q = [[cx, y - 1], [cx + hw * c, y - 1 - hw * sn], [cx + (hw - 26) * c, y - h - 1 - hw * .92 * sn], [cx, y - h - 1]];
-    if (o.leak && th > Math.PI / 2) {                                      // light spilling out of the gap
-      paint([[cx, y - 2], [cx + hw * c, y - 1 - hw * sn], [cx + (hw - 26) * c, y - h - 1 - hw * .92 * sn], [cx - hw + 26, y - h], [cx - hw, y]], { fill: o.leakCol || '#FFE3A0', fillOp: 120 * o.leak, bleed: .2, tex: .1, border: 0, ink: null });
-      light(cx - hw * .5, y - 30, 160, o.leakCol || '#FFE3A0', .45 * o.leak);
+    if (o.leak && th > Math.PI / 2) {                                      // light spilling out of the gap: rays and drifting motes
+      const lc = o.leakCol || '#FFE3A0';
+      paint([[cx, y - 2], [cx + hw * c, y - 1 - hw * sn], [cx + (hw - 26) * c, y - h - 1 - hw * .92 * sn], [cx - hw + 26, y - h], [cx - hw, y]], { fill: lc, fillOp: 130 * o.leak, bleed: .2, tex: .1, border: 0, ink: null });
+      light(cx - hw * .5, y - 30, 190, lc, .55 * o.leak);
+      light(cx - hw * .6, y - 50, 110, '#D9C8FF', .35 * o.leak);
+      for (let i = 0; i < 7; i++) { const a = -Math.PI * (.55 + .5 * (i / 6)) + .06 * Math.sin(T * 3 + i), L = (80 + 60 * hash(i)) * o.leak; inkLine([[cx - hw * .45, y - 8], [cx - hw * .45 + Math.cos(a) * L, y - 8 + Math.sin(a) * L]], 1.2, i % 2 ? lc : '#E3D6FF', 'fine', 0, .5 * o.leak); }
+      for (let i = 0; i < 6; i++) { const ph = frac(T * .8 + hash(i + 7)), mx = cx - hw * .6 + (hash(i) - .5) * 90 + Math.sin(ph * 6 + i) * 8; dot(mx, y - 14 - ph * 110, 2.2, i % 2 ? '#FFF1C2' : '#E9DDFF', Math.sin(ph * Math.PI) * o.leak); }
     }
     const up = th < Math.PI / 2;
     paint(Q, { wash: up ? PG : BL_LT, fill: up ? '#EFE6D6' : BL, fillOp: up ? 40 : 80, tex: .4, ink: PAL.ink, sw: .9 });
@@ -491,7 +496,7 @@
     // the book: open → the right half flips over → SNAP
     const th = t < SNAP ? Math.PI * easeIn(seg(t, SNAP - .42, SNAP)) : Math.PI;
     lampCord(t > CLICK - .05 && t < CLICK + .12 ? 1 : 0, 1 - off, Math.exp(-Math.max(0, t - CLICK) * 4) * Math.sin(Math.max(0, t - CLICK) * 18) * (t > CLICK ? 1 : 0));
-    deskBook(th, { glow: t > SNAP ? .8 * Math.exp(-(t - SNAP) * 5) : 0 });
+    deskBook(th, { glow: t > SNAP ? 1.1 * Math.exp(-(t - SNAP) * 5) : 0, pageGlow: .6 + .25 * Math.sin(t * 3) });
     if (t > SNAP && t < SNAP + .9) {                                      // puff of eraser crumbs + dust
       const a = t - SNAP;
       for (let i = 0; i < 7; i++) {
@@ -545,7 +550,7 @@
   const DISS = [B(78) + .3, B(79) - .04];                 // dissolve into the top-down page (before chapter 3's page turn)
   const QS = 14, QCOL = '#9A84DA';                       // the question mark's size and colour (lighter to read in the dark)
   // in this shot she has padded on towards bed (over by 团子's cushion), slow and sleepy
-  const qWalk = t => { const a = Math.max(0, t - 43.2); return [590 - 55 * a, 1012 + a * 10, 35 + a * .4]; };
+  const qWalk = t => { const a = Math.max(0, t - 43.2); return [560 - 33 * a, 1012 + a * 8, 35 + a * .3]; };
   const PLANT = qWalk(TUG[0]);                           // where she is when the question mark catches her
   // a body-local point of a hero drawn with (rot, sq, sx) → world (mirrors the chibi transform)
   const bodyPt = (x, y, s, px, py, o = {}) => {
@@ -595,9 +600,10 @@
     // camera: close on the book, pull back to find her, follow her back to the chair, then push in over her shoulder
     const push = easeIn(seg(t, B(78) - .12, DISS[1] + .02));
     const z = kf(t, [[43.3, 2.5], [44.25, 2.4], [44.95, 1.16], [45.35, 1.16], [45.95, 1.42], [46.9, 1.46]], easeInOut) * (1 + 4.2 * push);
-    const cx = lerp(kf(t, [[43.3, 1010], [44.25, 1000], [44.95, 820], [45.35, 820], [45.95, 1090], [46.9, 1080]], easeInOut), 960, easeOut(push * 1.5));
+    const cx = lerp(kf(t, [[43.3, 1040], [44.25, 1025], [44.95, 820], [45.35, 820], [45.95, 1090], [46.9, 1080]], easeInOut), 960, easeOut(push * 1.5));
     const cy = lerp(kf(t, [[43.3, 660], [44.25, 660], [44.95, 680], [45.35, 680], [45.95, 700], [46.9, 700]], easeInOut), 694, easeOut(push * 1.5));
-    camBegin(cx, cy, z, 0);
+    const [bx, by] = t > ZIP[1] ? shakeXY(t, 9 * Math.exp(-(t - ZIP[1]) * 9)) : [0, 0];
+    camBegin(cx + bx, cy + by, z, 0);
     nightRoom(t, { lamp: on, dark: .06 + .44 * dark });
     const H = qHero(t);
     // 团子 on the cushion opens one eye at the commotion
