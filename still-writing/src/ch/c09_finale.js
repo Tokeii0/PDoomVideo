@@ -1020,6 +1020,15 @@
     for (let i = 0; i <= n * k; i++) { const u = i / n, x = lerp(x0, x1, u); pts.push([x + Math.sin(u * 60 + seed) * 5, y + Math.sin(u * 47 + seed * 2) * 9 * (.6 + .4 * Math.sin(u * 13 + seed)) - (hash(Math.floor(u * 9) + seed) > .8 ? 8 : 0)]); }
     return pts;
   }
+  // looping cursive (a prolate cycloid with letter-sized loops and the odd ascender), drawn to fraction k
+  function cursive(x0, x1, y, seed, k = 1) {
+    const letters = Math.max(2, Math.round((x1 - x0) / 26)), n = letters * 9, pts = [];
+    for (let i = 0; i <= n * k; i++) {
+      const u = i / n, li = Math.floor(u * letters), ph = u * TAU * letters + seed, amp = .7 + .5 * hash(li * 3.1 + seed), asc = hash(li * 7.7 + seed) > .72 ? 1 : 0;
+      pts.push([lerp(x0, x1, u) - 9 * Math.sin(ph), y - 2 + 10 * amp * Math.cos(ph) - asc * 12 * Math.pow(Math.max(0, -Math.cos(ph)), 2)]);
+    }
+    return pts;
+  }
   function pageLeft(r, t) {                                   // her drawing of tonight, in pencil with a touch of colour
     sketch(.72, () => {
       moonFace(r.x + 330, r.y + 150, 70, { rot: 1.2 });
@@ -1033,13 +1042,13 @@
   function pageRight(r, t, withNew = true) {                // her handwriting, and the new glowing line
     for (let row = 0; row < 7; row++) inkLine(scribble(r.x + 40, r.x + r.w - 40 - (row === 6 ? 120 : hash(row) * 60), r.y + 60 + row * 62, row * 3.7), .9, '#6E7896', 'pencil', .4, .85);
     if (!withNew) return;
-    const k = seg(t, WR0, WR1), pts = scribble(r.x + 40, r.x + r.w - 50, LINE_Y, 9.1, k);
+    const k = seg(t, WR0, WR1), pts = cursive(r.x + 40, r.x + r.w - 50, LINE_Y, 9.1, k);
     const lit = seg(t, WR1, WR1 + .3);
     if (pts.length > 1) {
       glow(lerp(r.x + 40, pts[pts.length - 1][0], .5), LINE_Y, 200 + 140 * lit, '#FFE3A0', .3 + .3 * lit);
       const tipP = pts[pts.length - 1]; if (lit <= 0) glow(tipP[0], tipP[1], 50, '#FFF3C0', .8);
-      inkLine(pts, 3.4, '#E8A030', 'ink', .4, 1);
-      inkLine(pts, 1.4, '#FFF6D0', 'fine', .4, .95);
+      inkLine(pts, 3.0, '#E8A030', 'ink', .3, 1);
+      inkLine(pts, 1.2, '#FFF6D0', 'fine', .3, .95);
     }
     if (lit > 0) { light(r.x + r.w / 2, LINE_Y, 300, '#FFE3A0', .35 * lit * (1 - .5 * seg(t, WR1 + .3, WR1 + 1.2))); for (let i = 0; i < 6; i++) sparkle(r.x + 60 + i * 70, LINE_Y - 20 + Math.sin(i * 2) * 14, 12, '#FFF3C0', frac(t * .8 + i / 6)); }
   }
@@ -1097,7 +1106,7 @@
       if (c > .08) clipTo(quad, () => { push(); translate(960, 540); scale(c, grow); translate(-960, -540); pageRight(R, t); pop(); });
     }
     // her hand: writing the line, then lifting the page corner and turning it
-    const k = seg(t, WR0, WR1), pts = scribble(1010, 1380, LINE_Y, 9.1, Math.max(.02, k)), tip = pts[pts.length - 1];
+    const k = seg(t, WR0, WR1), pts = cursive(1010, 1380, LINE_Y, 9.1, Math.max(.02, k)), tip = pts[pts.length - 1];
     let hx = tip[0], hy = tip[1], hl = 0;
     if (t > WR1) { const a = seg(t, WR1, WR1 + .5); hx = lerp(tip[0], 1250, ease(a)); hy = lerp(tip[1], 890, ease(a)); hl = 20 * Math.sin(a * Math.PI); }
     if (flipping) { const c = Math.cos(flip * Math.PI); hx = 960 + 480 * c + 30; hy = lerp(700, 640, Math.sin(flip * Math.PI)); hl = 40 * Math.sin(flip * Math.PI); }
@@ -1109,7 +1118,10 @@
     if (t > SEAL_IN) {
       const tremble = rear >= 1 && !sad ? Math.sin(t * 40) * 2 : 0;
       const sx = lerp(1900, 1500, easeOut(sIn)) - easeOut(rear) * 110 * (1 - droop) + tremble, sy = lerp(800, 770, sIn) - hop * 60 - easeOut(rear) * 150 * (1 - droop) + droop * 60;
-      if (rear > 0 && !sad) paint(ellPts(sx - 20, LINE_Y + 40, 70 * (1 - .3 * rear), 20, 16), { fill: PAL.ink, fillOp: 40 * rear, bleed: .3, ink: null });
+      if (rear > 0 && !sad) {                                // where it wants to land: a faint, pulsing 完 at the end of her line
+        paint(ellPts(sx - 20, LINE_Y + 40, 70 * (1 - .3 * rear), 20, 16), { fill: PAL.ink, fillOp: 40 * rear, bleed: .3, ink: null });
+        sealPrint(1335, LINE_Y + 8, .5, .3 * rear * (.75 + .25 * Math.sin(t * 14)));
+      }
       sealStamp(sx, sy, .8, { face: sad ? 'sad' : 'stern', rot: lerp(0, -.42, easeOut(rear)) * (1 - droop) + Math.sin(t * 20) * .03 * (1 - sIn), sq: sIn < 1 ? (1 - hop) * .14 : rear < 1 ? -.1 * Math.sin(rear * Math.PI) : .04 * Math.sin(t * 6) + droop * .18 });
       if (sad && droop >= 1) emote('sweat', sx + 80, sy - 230, 16, seg(t, FLIP0 + .6, FLIP0 + .9));
     }
