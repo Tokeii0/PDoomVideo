@@ -202,8 +202,8 @@
       // swg flares it out sideways like a pair of wings (the ends lift, the middle sags behind her)
       hem.push([x + v * lerp(lerp(2.1, 3.1, lift), 6.4, swg) * s + w * 1.6 * s * (1 - Math.abs(v) * .3), hemY + fl - w * v * .9 * s - Math.cos(v * 1.5) * .25 * s - swg * (Math.pow(Math.abs(v), 1.5) * 3.2 - 1.2) * s]);
     }
-    const sh = swg * 1.2 * s;                                            // with the flare the top corners reach out along the arms
-    const pts = [[x - 1.0 * s, top], [x + 1.0 * s, top], [x + 1.35 * s + w * .3 * s + sh * 2.2, top + 1.2 * s - sh * 1.4], ...hem.slice().reverse(), [x - 1.35 * s + w * .3 * s - sh * 2.2, top + 1.2 * s - sh * 1.4]];
+    const sh = swg * 1.2 * s;                                            // with the flare the top corners ride out along her arms to her hands
+    const pts = [[x - 1.0 * s, top], [x + 1.0 * s, top], [x + 1.35 * s + w * .3 * s + sh * 1.45, top + 1.2 * s - sh * .75], ...hem.slice().reverse(), [x - 1.35 * s + w * .3 * s - sh * 1.45, top + 1.2 * s - sh * .75]];
     paint(pts, { wash: o.col || CAPE, fill: o.dk || CAPE_DK, fillOp: back ? 70 : 100, bleed: .05, tex: .45, border: .35, ink: PAL.ink, sw: sw * .85, curv: .3 });
     for (let i = 0; i < 7; i++) {
       const u = hash(i * 3.7 + 1), v = .25 + hash(i * 5.3 + 2) * .65, hp = hem[Math.round(u * n)];
@@ -298,7 +298,8 @@
     const breathe = pop > 0 ? 0 : Math.sin(t * 2.3) * .06;
     const dy = lerp(1.95, -.6, backOut(pop)) - stand * .5 + breathe;
     const md = mood(t, [[W0 - 3, 'closed'], [bPop, 'star', 'spark', 'O']]), lookUp = seg(t, B(377.5), B(377.5) + .2) * (1 - seg(t, bUp - .1, bUp + .1));
-    const arms = stand > 0 ? lerp(-1.1, .38, stand) + Math.sin(t * 11) * .14 * stand * (1 - Math.sin(clamp(seg(t, bCape - .1, bCape + .55)) * Math.PI)) + .25 * Math.sin(clamp(seg(t, bCape - .1, bCape + .55)) * Math.PI) : -1.15;
+    const flare = Math.sin(clamp(seg(t, bCape - .1, bCape + .55)) * Math.PI);          // arms spread wide, holding the cape out like wings
+    const arms = stand > 0 ? lerp(lerp(-1.1, .36, stand) + Math.sin(t * 11) * .12 * stand, .04 + .05 * Math.sin(t * 13), flare) : -1.15;
     const swing = seg(t, bCape - .1, bCape + .55), capeOn = swing > 0;
     const hx = 960, hy = 1000, hs = 44;
     if (capeOn) capeFB(hx, hy, hs, t, { dy, swing, lift: lerp(.2, .75, easeOut(swing)) + .08 * Math.sin(t * 5), wind: Math.sin(t * 2.2) * .25 });
