@@ -521,7 +521,7 @@
     if (cam.m < .56) { coverDesk(t, cam); coverLamp(t, cam); coverBook(t, cam); coverGlass(t, cam); coverCan(t, cam); }
     sunlight(t, cam);
     // everything returns to the paper it was painted on; the title lingers a moment as ink
-    if (fade > 0) { stamp(PAPER, fade); camBegin(cam.cx, cam.cy, cam.zg); titleInk(t, fade); camEnd(); }
+    if (t > T_END0 - .1) { if (fade > 0) stamp(PAPER, fade); camBegin(cam.cx, cam.cy, cam.zg); titleInk(t, fade); camEnd(); }
   }
   const SKY3 = ['#93A7DC', '#EDBDC4', '#FFDCA6'];
   function coverWall(t) {
@@ -569,12 +569,6 @@
       dot(bx, by + r * .35, r, '#9E6E6A', .22); dot(bx, by, r, '#FFF3E6', .5); dot(bx - r * .35, by - r * .35, r * .35, '#FFFFFF', .9);
       if (hash(i * 5.3) > .84) sparkle(bx - r * .3, by - r * .4, r * 2.8 + 4, '#FFF6D8', frac(t * .38 + hash(i * 9.1)));
     }
-    for (let i = 0; i < 3; i++) {                                // two or three still sliding down, slowly
-      const bx = x + 90 + hash(i * 9.1 + 4) * (w - 180), v = 9 + hash(i * 4.3) * 10, yy = y + 30 + ((t - 270) * v + hash(i) * h) % (h - 60), r = 4 + hash(i * 6.6) * 3;
-      inkLine([[bx, yy - 70], [bx + Math.sin(yy * .02) * 3, yy - 30], [bx, yy - r]], .9, '#FFF1E0', 'fine', .4, .45);
-      paint([[bx, yy - r * 1.9], [bx + r * .95, yy - r * .1], [bx + r * .6, yy + r * .75], [bx, yy + r], [bx - r * .6, yy + r * .75], [bx - r * .95, yy - r * .1]], { wash: '#FFF1E6', washOp: 150, ink: '#9E6E6A', sw: .35, curv: .6 });
-      dot(bx - r * .3, yy - r * .25, r * .32, '#FFFFFF', .9);
-    }
   }
   function coverTitle(t) {
     ['还', '没', '写', '完'].forEach((ch, i) => {
@@ -590,12 +584,11 @@
     if (k > 0) letter('未完待续', 960, TY + 125, 44, '#FFF9F0', { font: 'kai', ink: false, alpha: .95 * ease(k) });
   }
   function titleInk(t, fade) {
-    const a = ease(seg(t, T_END0, T_END0 + .9)) * (1 - ease(seg(t, 288.4, 289.85)));
-    if (a <= .01) return;
-    fadeIn(a, () => {
-      ['还', '没', '写', '完'].forEach((c, i) => letter(c, tcx(i), TY, TSZ, '#4A3A4C', { font: 'brush', ink: false }));
-      letter('未完待续', 960, TY + 125, 44, '#6A5A6C', { font: 'kai', ink: false });
-    });
+    // as the picture fades to paper, the title soaks in as ink, one character after another, and lingers a moment
+    const out = 1 - ease(seg(t, 288.4, 289.85));
+    ['还', '没', '写', '完'].forEach((c, i) => { const a = ease(seg(t, T_END0 - .1 + i * .12, T_END0 + .4 + i * .12)) * out; if (a > .01) letter(c, tcx(i), TY, TSZ, '#4A3A4C', { font: 'brush', ink: false, alpha: a }); });
+    const a2 = ease(seg(t, T_END0 + .5, T_END0 + 1)) * out;
+    if (a2 > .01) letter('未完待续', 960, TY + 125, 44, '#6A5A6C', { font: 'kai', ink: false, alpha: a2 });
   }
   function coverFrame(t) {
     const o = CWIN, i = COPEN, fc = '#EADCC8', fd = '#BBA892';

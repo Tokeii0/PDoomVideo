@@ -466,10 +466,11 @@
     camEnd();
     // night, then the lights: moon through the window, the microwave's warm glow (its lamp is on dimly while the door is open)
     const lamp = Math.max(mw.on, .5 * clamp(doorTh(t) / 1.2)), fl = 1 + .03 * Math.sin(t * 23) + .12 * dg;
-    lightMap(cam, '#2A3068', [[1710, 250, 700, '#5A6AAA', .55], [TURN[0], CAV.y + 150, 1000, '#FFD49A', .92 * lamp * fl], [TURN[0], CAV.y + 130, 300, '#FFF0CC', .5 * lamp * fl],
-      [PANEL.x + PANEL.w / 2, PANEL.y + 40, 160, '#FFB45C', .3], [HX3, 600, 900, '#46508A', .35]]);
+    lightMap(cam, '#242A60', [[1710, 250, 700, '#5A6AAA', .55], [TURN[0], CAV.y + 150, 1050, '#FFC98A', .95 * lamp * fl], [TURN[0], CAV.y + 130, 320, '#FFF0CC', .55 * lamp * fl],
+      [PANEL.x + PANEL.w / 2, PANEL.y + 40, 160, '#FFB45C', .3], [HX3, 600, 900, '#3E4884', .3]]);
     camBegin(cam[0], cam[1], cam[2]);
-    light(TURN[0], CAV.y + 120, 330, '#FFD27A', .22 * lamp * fl);
+    clipTo(rrPts(CAV.x, CAV.y, CAV.w, CAV.h, 10), () => light(TURN[0], CAV.y + 60, 260, '#FFD27A', .38 * mw.on * fl));
+    light(TURN[0], CAV.y + 120, 380, '#FFC870', .26 * lamp * fl);
     // timer: 0:04 → 0:00 on the beats
     const ds = t < T_GO ? 3 : Math.max(0, 3 - Math.floor((t - T_GO) / BEAT + 1e-3)), hop = t > T_GO ? Math.exp(-frac((t - T_GO) / BEAT) * 8) * (t < T_DING + .6 ? 1 : 0) : 0;
     const blink = t > T_DING && frac((t - T_DING) * 2.5) > .5 ? .35 : 1, da = (t < T_GO ? .45 : 1) * blink;

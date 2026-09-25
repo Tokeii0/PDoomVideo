@@ -615,6 +615,12 @@
       else dot(sx, sy, 2.4 * Math.min(1, a * 4), PAL.cream, .5 + .5 * tw);
     }
     moonFace(1560, 210, 72, { rot: -.3 });
+    const sh = seg(t, B(30) - .15, B(30) + .45);            // a shooting star while she breathes out
+    if (sh > 0 && sh < 1) {
+      const e = easeOut(sh), hx = lerp(1330, 520, e), hy = lerp(90, 330, e), tl = 180 * Math.sin(sh * Math.PI);
+      inkLine([[hx + tl * .96, hy - tl * .28], [hx + tl * .45, hy - tl * .13], [hx, hy]], 1.6, '#FFF3C8', 'fine', 0, .85 * (1 - sh * .5));
+      glow(hx, hy, 26, '#FFF3C0', .7 * (1 - sh)); dot(hx, hy, 3.5, '#FFFFFF', 1 - sh * .6);
+    }
     // far houses with warm windows
     for (let i = 0; i < 11; i++) {
       const bx = -120 + i * 205 + hash(i) * 40, bw = 150 + hash(i * 2.3) * 60, bh = 110 + hash(i * 4.1) * 150;

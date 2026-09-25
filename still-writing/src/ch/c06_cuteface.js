@@ -56,6 +56,16 @@
       }
     } });
   }
+  // a little cream ♪ (readable on dark backgrounds too)
+  function noteGlyph(x, y, s, a = 1, flip = 1) {
+    if (a <= .02) return;
+    fadeIn(a, () => {
+      push(); translate(x, y); rotate(-.15 * flip); scale(s * flip, s);
+      inkLine([[6, -1], [6, -27], [16, -20]], 3.2, PAL.ink, 'marker', .3); inkLine([[6, -1], [6, -27], [16, -20]], 1.8, '#FFF1C8', 'marker', .3);
+      paint(ellPts(0, 0, 8, 6, 12, 0, -.4), { wash: '#FFF1C8', ink: PAL.ink, sw: .8 });
+      pop();
+    });
+  }
   // A flat ribbon along pts. wFn(i) width, twFn(i) twist angle: the visible width is |cos| and the back face shows
   // where cos < 0. Each run of one face is one painted band, so the twists pinch like real satin ribbon.
   function ribbon(pts, wFn, twFn, o = {}) {
@@ -804,7 +814,7 @@
     const mwalk = seg(t, 144.3, 146.55), mx = lerp(-420, 830, mwalk), mwk = mwalk > 0 && mwalk < 1;
     const hop = t > tNote - .25 && t < tNote + .3 ? Math.sin(Math.PI * seg(t, tNote - .25, tNote + .3)) : 0;
     const lookBack = seg(t, tDef + .2, tDef + .45);
-    const hMood = mood(t, [[144, 'closed', 'music', 'smile'], [146.45, 'normal', null, 'smile'], [tNote + .05, 'sparkle', null, 'open'], [tDef + .25, 'look', null, 'o'], [tBonk - .05, 'happy', null, 'grin']]);
+    const hMood = mood(t, [[144, 'closed', null, 'smile'], [146.45, 'normal', null, 'smile'], [tNote + .05, 'sparkle', null, 'open'], [tDef + .25, 'look', null, 'o'], [tBonk - .05, 'happy', null, 'grin']]);
     const ph = t * 1.9;
     const hO = { outfit: 'home', ...hMood, blush: .7, seed: 1,
       walk: walking ? ph : null, dy: walking ? -Math.abs(Math.sin(ph * Math.PI)) * .45 : -hop * 1.0, sq: walking ? .04 * Math.cos(ph * TAU) : .05 * hop,
@@ -814,7 +824,7 @@
       handR: t < tNote ? ((s, sw) => { stickyNote(.25 * s, -.5 * s, .32 * s / 26, '#FFF1A8', .1, 0); paint(heartPts(.25 * s, -.46 * s, 5 * s / 26), { wash: '#F27D9A', ink: null }); }) : null };
     if (!walking && t < tNote + .6) { const r = t < tNote ? backOut(seg(t, 146.55, 146.9)) : 1 - seg(t, tNote + .12, tNote + .45); hO.aR = lerp(-1.1, t < tNote - .3 ? .35 : -.18, r); }
     const nod = t > tNote + .22 && t < tDef - .05 ? Math.max(0, Math.sin((t - tNote - .22) / .3 * Math.PI)) : 0;
-    const mMood = mood(t, [[144, 'normal', null, 'o'], [145.1, 'wide', null, 'O'], [145.55, 'happy', 'music', 'cat'], [146.55, 'happy', null, 'cat'], [tNote + .15, 'happy', null, 'smile'], [tDef + .25, 'wide', '!', 'o'], [tBonk - .05, 'closed', null, 'grin']]);
+    const mMood = mood(t, [[144, 'normal', null, 'o'], [145.1, 'wide', null, 'O'], [145.55, 'happy', null, 'cat'], [tNote + .15, 'happy', null, 'smile'], [tDef + .25, 'wide', '!', 'o'], [tBonk - .05, 'closed', null, 'grin']]);
     const mph = t * 2.2;
     const mO = { ...mMood, emote: null, seed: 3, blush: .8, walk: mwk ? mph : null,
       dy: mwk ? -Math.abs(Math.sin(mph * Math.PI)) * (t > 145.55 ? 1.0 : .3) : nod * .1, sq: nod * .1,
@@ -823,6 +833,10 @@
     momo(mx, 950, ms, mO);
     if (mMood.emote) emote(mMood.emote, mx - 3.3 * ms, 950 + (mO.dy || 0) * ms - 10.4 * ms, ms * .9, mMood.emoteK);
     hero(hx, 950, hs, hO);
+    if (t < 146.7) for (let k = 0; k < 3; k++) {                      // she hums as she walks: little notes float up
+      const ph = frac((t - 144) * .9 + k / 3), a = Math.sin(Math.PI * ph) * (1 - seg(t, 146.3, 146.7));
+      noteGlyph(hx + 60 + ph * 70 + 16 * Math.sin(ph * 9 + k), 950 - 10.2 * hs - ph * 120, 1.1 + .2 * (k % 2), a, k % 2 ? -1 : 1);
+    }
     if (stuck && t < tNote + 1.2) glow(NOTE3[0], NOTE3[1], 70, '#FFB3C8', .6 * (1 - seg(t, tNote + .3, tNote + 1.2)));
     if (nod > .05) for (let q = 0; q < 2; q++) {                      // little manga nod marks by her head (こくこく)
       const hx0 = mx - 3.2 * ms - q * 22, hy0 = 950 - 8.8 * ms + q * 30;
