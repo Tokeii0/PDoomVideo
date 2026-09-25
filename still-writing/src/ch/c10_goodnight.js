@@ -235,7 +235,7 @@
     const br = move('breathe', t, 2);
     const o = { ...br, ...md, digital: 1, blush: .5 + .4 * hug, rot: Math.sin(t * 1.9) * .05 * nod,
       tilt: nod * (.16 + .1 * Math.sin(t * 2.3)) + .3 * doze + Math.sin(t * 1.7) * .03, dy: .5 * doze - .25 * pulse(t - T_PRESS + .6, 8) * awake * (t < T_WAVE ? 1 : 0),
-      sit: doze > .3, emote: md.emote, emoteK: md.emoteK, aL: lerp(-1.15, -.3, hug), aR: wave > .01 ? 1.5 : lerp(-1.15, -.3, hug) };
+      sit: doze > .3, emote: md.emote, emoteK: md.emoteK, aL: lerp(-1.15, -1.3, hug), aR: wave > .01 ? 1.5 : lerp(-1.15, -1.3, hug) };
     if (t > 264.34 && t < 264.7) o.aL = lerp(-1.15, 1.45, seg(t, 264.34, 264.42) * (1 - seg(t, 264.6, 264.68)));   // rubs an eye mid-yawn
     momo(x, y, s, o);
     const sy = y + o.dy * s;
@@ -244,13 +244,15 @@
       sleeveArm(sh[0], sh[1], sh[0] + Math.cos(a) * 2.6 * s * wave, sh[1] + Math.sin(a) * 2.6 * s * wave, .33 * s, { col: MOMO_TOP, dk: MOMO_DK, stars: false, hand: 1.1 });
     }
     if (hug > .01) {
-      // the crescent-moon pillow poofs in, and she hugs it
-      const pk = backOut(hug), px = x + .1 * s, py = sy - 3.1 * s;
+      // a tiny pillow (a sleepy moon printed on it) poofs into her arms, and she hugs it
+      const pk = backOut(hug), px = x + .05 * s, py = sy - 2.95 * s;
       if (t - T_PILLOW < .3) for (let i = 0; i < 7; i++) { const a = i / 7 * TAU, d = (t - T_PILLOW + .04) * 110; sparkle(px + Math.cos(a) * d, py + Math.sin(a) * d * .8, 6, '#FFF3D0', seg(t, T_PILLOW - .04, T_PILLOW + .3)); }
-      push(); translate(px, py); rotate(.25 + .2 * doze); scale(pk); translate(-px, -py);
-      moonFace(px, py, 2.1 * s, { rot: .15 });
+      push(); translate(px, py); rotate(-.1 + .2 * doze); scale(pk);
+      paint(rrPts(-1.85 * s, -1.2 * s, 3.7 * s, 2.4 * s, 1.05 * s), { wash: '#FFF2CE', fill: '#F3D08E', fillOp: 70, bleed: .04, tex: .3, border: .3, ink: PAL.ink, sw: .8, curv: .3 });
+      moonFace(-.45 * s, .05 * s, .72 * s, { rot: -.25 });
+      for (const [sx, sy2] of [[.85, -.45], [1.05, .5], [.3, .75]]) paint(starPts(sx * s, sy2 * s, .22 * s, .45, 5), { wash: '#F29BB8', ink: null });
       pop();
-      for (const sd of [-1, 1]) paint(ellPts(x + sd * 1.25 * s, sy - 3.05 * s + sd * .1 * s, .38 * s, .34 * s, 10), { wash: SKIN, ink: PAL.ink, sw: .5 });
+      for (const sd of [-1, 1]) paint(ellPts(px + sd * 1.55 * s, py + .05 * s + sd * .12 * s, .38 * s, .34 * s, 10), { wash: SKIN, ink: PAL.ink, sw: .5 });
     }
     if (doze > .5) zees(t, x + 2.2 * s, y - 9.2 * s, 1.4 * s, '#FFE3F0', seg(t, T_DOZE + .2, T_DOZE + .45));
   }
