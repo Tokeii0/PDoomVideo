@@ -34,13 +34,18 @@ function loadPainter() {
   if (args.extra) files.push(...String(args.extra).split(','));                  // scratch scripts for tests
   for (const f of files) {
     const p = resolve(ROOT, f);
-    if (!existsSync(p)) { if (!args.worker) console.warn('(not painted yet: ' + f + ')'); continue; }
-    vm.runInThisContext(readFileSync(p, 'utf8'), { filename: f });
+    if (!existsSync(p)) { if (!args.worker && !args.quiet) console.warn('(not painted yet: ' + f + ')'); continue; }
+    try { vm.runInThisContext(readFileSync(p, 'utf8'), { filename: f }); }
+    catch (e) {                                                                    // one broken chapter must not stop the others
+      if (!f.includes('/ch/') && !args.extra?.includes(f)) throw e;
+      console.warn(`!! ${f} failed to load, skipped: ${e.message}`);
+    }
   }
   const api = vm.runInThisContext('({ initCore, renderFrame, W, H, DUR, LOOPS })');
   const canvas = createCanvas(api.W, api.H), ctx = canvas.getContext('2d');
   api.initCore(ctx);
-  return { ...api, canvas };
+  const render = t => { try { api.renderFrame(t); } catch (e) { console.error(`!! error painting t=${t}: ${e.stack.split('\n').slice(0, 4).join(' | ')}`); } };
+  return { ...api, renderFrame: render, canvas };
 }
 const times = s => String(s).split(',').map(Number);
 const run = (cmd, a) => new Promise((ok, bad) => { const p = spawn(cmd, a, { stdio: 'inherit' }); p.on('close', c => c ? bad(new Error(cmd + ' exited ' + c)) : ok()); });
