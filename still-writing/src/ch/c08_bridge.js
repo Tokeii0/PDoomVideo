@@ -573,7 +573,7 @@
     inkLine([[gx + .45 * s, gy - 4.0 * s], [gx - .25 * s, gy - 2.4 * s], [gx - .45 * s, gy - .2 * s]], 1.6, '#FFF1A8', 'marker', .4, .45);
     // 团子 curled up in her lap
     const purr = .025 * Math.sin(t * 40) * seg(t, 210.5, 211);
-    cat(gx + .3 * s, gy + 1.05 * s, 32, { pose: 'sleep', eyes: 'closed', zzz: false, sq: .03 * Math.sin(t * 1.4) + purr, tail: .2 * Math.sin(t * .8) });
+    cat(gx + .3 * s, gy + 1.05 * s, 32, { pose: 'sleep', eyes: 'happy', zzz: false, sq: .03 * Math.sin(t * 1.4) + purr, tail: .2 * Math.sin(t * .8) });
     // the bowl in both hands, the chopsticks (blowing, slurping, chewing)
     const bx = gx + .1 * s, by = gy - 2.35 * s + 4 * Math.sin(t * 1.6);
     noodleBowl(bx, by + .65 * s, 1.08);
@@ -594,8 +594,9 @@
       [PH4.x, PH4.y - 150, 460, '#FFB8D0', .55 + .35 * seg(t, T_MOMO, T_MOMO + .3)], [gx + 80, gy - 2.8 * s, wr, '#FFD49A', .12 + .95 * wk], [gx - 60, gy - 5.6 * s, 380, '#FFE6C4', .25 + .35 * wk]]);
     camBegin(cam[0], cam[1], cam[2]);
     fl.forEach(([x, y], i) => { if (i % 2) return; const on = .6 + .4 * Math.sin(t * 2 + i * 1.7); glow(x, y + 12, 30, ['#FFD98A', '#FFB3C6', '#FFE7A8'][i % 3], .6 * on); dot(x, y + 12, 6, ['#FFE7A8', '#FFC9D8', '#FFF3C4'][i % 3], .95); });
-    light(gx + 40, gy - 3.2 * s, lerp(300, 1000, wk), '#FFB46A', .3 * wk);                      // the warm cocoon
-    light(gx + 40, gy - 3.6 * s, 420, '#FFE2B0', .16 * wk);
+    light(gx + 40, gy - 3.2 * s, lerp(300, 900, wk), '#FFB46A', .14 * wk);                      // the warm cocoon
+    light(gx + 40, gy - 3.6 * s, 420, '#FFE2B0', .1 * wk);
+    light(gx + 60, gy - 3.4 * s, lerp(400, 1150, wk), '#FFA040', .55 * wk, 'soft-light');       // golden warmth without haze
     steamWisps(bx, by - .2 * s, t - 206, 4, 120, 260, .55 * (1 - lift * .7), 11);
     light(PH4.x, PH4.y - 150, 240, '#FF9FC0', .12 + .18 * seg(t, T_MOMO, T_MOMO + .3));
     // warm motes drifting up as the light wraps them
@@ -607,7 +608,7 @@
     // a small heart floats up from her
     const ha = t - T_HEART;
     if (ha > 0) {
-      const hk = backOut(seg(ha, 0, .4)) * (1 - seg(ha, 3.0, 3.6)), hx = gx + 1.3 * s + Math.sin(ha * 2) * 22, hy = gy - 10.0 * s - ha * 55;
+      const hk = backOut(seg(ha, 0, .4)) * (1 - seg(ha, 3.3, 3.9)), hx = gx + 1.3 * s + Math.sin(ha * 2) * 22, hy = gy - 10.0 * s - ha * 30;
       glow(hx, hy, 70 * hk, '#FFB0C8', .45);
       paint(heartPts(hx, hy, 26 * hk), { wash: '#F05A88', fill: '#FF9FC0', fillOp: 60, ink: PAL.ink, sw: .9 });
       paint(heartPts(hx - 7 * hk, hy - 8 * hk, 7 * hk), { wash: '#FFC6DA', ink: null });
@@ -854,7 +855,7 @@
     if (pulling) {
       cat(catX, cy0, CS6, { pose: 'walk', walk: -t * 1.8, eyes: 'closed', sq: .04 * Math.sin(t * 8) });
       paint([[mouth[0] - 7, mouth[1] - 2], [mouth[0] + 9, mouth[1] - 3], [mouth[0] + 6, mouth[1] + 16]], { wash: BLANKET, ink: PAL.ink, sw: .6 });   // the corner in its teeth
-    } else cat(lerp(cx0 + 40, HX6 + 4.3 * s, after), 962, CS6, { pose: after > .6 ? 'loaf' : 'walk', walk: t * 1.6, eyes: after > .6 ? 'closed' : 'happy', tail: .3 * Math.sin(t * 1.4) });
+    } else cat(lerp(cx0 + 40, HX6 + 4.3 * s, after), 962, CS6, { pose: after > .6 ? 'loaf' : 'walk', walk: t * 1.6, eyes: 'happy', tail: .3 * Math.sin(t * 1.4) });
     camEnd();
     // light: night room, the fairy lights; the screen (behind us) lights her face; warmth grows from the dream
     const gk = seg(t, T_GLOW, 225.9), bk = seg(t, T_BUBBLE + .4, T_BUBBLE + 1.0);

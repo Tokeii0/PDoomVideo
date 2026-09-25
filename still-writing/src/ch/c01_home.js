@@ -256,7 +256,7 @@
     // right page: the little star doodle (the idea, before it has a name)
     const dc = [840, 884], zb = zAt(cam, .8) || 1, blinkK = seg(t, 6.42, 6.49) * (1 - seg(t, 6.58, 6.66));
     const wig = Math.sin(seg(t, 6.72, 7.32) * Math.PI * 4) * .1 * (1 - seg(t, 6.9, 7.32)), hop = Math.sin(seg(t, 6.72, 6.98) * Math.PI) * 5;
-    const sp = starPts(0, 0, 70, .5, 5, -Math.PI / 2 + wig).map(([x, y]) => F(dc[0] + x, dc[1] - hop + y * .6));
+    const sp = smoothPts(starPts(0, 0, 70, .58, 5, -Math.PI / 2 + wig), .22, true).map(([x, y]) => F(dc[0] + x, dc[1] - hop + y * .6));
     const star = [...sp, sp[0], sp[1]];
     if (lampK > .01) { const [x, y] = F(dc[0], dc[1]); glow(x, y, 80 * zb, '#FFF1C2', .35 * lampK * (.6 + .4 * seg(t, 6.45, 6.9))); }
     inkLine(star, 1.5, '#4A4955', 'pencil', .25, 1);
@@ -266,9 +266,9 @@
       if (blinkK > .5) pl([[ex - 6, ey + 1], [ex, ey + 3], [ex + 6, ey + 1]], .9);
       else { const [x, y] = F(ex, ey); paint(ellPts(x, y, 4 * zb, 5.2 * zb * (1 - blinkK * .8), 8), { wash: '#45444F', ink: null }); dot(x - 1.2 * zb, y - 1.6 * zb, 1.3 * zb, '#FFFFFF', .9); }
     }
-    pl([[dc[0] - 7, dc[1] + 11 - hop], [dc[0], dc[1] + 16 - hop], [dc[0] + 7, dc[1] + 11 - hop]], .9);
+    pl([[dc[0] - 9, dc[1] + 7 - hop], [dc[0] - 4, dc[1] + 11 - hop], [dc[0] + 4, dc[1] + 11 - hop], [dc[0] + 9, dc[1] + 7 - hop]], 1.2);
     pl([[dc[0], dc[1] - 40 - hop], [dc[0] + 9, dc[1] - 54 - hop], [dc[0] + 1, dc[1] - 63 - hop]], .9);
-    for (const sd of [-1, 1]) for (const k of [-4, 0, 4]) pl([[dc[0] + sd * 34 + k - 1.5, dc[1] + 7 - hop], [dc[0] + sd * 34 + k + 1.5, dc[1] + 11 - hop]], .55);
+    for (const sd of [-1, 1]) { const [bx, by] = F(dc[0] + sd * 27, dc[1] + 5 - hop); paint(ellPts(bx, by, 7 * zb, 3.2 * zb, 10), { fill: '#F29BB8', fillOp: 110 * (.35 + .65 * lampK), bleed: .2, ink: null }); for (const k of [-3.5, 0, 3.5]) pl([[dc[0] + sd * 27 + k - 1.5, dc[1] + 3 - hop], [dc[0] + sd * 27 + k + 1.5, dc[1] + 7 - hop]], .5); }
     const tw = seg(t, 6.5, 7.25);
     if (tw > 0 && tw < 1) { const [x, y] = F(dc[0] + 70, dc[1] - 46); sparkle(x, y, 20 * zb, '#FFF3C0', tw); const [x2, y2] = F(dc[0] - 72, dc[1] - 26); sparkle(x2, y2, 12 * zb, '#FFF3C0', seg(t, 6.62, 7.3)); }
     if (lampK > .01) { const [x, y] = F(700, 900); light(x, y, 360, '#FFE3B0', .18 * lampK); }
