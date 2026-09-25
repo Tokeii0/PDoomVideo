@@ -111,6 +111,7 @@ the frame to show only the head and shoulders).
   `'heart'`, `'spiral'`.
 - **Hooks:** `draw(s, sw)` body-local; `handL(s, sw)` / `handR(s, sw)` at the hand centre in arm space (+x = outward along
   the arm) for holding pencils, cans, cups; `head(s, sw)` in head-local space (head centre 0,0; the face spans about ±2.5s).
+  `armFront: 'L' | 'R' | 'both'` paints that arm (and what it holds) over the head, for raised hands and props.
 - **Emote:** `emote` + `emoteK`: sweat, spark, heart, anger, music, swirl, zzz, bulb, flower, !, ?, !?, !!, … .
 - **Mood changes:** never snap between faces. Use `mood(t, [[t0, 'normal'], [t1, 'sparkle', 'spark', 'open'], ...])`
   (eyes, emote, mouth); spread the result into the options for a blink-squash-and-pop change.

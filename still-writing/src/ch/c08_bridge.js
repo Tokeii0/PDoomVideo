@@ -637,8 +637,8 @@
     const dawn = ease(seg(t, 213.4, 218.6));
     // sky wash: indigo → lilac → peach at the horizon, brightening toward dawn; the notebook's ruled lines show through
     paint([[-400, -400], [W + 400, -400], [W + 400, 520], [-400, 520]], { grad: [mixCol('#4A5496', '#6E76B6', dawn), mixCol('#EBB29C', '#FBC99A', dawn), Math.PI / 2], washOp: 220, tex: .45, ink: null });
-    for (let y = 40; y < H + 60; y += 46) inkLine([[-400, y], [W + 400, y]], .55, '#9CB8E0', 'fine', 0, .3);
-    inkLine([[120, -400], [120, H + 400]], .7, '#F08C9C', 'fine', 0, .35);
+    for (let y = 40; y < H + 60; y += 46) fillRectA(-400, y, W + 800, 1.6, '#9CB8E0', .3);          // printed rules: straight
+    fillRectA(119, -400, 1.8, H + 800, '#F08C9C', .35);
     glow(SUN5[0], SUN5[1], 1000, '#FFCF8E', .5 + .25 * dawn);
     glow(SUN5[0], SUN5[1], 320, '#FFF0C8', .6 + .3 * dawn);
     starField(t, { x: -200, y: -300, w: 1500, h: 600 }, 30, { seed: 5, a: .8 * (1 - dawn * .7) });

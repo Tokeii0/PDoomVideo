@@ -105,25 +105,38 @@ function washWipe(p, c1, c2, seed = 0) {
 // The band is painted under the paper grain; the words go on top, filling character by character on the aligned times.
 let KARAOKE = null;
 const KFONT = 54, KY = 1018;
-function lyricAt(t) { return LY.find(l => t >= l[0] - .3 && t < l[1] + .25); }
+// The band grows in before a line and shrinks after it, except between lines less than .7 s apart: there it stays up,
+// the words swap at the midpoint and the band eases to the new width.
+function lyricAt(t) {
+  for (let i = 0; i < LY.length; i++) {
+    const L = LY[i], P = LY[i - 1], N = LY[i + 1];
+    const joinP = !!P && L[0] - P[1] < .7, joinN = !!N && N[0] - L[1] < .7;
+    const s = joinP ? (P[1] + L[0]) / 2 : L[0] - .3, e = joinN ? (L[1] + N[0]) / 2 : L[1] + .25;
+    if (t >= s && t < e) return { L, P, s, e, joinP, joinN };
+  }
+  return null;
+}
 function karaokeBand(t) {
   KARAOKE = null;
-  const L = lyricAt(t); if (!L) return;
-  const [a, b, txt] = L, grow = easeOut((t - (a - .3)) / .22) * (1 - ease((t - (b + .05)) / .2));
+  const k = lyricAt(t); if (!k) return;
+  const { L, P, s, e, joinP, joinN } = k;
+  const grow = (joinP ? 1 : easeOut((t - s) / .22)) * (joinN ? 1 : 1 - ease((t - (e - .2)) / .2));
   if (grow < .02) return;
-  const tw = textWidth(txt, KFONT, 'kai'), w = (tw + 120) * grow, x0 = 960 - w / 2, y0 = KY - 44;
+  let tw = textWidth(L[2], KFONT, 'kai');
+  if (joinP) tw = lerp(textWidth(P[2], KFONT, 'kai'), tw, easeInOut((t - s) / .18));
+  const w = (tw + 120) * grow, x0 = 960 - w / 2, y0 = KY - 44;
   const pts = [[x0 + jit(6), y0 + jit(3)], [x0 + w / 2, y0 - 5 + jit(3)], [x0 + w + jit(6), y0 + jit(3)], [x0 + w + 16 + jit(6), y0 + 44], [x0 + w + jit(6), y0 + 88 + jit(3)], [x0 + w / 2, y0 + 93 + jit(3)], [x0 + jit(6), y0 + 88 + jit(3)], [x0 - 16 + jit(6), y0 + 44]];
   paint(pts, { wash: PAL.night, washOp: 200, fill: PAL.violet, fillOp: 70, tex: .6, border: .3, ink: null, curv: .25 });
-  KARAOKE = { L, grow };
+  KARAOKE = { L, grow, fade: joinP ? clamp((t - s) / .14) : 1 };
 }
 function karaokeText(t) {
   if (!KARAOKE || KARAOKE.grow < .85) return;
-  const [a, b, txt, , ct] = KARAOKE.L;
+  const [, b, txt, , ct] = KARAOKE.L;
   X.save(); X.setTransform(1, 0, 0, 1, 0, 0);
   X.font = `${KFONT}px ${FONTS.kai}, "WenQuanYi Zen Hei", sans-serif`; X.textBaseline = 'middle'; X.textAlign = 'left';
   const chars = [...txt], ws = chars.map(c => c === ' ' ? KFONT * .55 : X.measureText(c).width), total = ws.reduce((p, q) => p + q, 0);
   let x = 960 - total / 2, k = 0;
-  const alpha = clamp((KARAOKE.grow - .85) / .15);
+  const alpha = clamp((KARAOKE.grow - .85) / .15) * KARAOKE.fade;
   X.globalAlpha = alpha;
   chars.forEach((c, i) => {
     if (c === ' ') { x += ws[i]; return; }

@@ -710,7 +710,14 @@
     for (let i = 0; i < 16; i++) { const a = frac(t * .08 + hash(i * 3.3)), lx = -200 + hash(i * 7.1) * 2400, ly = 1500 - a * 700; glow(lx, ly, 34, '#FFC98A', .5 * (1 - a)); dot(lx, ly, 6, '#FFE2A8', .9 * (1 - a)); }
     for (let i = 0; i < 4; i++) cloudPuff(-150 + i * 640 + Math.sin(t * .3 + i) * 20, 980 + (i % 2) * 90, 1.4, '#7C6AAE', { seed: i + 7, op: 170, shade: '#5E4F92', ink: false });
     // the moon
-    moonFace(MX, MY, MR, { rot: MROT });
+    const moonAwake = t > land + .02 && t < land + .75;
+    moonFace(MX, MY, MR, { rot: MROT, eyes: moonAwake ? 'open' : undefined });
+    if (moonAwake) {                                                       // the moon's round, surprised eye (smoother, with a highlight)
+      push(); translate(MX, MY); rotate(MROT);
+      paint(ellPts(.62 * MR, -.1 * MR, .058 * MR, .078 * MR, 22), { wash: PAL.ink, ink: null });
+      dot(.605 * MR, -.125 * MR, MR * .02, '#FFFFFF', .95); dot(.64 * MR, -.07 * MR, MR * .009, '#FFFFFF', .8);
+      pop();
+    }
     // the dotted outline of a full moon: it glimmers, and is left open
     const ghost = smooth01(t, popT + .35, popT + .7, M0 + 3.6, M0 + 4.2);
     if (ghost > 0) fadeIn(ghost, () => { for (let i = 0; i < 26; i++) { const a = MROT + Math.PI * .5 + .18 + i / 26 * (Math.PI - .36); dot(MX + Math.cos(a) * MR * 1.0, MY + Math.sin(a) * MR * 1.0, 4.2, '#FFF1C2', .75); } });
@@ -718,7 +725,8 @@
     const seat = moonPt(MSEAT), parkA = MSEAT + 1.18, park = moonPt(parkA);
     const u = seg(t, M0 - .3, land);
     const slide = easeInOut(seg(t, hopT + .2, hopT + 1.0));                // after they hop off it slides back onto the horn
-    let px = lerp(lerp(120, seat[0] - 60, easeOut(u)), park[0] + 30, slide), py = lerp(lerp(-40, seat[1] - 26, easeOut(u)), park[1] - 16, slide) - Math.sin(u * Math.PI) * 60, pr = lerp(-.25, .3, u), pp = lerp(lerp(-.3, .05, u), -.38, slide);
+    const touch = moonPt(MSEAT + .42);                                    // it touches down just left of the moon's face
+    let px = lerp(lerp(120, touch[0] - 40, easeOut(u)), park[0] + 30, slide), py = lerp(lerp(-40, touch[1] - 22, easeOut(u)), park[1] - 16, slide) - Math.sin(u * Math.PI) * 60, pr = lerp(-.25, .3, u), pp = lerp(lerp(-.3, .05, u), -.38, slide);
     const bump = t > land ? Math.sin(seg(t, land, land + .4) * Math.PI) * 18 * (1 - seg(t, land, land + .8)) : 0;
     py -= bump;
     const onPlane = t < hopT;
@@ -726,7 +734,7 @@
     const mS = 24;
     const seatH = [seat[0] + 40, seat[1] + 2], seatM = [seat[0] - 62, seat[1] - 4];
     // stardust puff at the landing
-    if (t > land && t < land + .8) for (let i = 0; i < 9; i++) { const a = Math.PI + i / 8 * Math.PI, e = easeOut(seg(t, land, land + .8)); sparkle(seat[0] - 60 + Math.cos(a) * 190 * e, seat[1] - 30 + Math.sin(a) * 70 * e, 16, '#FFF3C0', seg(t, land, land + .8)); }
+    if (t > land && t < land + .8) for (let i = 0; i < 9; i++) { const a = Math.PI + i / 8 * Math.PI, e = easeOut(seg(t, land, land + .8)); sparkle(touch[0] - 40 + Math.cos(a) * 190 * e, touch[1] - 30 + Math.sin(a) * 70 * e, 16, '#FFF3C0', seg(t, land, land + .8)); }
     paperPlane(px, py, lerp(230, 150, slide), t, { el: .4, yaw: 0, pitch: pp, roll: pr * .3, flutter: onPlane ? 1 : .3, riders: onPlane ? P => crew(P, t, { s: mS, fac: 1, wind: .8, lift: .3,
       h: { eyes: 'star', mouth: 'open', lookX: .3, aL: .35, aR: .35, blush: .8, ahoge: 'perk', sq: .25 * (1 - elasticOut(seg(t, land, land + .5))) },
       m: { eyes: 'star', mouth: 'grin', aL: .4, aR: .4, sq: .25 * (1 - elasticOut(seg(t, land + .04, land + .55))) } }) : null });

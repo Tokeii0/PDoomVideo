@@ -842,7 +842,7 @@
     paint(rectPts(win.x - 16, win.y - 16, win.w + 32, win.h + 32, 2), { wash: '#8E6A4E', ink: INK, sw: 1.2 });
     clipTo(rectPts(win.x, win.y, win.w, win.h), () => {
       paint(rectPts(win.x, win.y, win.w, win.h), { grad: ['#FFE3B8', '#F2B98A', Math.PI / 2], ink: null });
-      for (const lx of [260, 540, 820]) { inkLine([[lx, win.y], [lx, win.y + 70]], .8, INK, 'fine', 0); paint([[lx - 34, win.y + 100], [lx + 34, win.y + 100], [lx + 18, win.y + 70], [lx - 18, win.y + 70]], { wash: '#E8A038', ink: INK, sw: .8 }); glow(lx, win.y + 120, 150, '#FFE3A0', .6); }
+      for (const lx of [230, 810]) { inkLine([[lx, win.y], [lx, win.y + 70]], .8, INK, 'fine', 0); paint([[lx - 34, win.y + 100], [lx + 34, win.y + 100], [lx + 18, win.y + 70], [lx - 18, win.y + 70]], { wash: '#E8A038', ink: INK, sw: .8 }); glow(lx, win.y + 120, 150, '#FFE3A0', .6); }
       paint(rectPts(win.x, win.y + 330, win.w, 140), { wash: '#C98E5E', fill: '#A8703E', fillOp: 60, tex: .5, ink: INK, sw: .9 });   // counter
       for (const [px2, s2] of [[150, 1], [890, .9]]) plant(px2, win.y + 330, s2, t);
     });
@@ -873,12 +873,12 @@
     paint([[win.x + 80, win.y], [win.x + 190, win.y], [win.x + 60, win.y + win.h], [win.x - 50, win.y + win.h]], { wash: '#FFFFFF', washOp: 30, ink: null });
     // the heart: pops above the user, then flies out to her phone
     const hk = backOut(seg(t, B(218) + .08, B(218) + .3)), fly = easeInOut(seg(t, B(218.6), B(219.35)));
-    const hs = [ux, uy - 12 * us + 40], her = [1480, 962], hs2 = 40, ho0 = { aR: .15, aL: -1.1 };
+    const hs = [ux, uy - 12 * us + 10], her = [1480, 962], hs2 = 40, ho0 = { aR: .15, aL: -1.1 };
     const target = handAt(her[0], her[1], hs2, ho0, 1);
     if (hk > 0 && fly < 1) {
       const p = arcPt(hs, [target[0], target[1] - 60], 260, fly);
       for (let i = 1; i <= 5; i++) { const q = arcPt(hs, [target[0], target[1] - 60], 260, Math.max(0, fly - i * .04)); if (fly > .02) sparkle(q[0], q[1], 10 - i, '#FFD7E4', .5); }
-      heart(p[0], p[1], 34 * hk * (1 + .1 * Math.sin(t * 20)), '#EE5A83');
+      heart(p[0], p[1], 46 * hk * (1 + .1 * Math.sin(t * 20)), '#EE5A83');
     }
     // her on the pavement
     paint([[-600, 860], [3000, 860], [3000, 1500], [-600, 1500]], { wash: '#CDB7A8', fill: '#A89080', fillOp: 60, tex: .6, ink: INK, sw: 1.1 });

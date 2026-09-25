@@ -979,10 +979,134 @@
   }
 
   // ======================================================================================
+  // 7 · 95.556–100.956  哪怕只改变 世界小小的一段
+  // One continuous pull-back: her warm open window (she and 桃桃 wave) → her apartment block → a dark city where only
+  // her window has colour → the night Earth (a little planet) with one small pink light, which twinkles on the beat.
+  // World units: the planet is a circle of radius R7 centred at (0, R7), so the street at her door is y = 0. Drawing is
+  // in screen space through S() with level of detail per zoom, so linework stays crisp at every scale.
+  // ======================================================================================
+  const R7 = 45000, WIN7 = { x: -35, y: -864, w: 70, h: 77 }, NW = 900, NH = 990;       // her window; native interior size
+  const W7c = [WIN7.x + WIN7.w / 2, WIN7.y + WIN7.h / 2];
+  const K7 = [[95.556, 2.5], [96.15, 2.36], [96.9, 1.1], [97.6, -.3], [98.3, -1.7], [99.0, -2.95], [99.7, -4.1], [100.4, -4.62], [100.956, -4.72], [101.6, -4.76]];
+  function spline(t, keys) {                                           // Catmull-Rom through (time, value) keys, clamped
+    if (t <= keys[0][0]) return keys[0][1]; const n = keys.length; if (t >= keys[n - 1][0]) return keys[n - 1][1];
+    let i = 0; while (t >= keys[i + 1][0]) i++;
+    const [t0, p0] = keys[i], [t1, p1] = keys[i + 1], h = t1 - t0, u = (t - t0) / h;
+    const m = j => j <= 0 ? (keys[1][1] - keys[0][1]) / (keys[1][0] - keys[0][0]) * .5 : j >= n - 1 ? (keys[n - 1][1] - keys[n - 2][1]) / (keys[n - 1][0] - keys[n - 2][0]) * .5 : (keys[j + 1][1] - keys[j - 1][1]) / (keys[j + 1][0] - keys[j - 1][0]);
+    const m0 = m(i) * h, m1 = m(i + 1) * h, u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * p0 + (u3 - 2 * u2 + u) * m0 + (-2 * u3 + 3 * u2) * p1 + (u3 - u2) * m1;
+  }
+  // the dark city: buildings standing radially on the planet, deterministic
+  const CITY7 = [];
+  for (const dir of [-1, 1]) { let u = 380; for (let i = 0; u < 7200; i++) { const k = dir * 50 + i, w = 360 + 520 * hash(k * 3.7), h = 420 + 1850 * Math.pow(hash(k * 5.9), 1.4) * (1 - .5 * seg(u, 3000, 7200)); u += 30 + 150 * hash(k * 1.3); CITY7.push({ u: dir > 0 ? u + w / 2 : -u - w / 2, w, h, k, roof: hash(k * 8.1) }); u += w; } }
+  function zoomOut(t, lt) {
+    const L = spline(t, K7), Z = Math.exp(L), bp = bpOf(t);
+    const wE = ease(seg(L, -2.6, -4.72)), th = -.32 * wE;                                // drift to the planet's centre, turning a little
+    const off = [0, 55 / Math.max(Z, 1e-3) * seg(L, 1.2, 2.5)];                          // at the start keep the window clear of the lyric band
+    const C = [lerp(W7c[0] + off[0], 0, wE), lerp(W7c[1] + off[1], R7, wE)];
+    const ct = Math.cos(th), st = Math.sin(th);
+    const S = (x, y) => { const dx = x - C[0], dy = y - C[1]; return [960 + Z * (dx * ct - dy * st), 540 + Z * (dx * st + dy * ct)]; };
+    const surf = (u, hgt = 0) => { const ph = u / R7, r = R7 + hgt; return [Math.sin(ph) * r, R7 - Math.cos(ph) * r]; };
+    // ---- sky / space ----
+    const spaceK = seg(L, -1.5, -3.8);
+    paint(rectPts(-40, -40, W + 80, H + 80), { grad: [mixCol('#171B3E', '#0E1130', spaceK), mixCol('#34356A', '#1A1C46', spaceK), Math.PI / 2], ink: null });
+    starField(t, { x: 0, y: 0, w: W, h: H }, Math.round(40 + 60 * spaceK), { seed: 17, a: .5 + .5 * spaceK });
+    if (spaceK > .01) fadeIn(spaceK, () => { for (let i = 0; i < 5; i++) glow(200 + i * 380, 180 + 120 * Math.sin(i * 1.7), 260, ['#6E5BA8', '#3E5A9E', '#8A5A96'][i % 3], .18); });
+    // ---- the planet ----
+    const E = S(0, R7), rs = R7 * Z;
+    if (rs < 4000) {
+      glow(E[0], E[1], rs * 1.28, '#7A8CE0', .35 * seg(L, -2.5, -4));
+      const pts = []; for (let i = 0; i < 180; i++) { const a = i / 180 * TAU; pts.push([E[0] + Math.cos(a) * rs, E[1] + Math.sin(a) * rs]); }
+      paint(pts, { grad: ['#2A3A78', '#141B44', th + Math.PI / 2 + .6], ink: null });
+      // night-side land and faint cloud swirls (fixed to the planet)
+      const lands = [[-.9, .55, .5], [.35, .6, .42], [2.1, .45, .6], [3.4, .35, .45], [4.6, .55, .5]];
+      for (const [a0, rr, sz] of lands) { const bl = []; for (let j = 0; j < 14; j++) { const a = j / 14 * TAU, q = rs * sz * .45 * (1 + .25 * Math.sin(a * 3 + a0 * 5)); const cx0 = Math.cos(a0 - Math.PI / 2 + th) * rs * rr, cy0 = Math.sin(a0 - Math.PI / 2 + th) * rs * rr; bl.push([E[0] + cx0 + Math.cos(a) * q, E[1] + cy0 + Math.sin(a) * q * .8]); } clipTo(pts, () => paint(bl, { wash: '#223A5E', washOp: 200, ink: null, curv: .5 })); }
+      clipTo(pts, () => { for (let j = 0; j < 4; j++) { const sw = []; for (let k = 0; k <= 10; k++) { const a = -2.2 + j * 1.4 + k * .09 + th; sw.push([E[0] + Math.cos(a) * rs * (.55 + .12 * j), E[1] + Math.sin(a) * rs * (.55 + .12 * j) + Math.sin(k) * rs * .03]); } inkLine(sw, clamp(rs / 200, .3, 2.5), '#8FA0D0', 'marker', .6, .25); } });
+      paint(pts, { ink: '#9FB0F0', sw: clamp(rs / 260, .5, 1.6), br: 'fine' });
+    } else {
+      // close to the ground: only the visible arc, closed far below
+      const ph0 = Math.atan2(C[0], R7 - C[1]), dph = Math.min(Math.PI, 1600 / Z / R7 * 1.4), pts = [];
+      for (let i = 0; i <= 60; i++) { const ph = ph0 - dph + 2 * dph * i / 60; pts.push(S(Math.sin(ph) * R7, R7 - Math.cos(ph) * R7)); }
+      const inner = []; for (let i = 60; i >= 0; i--) { const ph = ph0 - dph + 2 * dph * i / 60; inner.push(S(Math.sin(ph) * (R7 - 60), R7 - Math.cos(ph) * (R7 - 60))); }
+      const far = S(0, R7 * .5);
+      paint([...pts, [far[0] + 5000, far[1] + 5000], [far[0] - 5000, far[1] + 5000]], { wash: '#141836', ink: null });
+      paint([...pts, ...inner], { wash: '#2A2E52', ink: Z > .08 ? PAL.ink : null, sw: 1, br: 'fine' });
+    }
+    // ---- the dark city ----
+    const vis = (x, y, r) => { const p = S(x, y); return p[0] > -r && p[0] < W + r && p[1] > -r && p[1] < H + r; };
+    for (const b of CITY7) {
+      const base = surf(b.u); if (!vis(base[0], base[1] - b.h / 2, (b.h + b.w) * Z)) continue;
+      const P = S(base[0], base[1]); push(); translate(P[0], P[1]); rotate(th + b.u / R7); scale(Z);
+      const col = mixCol('#262A50', '#1E2246', hash(b.k * 2.2));
+      const top = b.roof > .72 ? [[-b.w / 2, -b.h], [0, -b.h - b.w * .35], [b.w / 2, -b.h]] : b.roof > .5 ? [[-b.w / 2, -b.h], [-b.w * .2, -b.h], [-b.w * .2, -b.h - 120], [b.w * .2, -b.h - 120], [b.w * .2, -b.h], [b.w / 2, -b.h]] : [[-b.w / 2, -b.h], [b.w / 2, -b.h]];
+      paint([[-b.w / 2, 4], ...top, [b.w / 2, 4]], { wash: col, ink: Z > .06 ? PAL.ink : null, sw: .7 / Z });
+      if (70 * Z > 1.6) { const cols = Math.floor((b.w - 40) / 120), rows = Math.floor((b.h - 60) / 110); for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (hash(b.k * 97 + r * 13 + c * 7) > .25) fillRectA(-b.w / 2 + 40 + c * (b.w - 80) / Math.max(1, cols - 1 || 1) - (cols > 1 ? 30 : -b.w / 2 + 70), -b.h + 60 + r * 110, 60, 70, '#343A68', .9); }
+      pop();
+    }
+    // ---- her building ----
+    {
+      const P = S(0, 0); push(); translate(P[0], P[1]); rotate(th); scale(Z);
+      const sw = .8 / Z;
+      paint([[-360, 4], [-360, -1320], [360, -1320], [360, 4]], { wash: '#2E3160', ink: Z > .05 ? PAL.ink : null, sw });
+      if (Z > .05) {
+        paint(rectPts(-380, -1345, 760, 30), { wash: '#3B3F72', ink: PAL.ink, sw });
+        paint(rectPts(140, -1470, 150, 125, 0), { wash: '#343866', ink: PAL.ink, sw });                // water tank
+        inkLine([[140, -1470], [215, -1520], [290, -1470]], .7 / Z, PAL.ink, 'fine', 0);
+        inkLine([[-200, -1345], [-200, -1520]], .8 / Z, '#4A4E80', 'marker', 0); inkLine([[-240, -1480], [-160, -1480]], .6 / Z, '#4A4E80', 'marker', 0);
+        paint(rectPts(-70, -96, 140, 96), { wash: '#1E2244', ink: PAL.ink, sw });                          // door
+      }
+      if (70 * Z > 1.2) for (let f = 1; f <= 11; f++) for (let c = -2; c <= 2; c++) {
+        if (f === 7 && c === 0) continue;
+        const x = c * 140 - 35, y = -(f + 1) * 110 + 16;
+        fillRectA(x, y, 70, 77, '#1B1F42', 1);
+        if (70 * Z > 14) { paint(rectPts(x, y, 70, 77), { ink: '#4A4E80', sw: .5 / Z, br: 'fine' }); fillRectA(x - 6, y + 77, 82, 7, '#474B7C', 1); paint([[x + 8, y + 8], [x + 26, y + 8], [x + 12, y + 50], [x + 4, y + 50]], { wash: '#2C3262', ink: null }); }
+      }
+      if (Z > .12) { inkLine([[470, 0], [470, -330]], 1.8 / Z * Math.min(1, Z), '#3A3E6C', 'marker', 0); paint(rectPts(462, -350, 40, 22), { wash: '#3A3E6C', ink: null }); }
+      pop();
+    }
+    // ---- her window: the warm room inside (drawn natively), frame, curtains, light ----
+    const wpx = WIN7.w * Z, wTL = S(WIN7.x, WIN7.y);
+    if (wpx > 24) {
+      push(); translate(wTL[0], wTL[1]); rotate(th); scale(wpx / NW);
+      clipTo(rectPts(0, 0, NW, NH), () => {
+        paint(rectPts(-10, -10, NW + 20, NH + 20), { grad: ['#F7C3A6', '#EE9FB0', Math.PI / 2], ink: null });
+        glow(160, 120, 520, '#FFE2A8', .6);
+        for (let i = 0; i < 7; i++) { const x = 60 + i * 130, y = 90 + 26 * Math.sin(i * 1.3); glow(x, y, 40, ['#FFD98A', '#FFB3C6', '#BFF0E0'][i % 3], .7); dot(x, y, 9, ['#FFE7A8', '#FFC9D8', '#D6FFF2'][i % 3]); }
+        inkLine(Array.from({ length: 8 }, (_, i) => [i * 130, 80 + 26 * Math.sin(i * 1.3) - 8]), .8, PAL.ink, 'fine', .5);
+        if (wpx > 120) {
+          const wave = Math.sin(bp * Math.PI), md = mood(t, [[95.4, 'happy', null, 'open'], [96.3, 'sparkle', null, 'smile']]);
+          hero(330, 1185, 64, { outfit: 'home', ...md, aR: .35 + .35 * Math.abs(wave), aL: -1.2, lookX: .1, blush: .8, tilt: .06 * wave, noShadow: true });
+          momo(650, 990 + 1.5 * 36, 36, { eyes: 'happy', mouth: 'open', sit: true, walk: t * 1.3, aR: .55 + .45 * Math.abs(Math.sin(bp * Math.PI * 1)), aL: -1.1, tilt: -.1 * wave, blush: 1, noShadow: true });
+        }
+      });
+      // curtains, frame and sill
+      for (const sd of [-1, 1]) { const x0 = sd < 0 ? -10 : NW + 10, x1 = sd < 0 ? 120 : NW - 120; paint([[x0, -10], [x1, -10], [x1 - sd * 20, 380], [x0 + sd * 40, 560], [x0, 900]], { wash: '#F29BB8', fill: '#E27A92', fillOp: 70, tex: .3, ink: PAL.ink, sw: 1.2, curv: .35 }); }
+      paint([[-40, -40], [NW + 40, -40], [NW + 40, NH + 40], [-40, NH + 40], [-40, -40], [0, 0], [0, NH], [NW, NH], [NW, 0], [0, 0]], { wash: '#F3E6D2', ink: null });
+      paint(rectPts(-40, -40, NW + 80, NH + 80), { ink: PAL.ink, sw: 1.6 }); paint(rectPts(0, 0, NW, NH), { ink: PAL.ink, sw: 1.2 });
+      paint(rectPts(-70, NH + 10, NW + 140, 44, 2), { wash: '#F8EEDF', fill: '#D9C6AE', fillOp: 80, tex: .3, ink: PAL.ink, sw: 1.3 });
+      pop();
+    }
+    // the one warm light in the dark: spill glow, then a tiny pink point
+    const wc = S(W7c[0], W7c[1]), gr = Math.max(wpx * 1.4, 26);
+    glow(wc[0], wc[1], gr * 1.6, '#FF9FC0', wpx > 200 ? .25 : .55);
+    if (wpx < 30) { glow(wc[0], wc[1], Math.max(10, gr * .45), '#FFE3EE', .9); dot(wc[0], wc[1], Math.max(2.4, wpx * .45), '#FFD2E2', 1); }
+    // 叮: it twinkles on the beat
+    const T7 = B(167), tw = seg(t, T7 - .05, T7 + .7);
+    if (tw > 0 && tw < 1) {
+      sparkle(wc[0], wc[1], 70, '#FFF3F8', tw);
+      const rr = 20 + 120 * easeOut(tw); paint(ellPts(wc[0], wc[1], rr, rr, 40), { ink: '#FFC9DC', sw: 1.2 * (1 - tw), br: 'fine' });
+    }
+    if (t > T7 + .5) sparkle(wc[0] + 3, wc[1] - 2, 16, '#FFFFFF', frac((t - T7) * .9));
+    // the sleepy crescent keeps watch at the end
+    const mk = seg(L, -3.6, -4.5);
+    if (mk > .01) fadeIn(mk, () => moonFace(1600, 230, 64, { rot: -.35 }));
+  }
+
+  // ======================================================================================
   // placeholders for the shots still to paint
   // ======================================================================================
   const todo = name => (t, lt) => { dreamSky(t, lt * 60); letter(name, 960, 520, 90, PAL.rose, { font: 'kai' }); };
-  const zoomOut = todo('zoomOut'), myLine = todo('myLine');
+  const myLine = todo('myLine');
 
   chapter('chorus1', 67.356, 105.756, [[67.356, seal], [72.156, noTrade], [76.956, paintCity], [81.756, momoBorn], [86.556, crescent], [90.756, sighPop], [95.556, zoomOut], [100.956, myLine]]);
   transition(67.356, 'white', .6);

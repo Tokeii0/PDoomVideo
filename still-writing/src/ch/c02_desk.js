@@ -352,7 +352,7 @@
   // =====================================================================================
   // THE ROOM AT NIGHT: closeBook and qmarkShot share her blocking (front view of room()).
   const SEAT = [1170, 985], HS = 34, SEAT_Y = SEAT[1] - 1.7 * HS;         // her chair; seated ground point
-  const BOOK = [1040, 704, 250], SWITCH = [1112, 731];                    // the sketchbook; the lamp's little cord switch
+  const BOOK = [1040, 704, 250], SWITCH = [1078, 812];                    // the sketchbook; the lamp's cord switch, dangling off the desk
   const SNAP = B(66), SWIV = [B(66) + .22, B(66) + .5], CLICK = B(69), HOPOFF = [B(69) + .36, B(69) + .6], WALK_V = 190;
   const walkPos = t => { const a = Math.max(0, t - HOPOFF[1]); return [SEAT[0] - 12 - WALK_V * a, 1000 + a * 12, HS * (1 + a * .02)]; };
   // the sketchbook lying on the desk, seen from the room: th 0 = open flat .. π = closed (right half folded over)
@@ -383,11 +383,15 @@
     if (th < .01) { inkLine([[cx, y], [cx, y - h]], .7, PAL.ink, 'fine', 0); inkLine([[cx + hw * .15, y - 10], [cx + hw * .5, y - 8]], .5, PAL.steel, 'pencil', 0); }
   }
   // the lamp's cord along the desk with a little round switch (pressed 0..1)
-  function lampCord(press = 0, on = 1) {
-    inkLine([[930, 706], [990, 724], [1060, 730], [SWITCH[0] - 14, SWITCH[1]]], 1.3, '#E7D8C2', 'marker', .5);
-    inkLine([[SWITCH[0] + 14, SWITCH[1]], [1190, 734], [1260, 728]], 1.3, '#E7D8C2', 'marker', .5);
-    paint(rrPts(SWITCH[0] - 16, SWITCH[1] - 7 + press * 2, 32, 14 - press * 2, 7), { wash: '#FFF1DC', ink: PAL.ink, sw: .7 });
-    dot(SWITCH[0], SWITCH[1] - 1 + press * 2, 3, on > .5 ? PAL.coral : PAL.gray);
+  function lampCord(press = 0, on = 1, sway = 0) {
+    const [sx, sy] = [SWITCH[0] + sway * 6, SWITCH[1]];
+    inkLine([[930, 706], [990, 722], [1030, 740], [1050, 752], [sx - 4, sy - 16]], 1.4, '#E7D8C2', 'marker', .5);
+    inkLine([[sx + 2, sy + 16], [sx + 8 - sway * 4, sy + 70], [sx - 4, sy + 130], [sx - 30, 986]], 1.4, '#E7D8C2', 'marker', .5);
+    push(); translate(sx, sy); rotate(-.15 + sway * .2);
+    paint(rrPts(-10, -18, 20, 36 - press * 3, 9), { wash: '#FFF1DC', fill: '#E7D8C2', fillOp: 60, ink: PAL.ink, sw: .8 });
+    paint(rrPts(-5, -9 + press * 3, 10, 12, 4), { wash: on > .5 ? '#F29BB8' : '#B8A9C8', ink: PAL.ink, sw: .5 });
+    pop();
+    if (press > .5) sparkle(sx - 18, sy - 18, 12, '#FFF3C0', .5);
   }
   // the ahoge, drawn in head-local space so it can morph between shapes (droop → question with an overshoot)
   const AH = {
@@ -403,6 +407,22 @@
       pop();
     };
   }
+  // both hands raised above her head in a big stretch (body-local; the draw hook paints before the head, so the
+  // forearms disappear behind it and only the wrists and hands peek over the top). k 0..1, wig = finger wiggle
+  function stretchHands(k, wig = 0) {
+    return (s, sw) => {
+      if (k <= .01) return;
+      for (const sd of [-1, 1]) {
+        const hx = sd * lerp(1.6, 1.25, k) * s, hy = lerp(-8.4, -11.0, k) * s, a = sd * (.15 + wig * .12 * Math.sin(T * 14 + sd));
+        paint(rrPts(-.33 * s, 0, .66 * s, 7 * s, .3 * s).map(([px, py]) => [hx + px * Math.cos(a) - py * Math.sin(a), hy + px * Math.sin(a) + py * Math.cos(a)]), { wash: HOOD, fill: HOOD_DK, fillOp: 50, tex: .3, ink: PAL.ink, sw: sw * .75 });
+        paint(ellPts(hx, hy - .1 * s, .42 * s, .4 * s, 12), { wash: SKIN, ink: PAL.ink, sw: sw * .6 });
+        for (const f of [-1, 0, 1]) inkLine([[hx + f * .2 * s, hy - .38 * s], [hx + f * .3 * s + sd * .05 * s, hy - .72 * s]], sw * .9, SKIN, 'marker', 0);
+        for (const f of [-1, 0, 1]) inkLine([[hx + f * .2 * s, hy - .38 * s], [hx + f * .3 * s + sd * .05 * s, hy - .72 * s]], sw * .35, PAL.ink, 'fine', 0);
+      }
+    };
+  }
+  // a tiny sleepy tear glinting at the corner of her eye (head hook)
+  const yawnTear = k => (s, sw) => { if (k > .02) { paint([[1.55 * s, .15 * s], [1.72 * s, .45 * s], [1.55 * s, .6 * s], [1.4 * s, .45 * s]], { wash: '#CFEAF8', washOp: 230 * k, ink: PAL.ink, sw: sw * .35, curv: .6 }); dot(1.52 * s, .38 * s, .06 * s, '#FFFFFF', k); } };
   // her pencil (in the right hand, arm space)
   const heldPencil = (s, sw) => { push(); rotate(-.9); pencil(.2 * s, -.3 * s, s / 95, Math.PI * .85, '#F6C85F'); pop(); };
   // the chair + her, facing the desk (back) or the room (front); sx squeezes for the swivel
@@ -422,16 +442,16 @@
   // 38.556 · The room: SNAP the book shut, swivel round, stretch and yawn, pat the lamp switch off, pad off to bed.
   function closeBook(t, lt, dur) {
     const off = t < CLICK ? 0 : t < CLICK + .05 ? .7 : t < CLICK + .09 ? .2 : t < CLICK + .13 ? .85 : 1;   // flicker, then dark
-    const z = kf(t, [[38.5, 1.3], [41.3, 1.38], [43.4, 1.08]], easeInOut);
-    const cx = kf(t, [[38.5, 1085], [41.3, 1100], [43.4, 880]], easeInOut), cy = kf(t, [[38.5, 655], [41.3, 650], [43.4, 640]], easeInOut);
+    const z = kf(t, [[38.5, 1.62], [39.9, 1.56], [40.5, 1.4], [41.7, 1.42], [43.4, 1.12]], easeInOut);
+    const cx = kf(t, [[38.5, 1070], [39.9, 1075], [40.5, 1090], [41.7, 1080], [43.4, 880]], easeInOut), cy = kf(t, [[38.5, 700], [39.9, 700], [40.5, 690], [41.7, 690], [43.4, 650]], easeInOut);
     camBegin(cx, cy, z, 0);
     nightRoom(t, { lamp: 1 - off, dark: .06 + .44 * off });
     // 团子 asleep on the cushion; the SNAP makes an ear twitch
     const tw = seg(t, SNAP, SNAP + .1) * (1 - seg(t, SNAP + .25, SNAP + .6));
-    cat(420, 932, 22, { pose: 'sleep', dy: -.12 * tw, sq: .06 * Math.sin(t * 2.4), zzz: tw < .2 });
+    cat(430, 932, 24, { pose: 'sleep', dy: -.12 * tw, sq: .06 * Math.sin(t * 2.4), zzz: tw < .2 });
     // the book: open → the right half flips over → SNAP
     const th = t < SNAP ? Math.PI * easeIn(seg(t, SNAP - .42, SNAP)) : Math.PI;
-    lampCord(t > CLICK - .06 && t < CLICK + .12 ? 1 : 0, 1 - off);
+    lampCord(t > CLICK - .05 && t < CLICK + .12 ? 1 : 0, 1 - off, Math.exp(-Math.max(0, t - CLICK) * 4) * Math.sin(Math.max(0, t - CLICK) * 18) * (t > CLICK ? 1 : 0));
     deskBook(th, { glow: t > SNAP ? .8 * Math.exp(-(t - SNAP) * 5) : 0 });
     if (t > SNAP && t < SNAP + .9) {                                      // puff of eraser crumbs + dust
       const a = t - SNAP;
@@ -453,15 +473,17 @@
     } else {
       const sw = seg(t, SWIV[0], SWIV[1]), sxk = -Math.cos(sw * Math.PI);
       const hopA = seg(t, HOPOFF[0], HOPOFF[1]);
-      const up = kf(t, [[B(67) - .05, -1.15], [B(67) + .12, -1.35], [B(67) + .45, 1.5], [B(68) + .5, 1.42], [B(68) + .75, 1.45]]);
-      const aL = t < CLICK - .25 ? up : kf(t, [[CLICK - .25, 1.45], [CLICK - .06, 1.22], [CLICK + .04, 1.14], [CLICK + .2, 1.25], [CLICK + .4, -1.1]]);
-      const aR = t < B(68) + .75 ? up : kf(t, [[B(68) + .75, 1.45], [B(68) + 1.0, -1.1]]);
+      const stK = kf(t, [[B(67) + .1, 0], [B(67) + .42, 1], [B(68) + .55, .92], [B(68) + .8, 0]], easeInOut);
+      const reach = kf(t, [[CLICK - .3, -1.15], [CLICK - .08, -.5], [CLICK + .02, -.42], [CLICK + .25, -.5], [CLICK + .45, -1.15]]);
+      const aL = stK > .05 ? 1.5 : t > CLICK - .35 ? reach : kf(t, [[B(67) - .05, -1.15], [B(67) + .12, -1.35], [B(67) + .2, -1.1]]);
+      const aR = stK > .05 ? 1.5 : kf(t, [[B(67) - .05, -1.15], [B(67) + .12, -1.35], [B(67) + .2, -1.1]]);
       const sq = kf(t, [[B(67) - .05, 0], [B(67) + .12, .08], [B(67) + .45, -.16], [B(68) + .5, -.13], [B(68) + .8, .02], [B(68) + 1.0, 0]]) + (md.take || 0);
       const dy = -kf(t, [[B(67) + .12, 0], [B(67) + .45, .3], [B(68) + .5, .25], [B(68) + .8, 0]]);
       const tilt = kf(t, [[B(67) + .1, 0], [B(67) + .5, -.14], [B(68) + .5, .1], [B(68) + .9, 0]]);
-      const tear = seg(t, B(67) + .5, B(67) + .8) * (1 - seg(t, B(68) + .6, B(68) + .9)) * .35;
+      const tear = seg(t, B(67) + .5, B(67) + .8) * (1 - seg(t, B(68) + .6, B(68) + .9));
       if (t < HOPOFF[0]) {
-        seated(SEAT[0], SEAT_Y, { ...md, take: 0, sx: Math.max(.08, sxk), aL, aR, sq, dy, tilt, tears: tear, blush: .5, ahoge: t > B(67) + .4 && t < B(68) + .8 ? 'normal' : 'droop' });
+        seated(SEAT[0], SEAT_Y, { ...md, take: 0, sx: Math.max(.08, sxk), aL, aR, sq, dy, tilt, blush: .5, ahoge: t > B(67) + .4 && t < B(68) + .8 ? 'normal' : 'droop',
+          draw: stretchHands(stK, stK), head: yawnTear(tear) });
       } else {
         // hop down and pad off to bed, sleepy
         chair(SEAT[0], SEAT[1], HS, { seat: 3.2 });

@@ -438,7 +438,7 @@
   function corridorBox(t, cz) {
     const { X: cx, Yf, Yc, Zend } = CO, z0 = Math.max(0, cz + .1);
     const Q = (a, b, c, d) => [pj(...a, cz), pj(...b, cz), pj(...c, cz), pj(...d, cz)];
-    paint(Q([-cx, Yc, z0], [cx, Yc, z0], [cx, Yc, Zend], [-cx, Yc, Zend]), { wash: '#EEF4F1', fill: '#D7E2DE', fillOp: 60, bleed: .05, tex: .3, border: .2, ink: null });
+    paint(Q([-cx, Yc, z0], [cx, Yc, z0], [cx, Yc, Zend], [-cx, Yc, Zend]), { wash: '#D3DDDA', fill: '#BFCCC9', fillOp: 60, bleed: .05, tex: .3, border: .2, ink: null });
     paint(Q([-cx, Yf, z0], [cx, Yf, z0], [cx, Yf, Zend], [-cx, Yf, Zend]), { wash: '#D6E2DE', fill: '#B7C8C4', fillOp: 60, bleed: .05, tex: .35, border: .2, ink: null });
     paint(Q([-cx, Yc, z0], [-cx, Yc, Zend], [-cx, Yf, Zend], [-cx, Yf, z0]), { wash: '#E3ECE8', fill: '#C9D6D2', fillOp: 60, bleed: .05, tex: .3, border: .2, ink: null });
     paint(Q([cx, Yc, z0], [cx, Yc, Zend], [cx, Yf, Zend], [cx, Yf, z0]), { wash: '#F1F5F2', fill: '#D5E0DC', fillOp: 55, bleed: .05, tex: .3, border: .2, ink: null });
@@ -489,7 +489,7 @@
         continue;
       }
       const a = pj(-1.05, CO.Yc + .02, z, cz), b = pj(1.05, CO.Yc + .02, z, cz), c = pj(0, CO.Yc + .02, z, cz);
-      paint(rrPts(a[0], c[1] - .1 * k, b[0] - a[0], .2 * k, .08 * k), { wash: '#C9D6D2', ink: '#8FA3A6', sw: .5 });
+      paint(rrPts(a[0], c[1] - .1 * k, b[0] - a[0], .2 * k, .08 * k), { wash: '#AFBEBB', ink: '#7E9296', sw: .5 });
       paint(rrPts(a[0] + .06 * k, c[1] - .05 * k, b[0] - a[0] - .12 * k, .1 * k, .05 * k), { wash: on > .5 ? '#FBFFFD' : mixCol('#7E8A94', '#FBFFFD', on), ink: null });
       if (on > .05) { push(); translate(c[0], c[1] + .15 * k); scale(1.6, 1); glow(0, 0, 1.1 * k, '#E6FFF5', .5 * on); pop(); glow(c[0], c[1], .6 * k, '#FFFFFF', .55 * on); }
       const bf = frac(bpOf(t));

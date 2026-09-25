@@ -11,6 +11,7 @@
 // Neck -4.3s, torso -4.35s..-1.35s, feet at 0. Shoulders (±.95s, -3.95s); arms are 1.8s long; hands r .36s.
 // Arm angles as in the P(doom) cast: 0 = straight out sideways, positive = raised, about -1.25 = hanging.
 // Hooks: o.draw(s, sw) body-local; o.handL/o.handR(s, sw) at the hand centre in arm space (+x = outward along the arm);
+//        o.armFront: 'L' | 'R' | 'both' paints that arm (and what it holds) over the head instead of under it;
 //        o.head(s, sw) in head-local space after the face (head centre at 0,0; face spans about ±2.5s).
 //
 // Pose: dy (units, negative = up), sq (squash; negative stretches), rot, flip, sx, walk (phase), run (phase), sit,
@@ -90,7 +91,8 @@ function chibi(x, y, s, o) {
     if (hook) { if (side < 0) scale(-1, 1); hook(s, sw); }
     pop();
   };
-  arm(-1, o.aL ?? -1.2, o.handL); arm(1, o.aR ?? -1.2, o.handR);
+  const fL = o.armFront === 'L' || o.armFront === 'both', fR = o.armFront === 'R' || o.armFront === 'both';
+  if (!fL) arm(-1, o.aL ?? -1.2, o.handL); if (!fR) arm(1, o.aR ?? -1.2, o.handR);
   if (o.draw) o.draw(s, sw);
 
   // --- head ---
@@ -105,6 +107,7 @@ function chibi(x, y, s, o) {
     if (o.head) o.head(s, sw);
   }
   pop();
+  if (fL) arm(-1, o.aL ?? -1.2, o.handL); if (fR) arm(1, o.aR ?? -1.2, o.handR);    // raised arms that must cover the head
   pop();
   if (o.emote) emote(o.emote, x + (o.flip ? -1 : 1) * 3.4 * s, y + (o.dy || 0) * s - 10.2 * s, s * .9, o.emoteK ?? 1);
 }
@@ -269,7 +272,7 @@ function browsOf(s, sw, o, fx, fy) {
   for (const sd of [-1, 1]) {
     const bx = sd * 1.05 * s + fx, by = -1.2 * s + fy;
     const tilt = b === 'worried' || b === 'sad' ? -sd * .22 : b === 'angry' ? sd * .28 : 0, lift = b === 'up' ? -.25 * s : 0;
-    inkLine([[bx - .35 * s, by + lift + tilt * s], [bx + .35 * s, by + lift - tilt * s]], sw * .75, mixCol(o.hair, PAL.ink, .3), 'ink', 0);
+    inkLine([[bx - .35 * s, by + lift + tilt * s], [bx + .35 * s, by + lift - tilt * s]], sw * .85, mixCol(o.hair, PAL.ink, .7), 'ink', 0);
   }
 }
 function faceFeatures(s, sw, o, fx, fy) {
