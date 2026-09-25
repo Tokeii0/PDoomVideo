@@ -439,9 +439,10 @@
   function thingFace(x, y, s, k, o = {}) {
     const sw = clamp(s / 16, .6, 2.6), ex = (o.ex || 1.1) * s;
     if (k < .5) {
+      const gx = (o.gaze ? o.gaze[0] : 0) * .2 * s, gy = (o.gaze ? o.gaze[1] : 0) * .14 * s;   // stern eyes follow 桃桃
       for (const sd of [-1, 1]) {
         inkLine([[x + sd * ex - sd * .5 * s, y - .48 * s], [x + sd * ex + sd * .5 * s, y - .74 * s]], sw * 1.2, PAL.ink, 'ink', 0);
-        paint(ellPts(x + sd * ex, y, .2 * s, .24 * s, 10), { wash: PAL.ink, ink: null });
+        paint(ellPts(x + sd * ex + gx, y + gy, .2 * s, .24 * s, 10), { wash: PAL.ink, ink: null });
       }
       inkLine([[x - .45 * s, y + .85 * s], [x + .45 * s, y + .85 * s]], sw * 1.1, PAL.ink, 'ink', 0);
       return;
@@ -470,11 +471,11 @@
     paint(pts, { ink: PAL.ink, sw });
   }
 
-  function thing(o, t, bump) {
+  function thing(o, t, bump, mp) {
     const tS = B(o.beat), age = t - tS, k = easeOut(seg(t, tS, tS + .42)), cute = age >= 0 ? .5 + seg(age, 0, .12) * .5 : 0;
     const c = (a, b) => mixCol(a, b, k), x = o.x, y = GY2, sq = (age > 0 ? .1 * Math.exp(-age * 6) * Math.cos(age * 22) : 0) + bump;
     push(); translate(x, y); scale(1 + sq * .5, 1 - sq); translate(-x, -y);
-    const earK = backOut(seg(age, -.02, .2));
+    const earK = backOut(seg(age, -.02, .2)), gaze = mp ? [clamp((mp[0] - o.x) / 350, -1, 1), clamp((mp[1] - 150 - (o.top + 80)) / 300, -1, 1)] : null;
     if (o.kind === 'stamp') {
       bloomBody(rrPts(x - 95, y - 66, 190, 66, 16), o.grey, o.col, k, x, y - 190, 260);
       paint(rrPts(x - 99, y - 16, 198, 16, 6), { wash: c('#6E7080', '#D9485E'), ink: PAL.ink, sw: 1 });
@@ -483,7 +484,7 @@
       bloomBody(knob, o.grey, mixCol(o.col, '#FFFFFF', .3), k, x, y - 246, 150);
       inkLine([[x - 48, y - 214], [x - 26, y - 232]], 2.2, '#FFFFFF', 'marker', .4, .45);
       catEar(x - 40, y - 236, 44, -.45, mixCol(o.col, '#FFFFFF', .3), earK); catEar(x + 40, y - 236, 44, .45, mixCol(o.col, '#FFFFFF', .3), earK);
-      thingFace(x, y - 184, 26, cute, { mouth: 'cat', ex: .95 });
+      thingFace(x, y - 184, 26, cute, { mouth: 'cat', ex: .95, gaze });
     } else if (o.kind === 'sign') {
       const py = y - 400;
       paint(rectPts(x - 9, py, 18, 400), { wash: c('#8C8FA0', '#E9D9C6'), ink: PAL.ink, sw: 1 });
@@ -496,7 +497,7 @@
       const bend = k * 26, bar = [];
       for (let i = 0; i <= 10; i++) { const u = i / 10 * 2 - 1; bar.push([x + u * 62, py + 26 + bend * (1 - u * u)]); }
       inkLine(bar, 7.4, PAL.ink, 'marker', .5); inkLine(bar, 6.2, c('#E3E4EA', '#FFF6E6'), 'marker', .5);
-      thingFace(x, py - 30, 28, cute, { eyes: 'sparkle', mouth: 'none' });
+      thingFace(x, py - 30, 28, cute, { eyes: 'sparkle', mouth: 'none', gaze });
     } else if (o.kind === 'cabinet') {
       const bx = x - 100, by = y - 300;
       bloomBody(rectPts(bx, by, 200, 300, 1.5), o.grey, o.col, k, x, by - 20, 380);
@@ -507,7 +508,7 @@
         if (d > 0) { paint(rrPts(x - 34, dy + 40, 68, 14, 7), { wash: c('#7C7F8E', '#F6C85F'), ink: PAL.ink, sw: .8 }); paint(rectPts(x - 22, dy + 12, 44, 20), { wash: c('#E4E4EA', '#FFF8EE'), ink: PAL.ink, sw: .6 }); }
       }
       catEar(bx + 44, by - 8, 46, -.3, o.col, earK); catEar(bx + 156, by - 8, 46, .3, o.col, earK);
-      thingFace(x, by + 54, 28, cute, { mouth: 'grin' });
+      thingFace(x, by + 54, 28, cute, { mouth: 'grin', gaze });
     } else if (o.kind === 'rack') {
       const bx = x - 90, by = y - 420;
       bloomBody(rectPts(bx, by, 180, 420, 1.5), o.grey, o.col, k, x, by - 20, 520);
@@ -519,7 +520,7 @@
         for (let q = 0; q < 4; q++) inkLine([[bx + 96 + q * 13, ry + 7], [bx + 96 + q * 13, ry + 23]], .6, PAL.ink, 'fine', 0, .6);
       }
       catEar(bx + 38, by - 2, 44, -.3, o.col, earK); catEar(bx + 142, by - 2, 44, .3, o.col, earK);
-      thingFace(x, by + 70, 28, cute, { eyes: 'happy', mouth: 'o', ex: 1.05 });
+      thingFace(x, by + 70, 28, cute, { eyes: 'happy', mouth: 'o', ex: 1.05, gaze });
     }
     pop();
   }
@@ -603,9 +604,10 @@
     inkLine([[-600, GY2 + 40], [W + 600, GY2 + 40]], .6, mixCol('#8E90A0', '#C99A86', warm), 'fine', 0, .5);
 
     // the row: everyone bounces together on the last beats
+    const mh = momoHop(t);
     OBJS.forEach((o, i) => {
       const happy = t > B(o.beat) + .5 ? 1 : 0, wave = t > tSm ? .05 * Math.max(0, Math.sin(Math.PI * frac(bpOf(t) - i * .15))) * pulse(t - i * .09, 3) : .018 * happy * pulse(t - i * .07, 5);
-      if (o.kind === 'building') building(o, t, wave); else thing(o, t, wave);
+      if (o.kind === 'building') building(o, t, wave); else thing(o, t, wave, [mh.x, mh.y]);
     });
 
     // 桃桃 hopping along the tops, slapping stickers on each landing

@@ -96,7 +96,7 @@ if (args.worker) {
   if (args.loop) { dir = resolve(args.out || join(ROOT, `out/loop_${args.loop}`)); first = 0; last = Math.round(+(args.len || 4) * fps) - 1; ext = 'png'; }
   else {
     const [a, b] = String(args.frames || args.clip).split(':').map(Number);
-    if (args.clip) { dir = resolve(join(ROOT, 'out/clip_frames')); rmSync(dir, { recursive: true, force: true }); }
+    if (args.clip) { dir = resolve(join(ROOT, `out/clip_frames_${process.pid}`)); rmSync(dir, { recursive: true, force: true }); }   // one folder per run
     first = Math.round(a * fps); last = Math.min(Math.ceil(DURV * fps) - 1, Math.round(b * fps) - 1);
   }
   mkdirSync(dir, { recursive: true });
@@ -123,6 +123,7 @@ if (args.worker) {
     await run(FFMPEG, ['-y', '-loglevel', 'error', '-framerate', String(fps), '-start_number', String(first), '-i', `${dir}/f%05d.jpg`,
       '-ss', String(a), '-t', String(b - a), '-i', SONG, '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19',
       '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-shortest', out]);
+    rmSync(dir, { recursive: true, force: true });
     console.log('wrote ' + out);
   }
 } else console.log('nothing to do: see the usage at the top of render.mjs');

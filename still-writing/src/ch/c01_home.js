@@ -418,9 +418,10 @@
   const heroZ = t => 5.3 - .92 * (t - B(16));
   const camZ = t => lerp(-.42, -3.15, easeInOut(seg(t, B(16) - .2, B(24) + .1)));
   const tubeOff = i => Math.max(B(18) + (11 - i) * BEAT / 2, B(16) + (5.3 - TUBES[i]) / .92 + .35);
+  const buzzTube = t => [1, 2, 0, 3][((beatN(t) % 4) + 4) % 4];     // one near tube buzzes and flickers on each beat
   function tubeState(t, i) {                              // 1 on, 0 off, with a dying flicker
     const to = tubeOff(i), a = t - to;
-    if (a < -.3) { const bi = beatN(t), bf = frac(bpOf(t)), hit = (bi + i) % 4 === 0 && bf < .16; return hit ? (Math.sin(bf * 120) > 0 ? .35 : 1) : 1 - .12 * pulse(t, 10); }
+    if (a < -.3) { const bf = frac(bpOf(t)), hit = i === buzzTube(t) && bf < .2; return hit ? (Math.sin(bf * 95) > -.2 ? .3 : 1) : 1 - .1 * pulse(t, 10); }
     if (a < 0) return a > -.18 && Math.sin(a * 90) > 0 ? .25 : 1;
     return a < .12 && Math.sin(a * 70) > .3 ? .5 : 0;
   }
@@ -491,6 +492,12 @@
       paint(rrPts(a[0], c[1] - .1 * k, b[0] - a[0], .2 * k, .08 * k), { wash: '#C9D6D2', ink: '#8FA3A6', sw: .5 });
       paint(rrPts(a[0] + .06 * k, c[1] - .05 * k, b[0] - a[0] - .12 * k, .1 * k, .05 * k), { wash: on > .5 ? '#FBFFFD' : mixCol('#7E8A94', '#FBFFFD', on), ink: null });
       if (on > .05) { push(); translate(c[0], c[1] + .15 * k); scale(1.6, 1); glow(0, 0, 1.1 * k, '#E6FFF5', .5 * on); pop(); glow(c[0], c[1], .6 * k, '#FFFFFF', .55 * on); }
+      const bf = frac(bpOf(t));
+      if (i === buzzTube(t) && bf < .35 && t < tubeOff(i) - .3) for (const sd of [-1, 1]) {   // bzz: little zigzags off the ends
+        const ex = sd < 0 ? a[0] - .12 * k : b[0] + .12 * k, zz = [];
+        for (let q = 0; q < 5; q++) zz.push([ex + sd * q * .07 * k, c[1] - .1 * k + (q % 2 ? -.07 : .07) * k]);
+        inkLine(zz, .9, '#8FA3A6', 'fine', 0, 1 - bf / .35);
+      }
     }
   }
   function hangingClock(t, cz) {
@@ -559,9 +566,9 @@
     hangingClock(t, cz);
     // the dark creeping up behind her as the lights go out
     let zd = 99; TUBES.forEach((z, i) => { if (t >= tubeOff(i) + .12) zd = Math.min(zd, z); });
-    if (zd < 90) for (let j = 0; j < 22; j++) {
-      const z = Math.max(zd - 1.6 + j * .32, cz + .2), a0 = pj(-CO.X, CO.Yc, z, cz), a1 = pj(CO.X, CO.Yf, z, cz);
-      fillRectA(a0[0], a0[1], a1[0] - a0[0], a1[1] - a0[1], '#12163C', .075);
+    if (zd < 90) for (let j = 0; j < 26; j++) {
+      const z = Math.max(zd - 2.2 + j * .38, cz + .2), a0 = pj(-CO.X, CO.Yc, z, cz), a1 = pj(CO.X, CO.Yf, z, cz);
+      fillRectA(a0[0], a0[1], a1[0] - a0[0], a1[1] - a0[1], '#1E2452', .055);
     }
     corridorHero(t, cz, false);
     entrance(t, cz);
@@ -618,8 +625,8 @@
     const sh = seg(t, B(30) - .15, B(30) + .45);            // a shooting star while she breathes out
     if (sh > 0 && sh < 1) {
       const e = easeOut(sh), hx = lerp(1330, 520, e), hy = lerp(90, 330, e), tl = 180 * Math.sin(sh * Math.PI);
-      inkLine([[hx + tl * .96, hy - tl * .28], [hx + tl * .45, hy - tl * .13], [hx, hy]], 1.6, '#FFF3C8', 'fine', 0, .85 * (1 - sh * .5));
-      glow(hx, hy, 26, '#FFF3C0', .7 * (1 - sh)); dot(hx, hy, 3.5, '#FFFFFF', 1 - sh * .6);
+      inkLine([[hx + tl * .96, hy - tl * .28], [hx + tl * .45, hy - tl * .13], [hx, hy]], 2.6, '#FFF3C8', 'ink', 0, .9 * (1 - sh * .5));
+      glow(hx, hy, 40, '#FFF3C0', .8 * (1 - sh)); sparkle(hx, hy, 14, '#FFFFFF', .5 + .5 * (1 - sh));
     }
     // far houses with warm windows
     for (let i = 0; i < 11; i++) {
