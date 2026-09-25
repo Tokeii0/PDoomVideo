@@ -520,7 +520,7 @@
     const wave = Math.sin(t * 12) * .25;
     paperPlane(PXp, PYp, 300, t, { el: .42, pitch: .05 + .06 * Math.cos((t - 230.556) * TAU / 2.4), roll: -.04 + .04 * Math.sin(t * 1.3), riders: P => crew(P, t, {
       s: 30, fac: 1, wind: 1, lift: .25,
-      h: { eyes: lookBack > .5 ? 'happy' : 'sparkle', mouth: lookBack > .5 ? 'grin' : 'open', lookX: lerp(.5, -.8, lookBack), aL: lerp(-.3, .42, lookBack) + wave * lookBack, aR: lerp(.1, -.2, lookBack), blush: .7, ahoge: 'perk', tilt: -.1 * lookBack },
+      h: { ...mood(t, [[229, 'sparkle', null, 'open'], [B(384.9), 'happy', 'heart', 'grin'], [B(389.4), 'sparkle', null, 'open']]), lookX: lerp(.5, -.8, lookBack), aL: lerp(-.3, .42, lookBack) + wave * lookBack, aR: lerp(.1, -.2, lookBack), blush: .7, ahoge: 'perk', tilt: -.1 * lookBack },
       m: { eyes: 'happy', mouth: 'open', lookX: lerp(.4, -.7, lookBack), aL: .38 + (bp > 386 ? wave : 0), aR: -.2, tilt: .08 * Math.sin(t * 3) } }) });
     // sparkles along the line on the beat
     for (let i = 0; i < 14; i++) { const q = line[Math.min(line.length - 1, i * 3 + 1)]; sparkle(q[0], q[1] + (hash(i) - .5) * 40, 10 + 8 * hash(i + 3), i % 2 ? '#FFF3C0' : '#FFD1E0', frac(bp + hash(i))); }
@@ -533,7 +533,14 @@
   const R0 = 235.356, CG = 1080, CX0 = -400;
   // the front skyline layer of nightCity(), mirrored so the drips can land on its roofs: [x, w, h] per building
   const FRONT = (() => { const out = []; let x = CX0 - 40 + hash(2 * 13) * 60, i = 0; while (x < 5200) { const bw = 170 * (.6 + hash(200 + i * 3.1) * .7), bh = 180 + hash(100 + i * 7.3) * 420; out.push([x, bw, bh]); x += bw + 6 + hash(60 + i) * 30; i++; } return out; })();
-  const roofAt = x => { for (const [bx, bw, bh] of FRONT) if (x >= bx && x <= bx + bw) return [CG - bh, bx, bw, bh]; return [CG - 150, x - 30, 60, 150]; };
+  const roofAt = x => {                                    // the roof surface y at x (pointed roofs included), and the building
+    let i = 0;
+    for (const [bx, bw, bh] of FRONT) {
+      if (x >= bx && x <= bx + bw) { const peak = hash(2 * 70 + i) > .7 ? 50 * (1 - Math.abs(x - bx - bw / 2) / (bw / 2)) : 0; return [CG - bh - peak, bx, bw, bh]; }
+      i++;
+    }
+    return [CG - 150, x - 30, 60, 150];
+  };
   function roofPlane(t) {                                  // the plane's world position during the shot
     const lt = t - R0, dive = seg(lt, -.3, 1.0);
     const x = lt < 1.0 ? lerp(-60, 880, easeIn(dive) * .55 + dive * .45) : 880 + (lt - 1.0) * 610;
@@ -566,10 +573,23 @@
     // paint drips on the beat: they fall from the contrail and splash on a roof
     for (let n = 391; n <= 400; n++) for (let j = 0; j < 2; j++) {
       const td = B(n) + j * .3, age = t - td; if (age < 0 || age > 1.4) continue;
-      const [sx, sy] = roofPlane(td), dx = sx - 120 - j * 60, [ry] = roofAt(dx), fall = Math.min(1, age / .45);
+      const [sx, sy] = roofPlane(td), dx = sx - 120 - j * 60, [ry, rbx, rbw] = roofAt(dx), fall = Math.min(1, age / .45);
       const col = WARM[(n * 2 + j) % 4];
       if (fall < 1) { const y = lerp(sy + 40, ry, fall * fall); paint([[dx, y - 44], [dx + 15, y], [dx, y + 15], [dx - 15, y]], { wash: col, ink: PAL.ink, sw: .9, curv: .6 }); }
-      else { const e = easeOut(seg(age, .45, .9)), f = 1 - seg(age, .9, 1.4); fadeIn(f, () => { paint(ellPts(dx, ry, 30 + 70 * e, 12 + 16 * e, 16), { fill: col, fillOp: 200, bleed: .2, tex: .3, ink: null }); for (let q = 0; q < 6; q++) { const a = -Math.PI * (q + .5) / 6; dot(dx + Math.cos(a) * 90 * e, ry + Math.sin(a) * 60 * e - 14 * e, 8 * (1 - e) + 3, col, 1); } }); sparkle(dx, ry - 40, 30, '#FFF3C0', seg(age, .45, 1.2)); }
+      else {
+        const e = easeOut(seg(age, .45, .75)), f = 1 - seg(age, 1.0, 1.4);
+        fadeIn(f, () => {
+          // paint running down the facade from the roof edge
+          for (let q = 0; q < 3; q++) {
+            const qx = clamp(dx + (q - 1) * 22 + (hash(n * 7 + q) - .5) * 10, rbx + 8, rbx + rbw - 8), L = (50 + 70 * hash(n * 3 + q + j)) * easeOut(seg(age, .5, 1.1));
+            if (L > 2) { inkLine([[qx, ry + 2], [qx, ry + L]], 3.2, col, 'marker', 0, 1); dot(qx, ry + L, 6, col, 1); }
+          }
+          // a puddle of paint sitting on the roof, and a crown of droplets
+          paint([[dx - 34 - 20 * e, ry + 3], [dx - 20, ry - 10 * e], [dx, ry - 16 * e], [dx + 20, ry - 10 * e], [dx + 34 + 20 * e, ry + 3]], { wash: col, ink: PAL.ink, sw: .8, curv: .6 });
+          for (let q = 0; q < 6; q++) { const a = -Math.PI * (q + .5) / 6, v = 150 + 60 * hash(q + n), ta = seg(age, .45, 1.0); dot(dx + Math.cos(a) * v * ta, ry - 10 + Math.sin(a) * v * ta * 1.2 + 260 * ta * ta, 7 * (1 - ta) + 2, col, 1); }
+        });
+        sparkle(dx, ry - 50, 30, '#FFF3C0', seg(age, .45, 1.2));
+      }
     }
     // the contrail: four wet bands of paint streaming back from the tail, sagging and spreading as they dry
     const bands = [['#F7B6C8', -1.5], ['#FFD9A0', -.5], ['#FFE3B8', .5], ['#BFE3D0', 1.5]], N = 44;
@@ -732,9 +752,17 @@
     const onPlane = t < hopT;
     const hopU = seg(t, hopT - .1, hopT + .3);
     const mS = 24;
-    const seatH = [seat[0] + 40, seat[1] + 2], seatM = [seat[0] - 62, seat[1] - 4];
+    const sH = moonPt(MSEAT + .14), sM = moonPt(MSEAT - .3), seatH = [sH[0], sH[1] + 2], seatM = [sM[0], sM[1] + 1];   // no crossing: she lands left, 桃桃 right
     // stardust puff at the landing
     if (t > land && t < land + .8) for (let i = 0; i < 9; i++) { const a = Math.PI + i / 8 * Math.PI, e = easeOut(seg(t, land, land + .8)); sparkle(touch[0] - 40 + Math.cos(a) * 190 * e, touch[1] - 30 + Math.sin(a) * 70 * e, 16, '#FFF3C0', seg(t, land, land + .8)); }
+    // 团子's paper boat, towed in behind the plane, settles in the bowl; he curls up for a nap on the moon
+    {
+      const bu = seg(t, M0 - .3 + .35, land + .45), dock = moonPt(MSEAT + .62), bb = Math.sin(seg(t, land + .45, land + .9) * Math.PI) * 10;
+      const bx = lerp(-60, dock[0], easeOut(bu)), by = lerp(-20, dock[1] - 16, easeOut(bu)) - Math.sin(bu * Math.PI) * 70 - bb + Math.sin(t * 2.2) * 2 * seg(t, land + .9, land + 1.4);
+      const nap = t > popT + .6, bsc = 54;
+      if (bu < 1 && bu > 0) inkLine([[bx + bsc, by - 20], [lerp(bx, px, .5), lerp(by, py, .5) + 30], [px - 150, py + 10]], 1.1, '#F4ECFA', 'fine', .5, .7 * (1 - seg(t, land + .2, land + .5)));
+      paperBoat(bx, by, bsc, t, { rot: -.12 + .06 * Math.sin(t * 2.2), inside: () => cat(bx + 7, by + 4, 12, nap ? { pose: 'sleep', noShadow: true, zzz: true } : { pose: 'sit', eyes: t > land + .5 ? 'happy' : 'wide', noShadow: true, look: .5, sq: .2 * (1 - elasticOut(seg(t, land + .45, land + .9))) }) });
+    }
     paperPlane(px, py, lerp(230, 150, slide), t, { el: .4, yaw: 0, pitch: pp, roll: pr * .3, flutter: onPlane ? 1 : .3, riders: onPlane ? P => crew(P, t, { s: mS, fac: 1, wind: .8, lift: .3,
       h: { eyes: 'star', mouth: 'open', lookX: .3, aL: .35, aR: .35, blush: .8, ahoge: 'perk', sq: .25 * (1 - elasticOut(seg(t, land, land + .5))) },
       m: { eyes: 'star', mouth: 'grin', aL: .4, aR: .4, sq: .25 * (1 - elasticOut(seg(t, land + .04, land + .55))) } }) : null });
@@ -748,8 +776,8 @@
       const swing = Math.sin(t * 4.2), cont = seg(t, popT + .5, popT + .9);
       const md = mood(t, [[hopT, 'happy'], [drawT - .15, 'sparkle', null, 'o'], [popT, 'star', 'spark', 'open'], [popT + .75, 'happy', null, 'smile']]);
       const lift = seg(t, drawT - .2, drawT + .1) * (1 - seg(t, popT + .3, popT + .7));
-      // 桃桃 (on her left), leaning on her shoulder at the end
-      momo(mx, my, mS * .82, { sit: true, eyes: t > popT ? 'happy' : 'star', mouth: t > popT ? 'open' : 'smile', tilt: .18 * cont, lookX: .3, rot: .08 * cont, blush: .8,
+      // 桃桃 (on her right), leaning on her shoulder at the end
+      momo(mx, my, mS * .82, { sit: true, eyes: t > popT ? 'happy' : 'star', mouth: t > popT ? 'open' : 'smile', tilt: -.2 * cont, lookX: -.4, rot: -.1 * cont, blush: .8,
         aL: t > popT && t < popT + .6 ? .4 + .3 * Math.sin(t * 14) : -.9, aR: t > popT && t < popT + .6 ? .4 - .3 * Math.sin(t * 14) : -.7, noShadow: true, dy: -.1 * Math.abs(swing) });
       capeFB(hx, hy, mS, t, { lift: .15, wind: .2 });
       hero(hx, hy, mS, { outfit: 'pajama', sit: true, ...md, blush: .8, lookX: lerp(.2, -.3, lift), lookY: lerp(0, -.8, lift), tilt: -.1 * cont, ahoge: cont > .5 ? 'heart' : 'perk', noShadow: true,
@@ -820,7 +848,7 @@
       speed.forEach(l => inkLine(l, 1.2, '#EDE3F5', 'fine', 0, .6 * charge));
       paperPlane(px, py, 260, t, { el: .4, pitch: -.05 + .1 * Math.sin(t * 2.2), roll: -.05, riders: P => crew(P, t, {
         s: 26, fac: 1, wind: 1, lift: .3, noMomo: t > jumpM, noHero: t > jumpH,
-        h: t > jumpH ? { eyes: 'star' } : { eyes: t < C0 + .5 ? 'normal' : 'star', brows: t < C0 + .5 ? 'angry' : null, mouth: t < C0 + .5 ? 'grin' : 'open', lookX: .6, aR: .02, aL: -.5, blush: .7, ahoge: 'perk' },
+        h: t > jumpH ? { eyes: 'star' } : { ...mood(t, [[C0 - 1, 'normal', null, 'grin'], [C0 + .5, 'star', '!', 'open']]), brows: t < C0 + .5 ? 'angry' : null, lookX: .6, aR: .02, aL: -.5, blush: .7, ahoge: 'perk' },
         m: { eyes: 'normal', brows: 'angry', mouth: 'grin', lookX: .6, aL: .3, aR: .3 } }) });
     }
     const lp = seg(t, C0 + 2.9, C0 + 4.8);
@@ -1031,6 +1059,9 @@
     paint(rrPts(-62, -26, 124, 26, 5), { wash: '#C8324A', fill: '#9E2238', fillOp: 90, tex: .5, ink: PAL.ink, sw });
     paint(rrPts(-58, -170, 116, 146, 14), { wash: '#CFE6D2', fill: '#8FB89A', fillOp: 90, bleed: .05, tex: .7, border: .5, ink: PAL.ink, sw });
     paint(ellPts(0, -186, 40, 30, 18), { wash: '#CFE6D2', fill: '#8FB89A', fillOp: 90, tex: .6, ink: PAL.ink, sw });
+    paint(rectPts(-20, -176, 40, 12), { wash: '#8FB89A', ink: null });
+    inkLine([[40, -150], [44, -60]], sw * 1.4, '#FFFFFF', 'marker', 0, .45);
+    for (const k of [-1, 1]) inkLine([[k * 30, -140], [k * 18, -120], [k * 30, -100]], sw * .6, '#8FB89A', 'fine', .5, .9);      // carved cloud scrolls
     pop();
   }
   function blankPage(t, lt, dur) {
@@ -1047,8 +1078,13 @@
       }
     }, items: tt => {
       paint(ellPts(1560, 300, 60, 60, 20), { fill: '#E27A92', fillOp: 40, ink: null });
-      sodaCan(1640, 360, 1, { drops: .4 }); mug(1640, 560, 1, PAL.rose, .6);
+      sodaCan(1640, 360, 1, { drops: .4 }); mug(1690, 600, 1, PAL.rose, .6);
       paperBall(360, 760, 1.2, 6); stickyNote(330, 300, 1.1, '#FFF1A8', -.15, 1);
+      // 桃桃 on the desk, watching: cheers when the line glows, alarmed by the seal, cheers again at the fresh page
+      const cheer1 = smooth01(tt, WR1, WR1 + .15, SEAL_IN + .2, SEAL_IN + .45), cheer2 = seg(tt, FLIP1 - .1, FLIP1 + .1);
+      const alarm = smooth01(tt, SEAL_IN + .3, SEAL_IN + .5, FLIP0, FLIP0 + .2), hopM = Math.max(cheer1, cheer2) * Math.abs(Math.sin((tt - WR1) * Math.PI / BEAT));
+      const md = mood(tt, [[D0 - 1, 'sparkle', null, 'smile'], [WR1, 'star', 'heart', 'open'], [SEAL_IN + .35, 'wide', '!?', 'o'], [FLIP0 + .1, 'happy', null, 'grin'], [FLIP1, 'star', 'spark', 'open']]);
+      momo(1560, 470, 15, { ...md, dy: -1.2 * hopM, sq: .12 * pulse(tt, 8) * Math.max(cheer1, cheer2), aL: lerp(lerp(-.6, 1.2, Math.max(cheer1, cheer2)), .2, alarm), aR: lerp(lerp(-.6, 1.2, Math.max(cheer1, cheer2)), -.2, alarm), lookX: lerp(-.5, -.1, alarm), lookY: .4, blush: .8, digital: .3 });
     } });
     // the turning page
     if (flipping && flip < 1) {
@@ -1086,38 +1122,18 @@
     glow(760, 620, 500, PAL.lamp, .3);
     capeFB(960, 1000, 44, t, { lift: .2, wind: .1, dy: -.65 });
     const shake = seg(a, .2, .75), tilt = Math.sin(shake * Math.PI * 3) * .13 * Math.sin(shake * Math.PI);
-    hero(960, 1000, 44, { outfit: 'pajama', sit: true, dy: -.65, eyes: a < .2 ? 'normal' : 'happy', mouth: a < .2 ? 'o' : 'smile', lookY: .5, lookX: -.2, tilt, blush: .9, ahoge: 'normal',
+    hero(960, 1000, 44, { outfit: 'pajama', sit: true, dy: -.65, ...mood(t, [[FACE0 - 1, 'normal', null, 'o'], [FACE0 + .2, 'happy', null, 'smile']]), lookY: .5, lookX: -.2, tilt, blush: .9, ahoge: 'normal',
       aR: .1 + .25 * Math.sin(a * 16) * shake, aL: -1.1, handR: (sz, sw) => pencil(0, 0, sz / 60, -Math.PI / 2 + .3, '#F6C85F') });
     capeKnot(960, 1000, 44, { lookX: -.2, dy: -.65 });
     light(960, 700, 420, '#FFE3A0', .15);
     deskFront(t, {});
-    sealBack(700, 1010 - 60 * Math.sin(Math.min(1, a * 2) * Math.PI / 2), .95, { rot: -.2 });
+    // the seal in the foreground (from behind), reared up at her … and deflating when she shakes her head
+    const defl = seg(a, .45, .75), trem = (1 - defl) * Math.sin(t * 40) * 2.5;
+    const sy = 1010 - 60 * Math.sin(Math.min(1, a * 2) * Math.PI / 2) + 40 * defl;
+    sealBack(690 + trem, sy, 1.0, { rot: lerp(.2, -.06, defl), sq: lerp(-.05, .12, defl) });
+    if (a > .5) emote('sweat', 610, sy - 205, 16, seg(a, .5, .7));
     camEnd();
   }
-
-  // temporary model sheet (removed when the chapter is done)
-  LOOPS.c09birds = t => {
-    paint(rectPts(-10, -10, W + 20, H + 20), { grad: ['#1B2147', '#5A4A8A', Math.PI / 2], ink: null });
-    for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) {
-      const yaw = [0, .6, 1.4, -.5][r], el = [.3, .5, .7, .9][c % 4], fl = c / 6;
-      paperBird(170 + c * 310, 150 + r * 250, 70, fl, { yaw, el, doodle: c === 2 });
-    }
-  };
-  LOOPS.c09model = t => {
-    paint(rectPts(-10, -10, W + 20, H + 20), { grad: ['#1B2147', '#5A4A8A', Math.PI / 2], ink: null });
-    paperPlane(560, 330, 330, t, { el: .5, roll: -.05, pitch: .04, riders: P => crew(P, t, { s: 26, fac: 1, h: { eyes: 'sparkle', mouth: 'open', aR: .5, aL: -.3 }, m: { eyes: 'happy', mouth: 'open', aL: .9, aR: .2 } }) });
-    paperPlane(1450, 330, 250, t, { el: .45, yaw: 2.2, pitch: .05, riders: P => {
-      const p = P(SEAT); hero(p[0], p[1], 20, { outfit: 'pajama', sit: true, back: true, noShadow: true });
-    } });
-    paperBird(150, 800, 80, t * 2.2, { yaw: -.3 });
-    paperBird(330, 780, 80, t * 2.2 + .5, { yaw: .5, doodle: true });
-    paperBird(500, 760, 80, t * 2.2 + .25, { yaw: 1.6, el: .8 });
-    paperBoat(720, 850, 110, t, { inside: () => cat(740, 845, 20, { pose: 'sit', eyes: 'happy' }) });
-    candyCloud(1100, 850, 1, {});
-    lantern(1400, 900, 1.2, t, { heart: true });
-    lantern(1550, 870, .8, t, {});
-    capeFB(1750, 900, 26, t, { lift: .7, wind: .3 }); hero(1750, 900, 26, { outfit: 'pajama', eyes: 'star', mouth: 'grin' }); capeKnot(1750, 900, 26, {});
-  };
 
   chapter('finale', 225.756, 264.5, [[225.756, wakeFly], [230.556, parade], [235.356, paintRoofs], [240.156, windowsGlow],
     [244.956, moon], [249.156, cottonClouds], [253.956, earthLights], [259.356, blankPage]]);

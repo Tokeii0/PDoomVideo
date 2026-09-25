@@ -105,7 +105,7 @@
     pop();
   }
   // an app-icon gift box standing on (x, y) (bottom centre), 210 px at s = 1
-  // o: { face: 0 sleepy .. 1 awake-happy, band: 0..1 ribbon bands wipe in, bowK, glint }
+  // o: { face: 0 sleepy .. 1 awake-happy, band: 0..1 ribbon bands wipe in, glint: 0..1 a shine sweeps across }
   function giftIcon(x, y, s, o = {}) {
     const w = 210 * s, h = 210 * s, x0 = x - w / 2, y0 = y - h, sw = clamp(s * 1.2, .6, 1.8);
     paint(ellPts(x, y + 4, w * .62, 16 * s, 16), { fill: PAL.ink, fillOp: 60, bleed: .2, tex: .2, ink: null });
@@ -175,7 +175,7 @@
   })();
 
   // a gear: toothed disc
-  function gear(x, y, r, teeth, rot, col = '#9AA0B4', k = 1) {
+  function gear(x, y, r, teeth, rot, col = '#9AA0B4') {
     const pts = [];
     for (let i = 0; i < teeth * 4; i++) { const a = rot + i / (teeth * 4) * TAU, q = i % 4, rr = q === 1 || q === 2 ? r : r * .8; pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]); }
     paint(pts, { wash: col, fill: mixCol(col, PAL.ink, .3), fillOp: 60, tex: .5, ink: PAL.ink, sw: clamp(r / 50, .5, 1.2) });
@@ -548,7 +548,7 @@
       for (const sd of [-1, 1]) {
         paint(rectPts(x + sd * 95 - 50, fy - 40, 100, 80), { wash: '#6C6F7E', ink: PAL.ink, sw: 1.2 });
         paint(rectPts(x + sd * 95 - 50, fy - 40, 100, 44), { wash: '#9A9DAA', ink: PAL.ink, sw: 1 });            // heavy blinds: stern lids
-        inkLine([[x + sd * 95 - 58, fy - 64 + sd * 0], [x + sd * 95 + 50, fy - 50 - sd * 12]].map(p => sd > 0 ? p : [2 * x - p[0], p[1]]), sw * 1.3, PAL.ink, 'ink', 0);
+        inkLine([[x + sd * 38, fy - 50], [x + sd * 152, fy - 70]], sw * 1.4, PAL.ink, 'ink', 0);          // stern brows, low in the middle
       }
       inkLine([[x - 100, fy + 120], [x + 100, fy + 120]], sw * 1.5, PAL.ink, 'ink', 0);
     } else {
@@ -577,7 +577,7 @@
   }
 
   function cuteFaces(t, lt) {
-    const tEnd = 144.156, tSm = B(239);
+    const tSm = B(239);
     const conv = OBJS.map(o => easeOut(seg(t, B(o.beat), B(o.beat) + .5)));
     const warm = (conv[0] + conv[1] + conv[2] + conv[3] + 2 * conv[4]) / 6;
     // camera: open wide on the stern row, then track 桃桃 along it, and ease back to the whole happy row
@@ -590,6 +590,11 @@
     // sky, distant town, clouds: overcast grey warming to peach and pink as the row comes alive
     paint(rectPts(-600, -500, W + 1200, 1500), { grad: [mixCol('#AEB2C2', '#F3C3D2', warm), mixCol('#D3D4DC', '#FDE2C6', warm), Math.PI / 2], ink: null });
     if (warm > .02) glow(1650, 60, 700, '#FFE6A8', .55 * warm);
+    const sunK = ease(seg(warm, .45, 1));                               // the sun breaks through as the row comes alive
+    if (sunK > .01) for (let k = 0; k < 6; k++) {
+      const a0 = 2.05 + k * .13 + .02 * Math.sin(t * .7 + k), a1 = a0 + .045 + .02 * hash(k), o = [1900, -160];
+      paint([o, [o[0] + Math.cos(a0) * 2600, o[1] + Math.sin(a0) * 2600], [o[0] + Math.cos(a1) * 2600, o[1] + Math.sin(a1) * 2600]], { wash: '#FFF4D6', washOp: (26 + 14 * (k % 2)) * sunK, ink: null });
+    }
     for (let i = 0; i < 5; i++) {
       const cx = -300 + i * 560 + Math.sin(t * .3 + i) * 20, cy = 60 + hash(i * 5.3) * 170;
       cloudPuff(cx, cy, .9 + hash(i) * .6, mixCol('#C9CBD6', '#FFF1EA', warm), { seed: i + 2, shade: mixCol('#A9ACBA', '#F8C9D6', warm), ink: false });
@@ -985,8 +990,6 @@
     if (t > tHead) flash(.25 * Math.exp(-(t - tHead) * 5), '#FFF1F4');
   }
 
-  // ---------- stubs for the shots still to paint ----------
-  const stub = col => (t, lt) => { paint(rectPts(-40, -40, W + 80, H + 80), { wash: col, ink: null }); };
   chapter('cuteface', 135.156, 153.756, [[135.156, untangle], [139.356, cuteFaces], [144.156, noManifesto], [148.956, again]]);
   transition(135.156, 'dissolve', .8);
   transition(148.956, 'white', .36, { col: '#FFF7EE' });           // the finished app flashes on

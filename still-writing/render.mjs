@@ -74,7 +74,8 @@ if (args.worker) {
   const sheet = createCanvas(cols * w, Math.ceil(ts.length / cols) * h), c = sheet.getContext('2d'), ms = [];
   if (args.loop) globalThis.LOOP = P.LOOPS[args.loop];
   ts.forEach((t, i) => {
-    const t0 = performance.now(); P.renderFrame(t); ms.push(Math.round(performance.now() - t0));
+    const t0 = performance.now(); P.renderFrame(t); P.canvas.getContext('2d').getImageData(0, 0, 1, 1);   // Skia paints lazily: flush it
+    ms.push(Math.round(performance.now() - t0));
     const x = (i % cols) * w, y = Math.floor(i / cols) * h;
     c.drawImage(P.canvas, x, y, w, h); c.fillStyle = 'rgba(0,0,0,.65)'; c.fillRect(x, y, 100, 26); c.fillStyle = '#fff'; c.font = '16px sans-serif'; c.fillText(t.toFixed(2) + 's', x + 6, y + 18);
   });

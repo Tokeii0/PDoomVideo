@@ -21,7 +21,7 @@
   // 等 269.18 明 269.66 天 269.84 醒 270.26 来 270.44 接 270.92 着 271.1 写 271.34 接 271.94 着 272.12 喜 272.48 欢 272.66
   const T_PRESS = 264.84, T_WAVE = 265.24, T_PILLOW = 265.74, T_DOZE = 266.02, T_FADE0 = 266.06, T_FADE1 = 266.44;
   const T_LAMP = 266.52, T_CUT = 266.64, T_MOON0 = 266.72, T_MOON1 = 267.3;
-  const T_SAY = [266.96, 267.38, 267.62], T_NIGHT = 268.34, T_AN = 268.58, T_YAWN = 268.28;
+  const T_SAY = [266.96, 267.38, 267.62], T_NIGHT = 268.34, T_AN = 268.58, T_YAWN = 268.06;
   const T_LAPSE0 = 269.12, T_LAPSE1 = 270.3, T_WAKE = 270.26, T_STRETCH = 270.4, T_BOOK = 270.96, T_STROKE = 271.34;
   const T_BOOT = 271.94, T_MOMO = 272.3, T_HELLO = 272.66;
 
@@ -57,13 +57,19 @@
     paint(ellPts(x1, y1, hr, hr * .9, 14, 0, a), { wash: SKIN, ink: PAL.ink, sw: sw * .8 });
     if (o.finger != null) paint(ellPts(x1 + Math.cos(o.finger) * hr * .55, y1 + Math.sin(o.finger) * hr * .55, hr * .34, hr * .3, 8), { wash: SKIN, ink: null });
   }
-  // screen-blended soft polygon light (moon- and sunbeams), fading from g0 to g1; o.blur softens the edges
+  // screen-blended soft polygon light (moon- and sunbeams), fading from g0 to g1. Soft edges come from three nested
+  // copies shrunk toward the centre (a blur filter looks similar but costs ~40 ms a shape once Skia rasterizes).
   function beam(pts, col, a, g0, g1, o = {}) {
     if (a <= .005) return;
-    X.save(); X.globalCompositeOperation = o.mode || 'screen'; if (o.blur) X.filter = `blur(${o.blur}px)`;
-    const g = X.createLinearGradient(g0[0], g0[1], g1[0], g1[1]);
-    g.addColorStop(0, hexA(col, a * ALPHA)); g.addColorStop(.55, hexA(col, a * .5 * ALPHA)); g.addColorStop(1, hexA(col, 0));
-    X.fillStyle = g; X.globalAlpha = 1; X.fill(pathOf(pts)); X.restore();
+    let cx = 0, cy = 0; for (const [x, y] of pts) { cx += x; cy += y; } cx /= pts.length; cy /= pts.length;
+    X.save(); X.globalCompositeOperation = o.mode || 'screen'; X.globalAlpha = 1;
+    for (const k of o.soft === false ? [1] : [1.06, .8, .55]) {
+      const aa = o.soft === false ? a : a * .42;
+      const g = X.createLinearGradient(g0[0], g0[1], g1[0], g1[1]);
+      g.addColorStop(0, hexA(col, aa * ALPHA)); g.addColorStop(.55, hexA(col, aa * .5 * ALPHA)); g.addColorStop(1, hexA(col, 0));
+      X.fillStyle = g; X.fill(pathOf(pts.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k])));
+    }
+    X.restore();
   }
   // darkness that falls off around a light: a radial multiply (world space), aIn at the centre → aOut outside r
   function darkness(cx, cy, r, sx, aIn, aOut, col) {
@@ -349,14 +355,20 @@
     const fx = lookX * .38 * RS, fy = lookY * .22 * RS;
     return [RX + fx * 1.1 + Math.sin(tilt) * 2.4 * RS, RY + dy * RS - 5.4 * RS + fy];
   }
-  // the window's light thrown on the back wall: four panes of moonlight with raindrop shadows sliding down
+  // the window's light thrown on the back wall: four panes of moonlight (one path, one soft blur) with raindrop shadows
   function windowPatch(t, k) {
     if (k <= .01) return;
     const P = (u, v) => [lerp(lerp(520, 870, u), lerp(548, 898, u), v), lerp(lerp(330, 306, u), lerp(676, 660, u), v)];
+    const path = new ENV.Path2D();
     for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
-      const u0 = i * .52, u1 = u0 + .48, v0 = j * .52, v1 = v0 + .48, pk = ease(clamp(k * 1.6 - i * .35 - j * .15));
-      beam([P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)], '#BCD0FA', .5 * pk, P(u0, v0), P(u1 + .4, v1 + .4), { blur: 7 });
+      const u0 = i * .52, u1 = u0 + .48, v0 = j * .52, v1 = v0 + .48, q = [P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)];
+      path.moveTo(...q[0]); for (const p of q) path.lineTo(...p); path.closePath();
     }
+    const sweep = ease(clamp(k * 1.4)), [ax, ay] = P(0, 0), [bx, by] = P(1, 1);
+    X.save(); X.globalCompositeOperation = 'screen'; X.filter = 'blur(7px)';
+    const g = X.createLinearGradient(ax, ay, lerp(ax, bx, 1.6), lerp(ay, by, 1.6));
+    g.addColorStop(0, hexA('#BCD0FA', .5 * sweep * ALPHA)); g.addColorStop(.6, hexA('#BCD0FA', .34 * sweep * ALPHA)); g.addColorStop(1, hexA('#BCD0FA', .12 * sweep * ALPHA));
+    X.fillStyle = g; X.fill(path); X.restore();
     for (let i = 0; i < 10; i++) {
       const u = hash(i * 4.1), v = frac(hash(i * 2.7) + t * (.05 + hash(i) * .06)), [px, py] = P(u, v);
       dot(px, py, 3 + hash(i * 9) * 3, '#1E244C', .3 * k * Math.sin(v * Math.PI));
@@ -418,12 +430,12 @@
     if (nightK > .01) {
       grade(.5 * nightK, 'multiply', '#4C5590');
       if (moon[3] > .01) light(moon[0], moon[1], 110, '#DDE6FF', .3 * moon[3]);
-      beam([[250, 320], [770, 330], [1250, 1040], [560, 1040]], '#AFC2F4', .14 * nightK, [510, 330], [900, 1040], { blur: 12 });
+      beam([[250, 320], [770, 330], [1250, 1040], [560, 1040]], '#AFC2F4', .14 * nightK, [510, 330], [900, 1040]);
     }
     if (sunK > .01) {
       darkness(sun[0], sun[1] + 120, 1250, 1.15, 0, .3 * sunK, '#B07E96');           // rosy shade away from the window
       light(sun[0], Math.min(sun[1], 560), 380, '#FFB978', .45 * sunK);
-      beam([[190, 250], [790, 290], [1320, 1060], [540, 1060]], '#FF9E4A', .26 * sunK, [470, 290], [950, 1060], { blur: 16 });
+      beam([[190, 250], [790, 290], [1320, 1060], [540, 1060]], '#FF9E4A', .26 * sunK, [470, 290], [950, 1060]);
       light(BOOK[0] - 30, BOOK[1] - 10, 170, '#FFC98A', .35 * sunK);
       motes(t, { x: 380, y: 360, w: 860, h: 560 }, 30, '#FFF1D0', .75 * sunK, 4);
       grade(.3 * sunK, 'soft-light', '#FF8C4A');
@@ -476,7 +488,7 @@
       sleeveArm(ax, ay, lerp(ax, tx, reachK), lerp(ay, ty, reachK), .34 * s);
       if (pk > 0 && reachK > .5) pencil(lerp(ax, tx, reachK) - 2, lerp(ay, ty, reachK) + 11, .3 * backOut(pk), -.5, '#F6C85F');
     }
-    if (wave > .01) { const [ax, ay] = sh(1), a = -.72 + .3 * Math.sin((t - T_HELLO) * 12); sleeveArm(ax, ay, ax + Math.cos(a) * 4.3 * s * wave, ay + Math.sin(a) * 4.3 * s * wave, .34 * s); }
+    if (wave > .01) { const [ax, ay] = sh(1), a = -.95 + .22 * Math.sin((t - T_HELLO) * 12); sleeveArm(ax, ay, ax + Math.cos(a) * 5.2 * s * wave, ay + Math.sin(a) * 5.2 * s * wave, .34 * s); }
     hero(x, gy, s, { outfit: 'pajama', sit: true, back: true, sq, dy, tilt: sleepK * -.14 + .06 * Math.sin(t * .9) - .05 * sk, aL: stretch > .01 || reachK > .01 ? 1.5 : .35, aR: stretch > .01 || wave > .01 ? 1.5 : .35,
       ahoge: t < T_WAKE ? 'droop' : 'perk' });
     chair(x, HFY, s, { seat: 3.2, backOnly: true });
@@ -508,6 +520,7 @@
   }
   function ending(t, lt, dur) {
     const cam = endCam(t), fade = ease(seg(t, T_END0, T_END1));
+    if (fade >= .999) { camBegin(cam.cx, cam.cy, cam.zg); titleInk(t, fade); camEnd(); return; }     // only paper and ink are left
     camBegin(cam.cx, cam.cy, cam.zg); coverWall(t); camEnd();
     // the view through the opening
     const S = (x, y) => [960 + (x - cam.cx) * cam.zg, 540 + (y - cam.cy) * cam.zg];
@@ -525,8 +538,7 @@
   }
   const SKY3 = ['#93A7DC', '#EDBDC4', '#FFDCA6'];
   function coverWall(t) {
-    const wc = '#E4C0AA';
-    for (const r of [[-900, -900, 3800, 990], [-900, 88, 1262, 640], [1558, 88, 1400, 640]]) paint(rectPts(...r), { wash: wc, fill: '#CFA08C', fillOp: 90, bleed: .04, tex: .6, border: 0, ink: null });
+    paint(rectPts(-900, -900, 3800, 1640), { wash: '#E4C0AA', fill: '#CFA08C', fillOp: 90, bleed: .04, tex: 0, border: 0, ink: null });
     glow(960, 420, 1050, '#FFE0B8', .45);
   }
   function coverOutside(t) {
@@ -605,7 +617,7 @@
   function coverDesk(t, cam) {
     const vm = clamp((1 - cam.m * 1.15) / .42, 0, 1); if (vm < .02) return;
     const q = [deskPt(cam, -900, 0), deskPt(cam, 2800, 0), deskPt(cam, 960 + 1840 * lerp(1, 1.45, vm), vm), deskPt(cam, 960 - 1860 * lerp(1, 1.45, vm), vm)];
-    paint(q, { wash: '#B48660', fill: '#8C6247', fillOp: 85, bleed: .03, tex: .7, border: .2, ink: null });
+    paint(q, { wash: '#B48660', fill: '#8C6247', fillOp: 85, bleed: .03, tex: 0, border: .2, ink: null });
     for (let k = -8; k <= 9; k++) { const u = 960 + k * 150, a = deskPt(cam, u, 0), b = deskPt(cam, 960 + (u - 960) * lerp(1, 1.45, vm), vm); inkLine([a, b], .7, '#6E4A34', 'fine', 0, .55); }
     for (let k = 0; k < 14; k++) {
       const u0 = 960 + (hash(k * 3.3) - .5) * 2200, pts = [];
@@ -616,7 +628,7 @@
     paint([[-50, e[1] - 2], [W + 50, e[1] - 2], [W + 50, e[1] + 16 * ez], [-50, e[1] + 16 * ez]], { wash: '#5A3A34', washOp: 70, ink: null });
     // the window's sunlight lying on the desk, reaching toward us
     const wl = [deskPt(cam, 380, .02), deskPt(cam, 1540, .02), deskPt(cam, 1340, .78 * vm), deskPt(cam, -120, .78 * vm)];
-    beam(wl, '#FFCB86', .42, deskPt(cam, 960, .02), deskPt(cam, 960, .8 * vm), { blur: 10 });
+    beam(wl, '#FFCB86', .42, deskPt(cam, 960, .02), deskPt(cam, 960, .8 * vm));
   }
   // map page space (0..pw, 0..ph) onto the page whose top-left, top-right and bottom-left corners are p0, p1, p2
   function onPage(p0, p1, p2, pw, ph, fn) {
@@ -730,7 +742,7 @@
     X.save(); X.setTransform(1, 0, 0, 1, 0, 0);
     for (let i = 0; i < 5; i++) {
       const a = 1.72 + i * .2 + Math.sin(t * .2 + i) * .03, w = .05 + .03 * hash(i), L = 2400;
-      beam([[px, py], [px + Math.cos(a - w) * L, py + Math.sin(a - w) * L], [px + Math.cos(a + w) * L, py + Math.sin(a + w) * L]], '#FFD9A0', .2 * breathe, [px, py], [px + Math.cos(a) * 1300, py + Math.sin(a) * 1300], { blur: 18 });
+      beam([[px, py], [px + Math.cos(a - w) * L, py + Math.sin(a - w) * L], [px + Math.cos(a + w) * L, py + Math.sin(a + w) * L]], '#FFD9A0', .2 * breathe, [px, py], [px + Math.cos(a) * 1300, py + Math.sin(a) * 1300]);
     }
     light(px, py, 520 * Math.min(1.6, cam.ze), '#FFCF94', .4);
     X.restore();
@@ -740,6 +752,6 @@
 
   chapter('goodnight', 264.5, 290, [[264.5, screenOff], [269.0, morning], [273.5, ending]]);
   transition(264.5, 'dissolve', 1.0);
-  transition(269.0, 'dissolve', .8);
+  transition(269.0, 'dark', .7, { col: '#0E1230' });
   transition(273.5, 'dissolve', 1.0);
 })();

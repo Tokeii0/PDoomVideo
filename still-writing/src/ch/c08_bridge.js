@@ -2,11 +2,11 @@
 // blank page at night → doubts circling like moths → the microwave's warm light → cared for by the cat and 桃桃
 // → a rest stop on a paper path toward dawn → asleep, tucked in, dreaming of small loves (a warm glow grows → white).
 // From here to the end she wears the pajama. Lighting recipe for the night shots: paint the scene in its own colours,
-// multiply the frame with a night blue (grade 'multiply'), then add the light sources as screen-blended pools.
+// multiply the frame by a light map (a dark ambient colour plus additive pools where the lights are, see lightMap),
+// then add glows/blooms for the light sources themselves on top.
 (() => {
   const B = n => beatT(n);                                   // beat 320 = 192.156 (chapter start)
   const FULL = () => rectPts(-2400, -2400, W + 4800, H + 4800);
-  const cover = (col, op = 255) => paint(FULL(), { wash: col, washOp: op, ink: null });
   const SKIN_C = '#FCE5D4';
   const PJ = '#BFD9EE', PJ_DK = '#94B7D6';
   const BLANKET = '#8FA8D8', BLANKET_DK = '#6F86B8', BLANKET_STAR = '#FFF1A8';
@@ -123,14 +123,14 @@
     glow(cx, cy, 60, '#9FB6DA', .25 * (on ? 1 : .3));
     if (on) paint(rectPts(cx - 3.5, cy - 32, 7, 64), { wash: '#2B2233', ink: null });
     // 桃桃 in the corner: greyed out, asleep on a little grey cushion
-    const mx = x + w - 96, my = y + h - 14;
-    fadeIn(.9, () => {
-      paint(ellPts(mx, my - 4, 62, 16, 16), { wash: '#A7B0C2', ink: PAL.ink, sw: .6 });
-      momo(mx, my - 10, 19, { ...MOMO_GREY, sit: true, noShadow: true, eyes: 'closed', mouth: 'tiny', tilt: .3 + .03 * Math.sin(t * 1.3), aL: -1.4, aR: -1.4, sq: .03 * Math.sin(t * 1.7), blush: .15 });
+    const mx = x + w - 110, my = y + h - 22;
+    fadeIn(.9, () => {                                                                         // curled up asleep on a little cushion
+      paint(rrPts(mx - 110, my - 14, 220, 30, 14), { wash: '#A7B0C2', fill: '#8E98AC', fillOp: 60, ink: PAL.ink, sw: .6 });
+      momo(mx + 92, my - 20, 17, { ...MOMO_GREY, noShadow: true, rot: -1.42 + .02 * Math.sin(t * 1.4), eyes: 'closed', mouth: 'tiny', aL: -.3, aR: -2.2, sq: .03 * Math.sin(t * 1.7), blush: .15, tilt: -.15 });
     });
     for (let i = 0; i < 2; i++) {                                                              // slow grey z's
       const a = frac(t * .3 + i * .5);
-      letter('z', mx + 60 + a * 34, my - 210 - a * 70, 28 + a * 14, '#9A98AA', { font: 'cute', ink: false, alpha: Math.sin(a * Math.PI) * .9 });
+      letter('z', mx - 70 + a * 30, my - 90 - a * 80, 26 + a * 14, '#9A98AA', { font: 'cute', ink: false, alpha: Math.sin(a * Math.PI) * .9 });
     }
   }
   function blank(t, lt, dur) {
@@ -186,7 +186,6 @@
   // =====================================================================================================
   const HX2 = 640, HS2 = 46, FY2 = 950, WALL2 = 770;               // her chair's floor point, the wall/floor line
   const HG2 = FY2 - 1.7 * HS2;                                    // her seated ground point
-  const LIGHT2 = [-520, 660], SHK = 1.5;                          // the light (monitor, off left) and the shadow's magnification
   const QM = Array.from({ length: 10 }, (_, i) => ({ r: 170 + hash(i * 3.7) * 170, sp: (.14 + hash(i * 5.3) * .14) * (i % 3 === 1 ? -1 : 1), ph: i / 10 * TAU + hash(i * 7.9),
     s: 5.2 + hash(i * 2.3) * 2.6, h: hash(i * 9.1) * 120 - 50, col: ['#C8B6F2', '#B7A6DA', '#D6C8F6'][i % 3] }));
   function qmPos(q, i, t, tight) {
@@ -310,12 +309,12 @@
   const quadSub = (q, u0, v0, u1, v1) => [quadPt(q, u0, v0), quadPt(q, u1, v0), quadPt(q, u1, v1), quadPt(q, u0, v1)];
 
   // the bowl of noodles: ceramic with a pink band; ang turns its pattern (on the turntable)
-  function noodleBowl(x, y, s, ang = 0, steam = 0) {
+  function noodleBowl(x, y, s, ang = 0) {
     push(); translate(x, y); scale(s);
     paint(ellPts(0, 4, 70, 12, 16), { wash: PAL.ink, washOp: 60, ink: null });
     const body = []; for (let i = 0; i <= 12; i++) { const a = i / 12 * Math.PI; body.push([Math.cos(a) * 66, -30 + Math.sin(a) * 34]); }
     body.push([-66, -30], [66, -30]);
-    paint([[-64, -32], [64, -32], ...body.slice(0, 13)].slice(2), { wash: '#F6EEE4', fill: '#D9CBBE', fillOp: 70, tex: .3, ink: PAL.ink, sw: 1.1, curv: .3 });
+    paint(body.slice(0, 13), { wash: '#F6EEE4', fill: '#D9CBBE', fillOp: 70, tex: .3, ink: PAL.ink, sw: 1.1, curv: .3 });
     clipTo(body.slice(0, 13).concat([[-66, -32], [66, -32]]), () => {
       paint(rectPts(-70, -20, 140, 12), { wash: '#F29BB8', ink: null });
       for (let k = 0; k < 6; k++) { const a = ang + k / 6 * TAU, c = Math.cos(a); if (Math.sin(a) < 0) continue; dot(c * 58, -14, 4.5 * (.4 + .6 * Math.sin(a)), '#FFF6EE', 1); }
@@ -393,7 +392,7 @@
     paint(ellPts(TURN[0], TURN[1], 112, 17, 22), { wash: '#E3ECEF', washOp: 200, ink: PAL.ink, sw: .8 });
     for (let k = 0; k < 3; k++) { const a = ang * 1.0 + k / 3 * TAU; if (Math.sin(a) > -.2) dot(TURN[0] + Math.cos(a) * 92, TURN[1] + Math.sin(a) * 13, 3, '#B8C4CC', 1); }
     const bp = bowlPos(t);
-    if (bp.inside) noodleBowl(bp.x, bp.y, .95, ang, 0);
+    if (bp.inside) noodleBowl(bp.x, bp.y, .95, ang);
     // the door
     const c = Math.cos(th), sn = Math.sin(th), hx = DOOR.x, fw = DOOR.w * c, grow = 1 + .14 * sn, y0 = DOOR.y, y1 = DOOR.y + DOOR.h, ym = (y0 + y1) / 2;
     const q = [[hx, y0], [hx + fw, ym - (ym - y0) * grow], [hx + fw, ym + (y1 - ym) * grow], [hx, y1]];
@@ -422,14 +421,6 @@
     if (t < T_IN0) return { x: 850, y: 850, inside: false };
     if (t < T_IN1) { const k = easeInOut(seg(t, T_IN0, T_IN1)); return { x: lerp(850, TURN[0], k), y: lerp(850, TURN[1] - 6, k) - Math.sin(k * Math.PI) * 16, inside: k > .3 }; }
     return { x: TURN[0], y: TURN[1] - 6, inside: true };
-  }
-  function microwaveGlow(t, on, ang) {
-    if (on < .01) return;
-    const k = on * (1 + .15 * Math.exp(-Math.max(0, t - T_DING) * 5) * (t > T_DING ? 1 : 0)) * (1 + .03 * Math.sin(t * 23));
-    clipTo(rrPts(CAV.x, CAV.y, CAV.w, CAV.h, 10), () => { light(TURN[0], CAV.y + 70, 300, '#FFD890', .42 * k); light(TURN[0], TURN[1] - 30, 190, '#FFC870', .22 * k); });
-    light(TURN[0], CAV.y + CAV.h / 2, 1100, '#F2B95C', .34 * k);
-    light(TURN[0] - 180, CT - 40, 560, '#FFC77A', .2 * k);
-    light(CX3, CT - 80, 260, '#FFC77A', .12 * k);
   }
   function reheat(t, lt, dur) {
     const e = easeInOut(seg(lt, -.4, dur + .3)), dg = t > T_DING ? Math.exp(-(t - T_DING) * 5) : 0;
@@ -461,8 +452,7 @@
     if (t > T_OPEN) aR = lerp(-1.1, .35, ease(seg(t, T_OPEN + .1, T_OPEN + .6)));
     hero(HX3 + (wait ? sway.dx * HS3 * .5 : 0), GY3, HS3, { outfit: 'pajama', ...md, ahoge: t > T_DING ? 'normal' : 'droop', lookX: t > T_GO - .4 && t < T_GO + .4 ? .95 : .75, lookY: .1, blush: .4,
       rot: wait ? sway.rot * .6 : 0, tilt: wait ? sway.tilt * .8 + .06 * Math.sin(mw.ang) : .04, sq: .02 * Math.sin(t * 1.9), dy: -.1 * (1 - Math.exp(-Math.max(0, t - T_DING) * 3)) * (t > T_DING ? 1 : 0),
-      aL, aR, handR: !bp.inside ? (s, sw) => { push(); rotate(aR); translate(.15 * s, .62 * s); noodleBowl(0, 0, s / 70, 0, 0); pop(); } : null });
-    if (!bp.inside && t >= T_IN0 && t < T_IN1) { /* the bowl travels in her hand (drawn by handR) */ }
+      aL, aR, handR: !bp.inside ? (s, sw) => { push(); rotate(aR); translate(.15 * s, .62 * s); noodleBowl(0, 0, s / 70); pop(); } : null });
     camEnd();
     // night, then the lights: moon through the window, the microwave's warm glow (its lamp is on dimly while the door is open)
     const lamp = Math.max(mw.on, .5 * clamp(doorTh(t) / 1.2)), fl = 1 + .03 * Math.sin(t * 23) + .12 * dg;
@@ -471,7 +461,7 @@
     camBegin(cam[0], cam[1], cam[2]);
     clipTo(rrPts(CAV.x, CAV.y, CAV.w, CAV.h, 10), () => light(TURN[0], CAV.y + 60, 260, '#FFD27A', .38 * mw.on * fl));
     light(TURN[0], CAV.y + 120, 380, '#FFC870', .26 * lamp * fl);
-    // timer: 0:04 → 0:00 on the beats
+    // timer: 0:03 → 0:00 on the beats
     const ds = t < T_GO ? 3 : Math.max(0, 3 - Math.floor((t - T_GO) / BEAT + 1e-3)), hop = t > T_GO ? Math.exp(-frac((t - T_GO) / BEAT) * 8) * (t < T_DING + .6 ? 1 : 0) : 0;
     const blink = t > T_DING && frac((t - T_DING) * 2.5) > .5 ? .35 : 1, da = (t < T_GO ? .45 : 1) * blink;
     const dx0 = PANEL.x + 40, dy0 = PANEL.y + 27 - hop * 4;
@@ -590,8 +580,8 @@
     camEnd();
     // light: a dark blue room; the bowl's warmth and the phone's pink glow; then warm light slowly wraps them
     const wr = lerp(560, 1500, wk);
-    lightMap(cam, mixCol('#2A3068', '#5A4060', wk * .7), [[300, 300, 700, '#5A6AAA', .45 * (1 - wk * .4)], [bx, by, 520, '#FFD6A0', .7 + .1 * Math.sin(t * 2)],
-      [PH4.x, PH4.y - 150, 460, '#FFB8D0', .55 + .35 * seg(t, T_MOMO, T_MOMO + .3)], [gx + 80, gy - 2.8 * s, wr, '#FFD49A', .12 + .95 * wk], [gx - 60, gy - 5.6 * s, 380, '#FFE6C4', .25 + .35 * wk]]);
+    lightMap(cam, mixCol('#2A3068', '#4A3456', wk * .8), [[300, 300, 700, '#5A6AAA', .45 * (1 - wk * .5)], [bx, by, 520, '#FFD6A0', .7 + .1 * Math.sin(t * 2)],
+      [PH4.x, PH4.y - 150, 460, '#FFB8D0', .55 + .35 * seg(t, T_MOMO, T_MOMO + .3)], [gx + 80, gy - 2.8 * s, wr, '#FFB070', .12 + .72 * wk], [gx - 60, gy - 5.6 * s, 380, '#FFE6C4', .25 + .3 * wk]]);
     camBegin(cam[0], cam[1], cam[2]);
     fl.forEach(([x, y], i) => { if (i % 2) return; const on = .6 + .4 * Math.sin(t * 2 + i * 1.7); glow(x, y + 12, 30, ['#FFD98A', '#FFB3C6', '#FFE7A8'][i % 3], .6 * on); dot(x, y + 12, 6, ['#FFE7A8', '#FFC9D8', '#FFF3C4'][i % 3], .95); });
     light(gx + 40, gy - 3.2 * s, lerp(300, 900, wk), '#FFB46A', .14 * wk);                      // the warm cocoon
@@ -673,6 +663,12 @@
       if (lit > .05) { glow(x0, y0, 40 * (w0 / 200 + .4), '#FFD27A', .75 * lit); dot(x0, y0, 3 * (w0 / 200 + .4), '#FFF3C8', lit); }
     }
     for (let i = 0; i < 9; i++) { const u = .05 + i * .05, [x, y, w] = pathPt(u), sd = i % 2 ? .2 : -.2, sc = 1.3 - u; paint(ellPts(x + sd * w, y, 8 * sc, 12 * sc, 8, 0, -.6), { wash: '#C9B492', washOp: 150, ink: null }); }   // footprints
+    // two little pencil birds flying ahead toward the sunrise
+    for (let i = 0; i < 3; i++) {
+      const u = seg(t, 215.6 + i * .5, 218.9 + i * .4); if (u <= 0 || u >= 1) continue;
+      const bx = lerp(820 + i * 70, SUN5[0] - 60 + i * 50, u), by = lerp(330 - i * 40, SUN5[1] - 150 - i * 30, u) + Math.sin(u * 9 + i) * 10, fl = Math.sin(t * 14 + i * 2) * 7, sc = 1.2 - .6 * u;
+      inkLine([[bx - 16 * sc, by - fl * sc], [bx - 5 * sc, by - 2 * sc], [bx, by + 3 * sc], [bx + 5 * sc, by - 2 * sc], [bx + 16 * sc, by - fl * sc]], 1.1, PEN, 'pencil', .5);
+    }
     // grass tufts
     for (let i = 0; i < 22; i++) {
       const x = hash(i * 4.1) * W, y = 720 + hash(i * 2.7) * 330, [px, py, pw] = pathPt(clamp((y - 1160) / (492 - 1160))); if (Math.abs(x - px) < pw * .7) continue;
@@ -694,8 +690,7 @@
   // the notebook in her lap (body-local): open → closed → hugged; the ribbon bookmark with a star charm
   function notebook5(t, s, sw) {
     const cl = seg(t, T_CLOSE - .15, T_CLOSE + .05), hug = ease(seg(t, T_CLOSE + .1, T_CLOSE + .5));
-    const bx = 0, by = lerp(-1.75, -3.0, hug) * s, rot = lerp(0, 0, hug);
-    push(); translate(bx, by); rotate(rot);
+    push(); translate(0, lerp(-1.75, -3.0, hug) * s);
     if (cl < 1) {
       const wv = lerp(1.9, .95, easeIn(cl));
       paint([[-wv * s, -.1 * s], [0, .15 * s], [wv * s, -.1 * s], [wv * s * .98, .75 * s], [0, .95 * s], [-wv * s * .98, .75 * s]], { wash: '#6F86B8', ink: PAL.ink, sw: sw * .7 });
@@ -718,7 +713,7 @@
     paperWorld(t);
     bench5(t, true);
     // her: resting, the notebook in her lap; takes the bookmark, slips it in, closes the book, hugs it, looks at the dawn
-    const give = seg(t, T_GIVE - .35, T_GIVE), take = seg(t, T_GIVE, T_SLIP), close = seg(t, T_CLOSE - .15, T_CLOSE + .05);
+    const give = seg(t, T_GIVE - .35, T_GIVE);
     const md = mood(t, [[213.5, 'normal', null, 'tiny'], [T_GIVE - .4, 'normal', null, 'o'], [T_GIVE, 'happy', null, 'smile'], [T_SLIP + .1, 'normal', null, 'smile'], [T_CLOSE + .3, 'closed', null, 'smile'], [T_LOOK, 'normal', null, 'smile'], [B(363), 'happy', null, 'smile']]);
     const reachR = Math.sin(clamp((t - (T_GIVE - .3)) / (T_SLIP - T_GIVE + .3)) * Math.PI);
     const hugK = ease(seg(t, T_CLOSE + .1, T_CLOSE + .5)), lookAhead = ease(seg(t, T_LOOK, T_LOOK + .5));
@@ -749,18 +744,17 @@
 
   // =====================================================================================================
   // 6 · TIRED, NOT DONE (218.556–225.756, painted until ~226.0): the reverse angle of her room at 3 a.m. She has dozed
-  //     off at the desk hugging her notebook. Tiny 桃桃 (stepped out of the screen) and 团子 lift the star blanket over
-  //     her and let it settle on her shoulders. Her ahoge curls into a heart; a dream bubble fills with her small loves;
+  //     off at the desk hugging her notebook. Tiny 桃桃 (stepped out of the screen) and 团子 tug the star blanket's
+  //     corners up over her shoulders. Her ahoge curls into a heart; a dream bubble fills with her small loves;
   //     a warm glow grows from the dream and brightens toward the white flash of the final chorus.
   // =====================================================================================================
-  const HX6 = 900, HS6 = 48, HEADY6 = 746, GY6 = HEADY6 + 6.7 * HS6, DESK6 = 880;
+  const HX6 = 900, HS6 = 48, HEADY6 = 746, GY6 = HEADY6 + 6.7 * HS6;
   const T_PULL = 218.75, T_DRAPE = B(367), T_HEART6 = B(367) + .5, T_BUBBLE = B(368) + .1, T_GLOW = 224.3;
   const BUB = { x: 1310, y: 408, w: 620, h: 370 };
   const MOMO6 = [HX6 - 4.7 * HS6, 936], MS6 = 15, CAT6 = [HX6 + 5.6 * HS6, 946], CS6 = 26;
   // the blanket over her back (behind her), its top edge rising as it is pulled up over her shoulders
   const BL_BACK = [[-4.75, 922], [-4.3, 820], [-3.6, 752], [-2.2, 700], [0, 684], [2.2, 700], [3.7, 752], [4.4, 820], [4.95, 925], [3.0, 940], [0, 946], [-3.0, 940]];
-  const LOVES = [
-    { k: 'star', a: 0 }, { k: 'paw', a: 1 }, { k: 'drawing', a: 2 }, { k: 'candy', a: 3 }, { k: 'pencil', a: 4 }, { k: 'pixel', a: 5 }, { k: 'note', a: 6 }, { k: 'soda', a: 7 }];
+  const LOVES = ['star', 'paw', 'drawing', 'candy', 'pencil', 'pixel', 'note', 'soda'];     // her small loves (as in chapter 3)
   function love(kind, x, y, sc, t, i) {
     push(); translate(x, y); rotate(Math.sin(t * 1.3 + i) * .15); scale(sc);
     if (kind === 'star') { pop(); idea(x, y, 18 * sc, { eyes: 'happy', seed: i }); return; }
@@ -791,19 +785,19 @@
       glow(x, y + bh * .1, bw * .5, '#FFF3DC', .6);
       for (let i = 0; i < 6; i++) sparkle(x + Math.cos(i * 2.3 + t * .3) * bw * .4, y + Math.sin(i * 1.7 + t * .4) * bh * .35, 8, '#FFF3C0', frac(t * .5 + i * .17));
       // her small loves float round in a slow ring, one popping in on each beat
-      LOVES.forEach((L, i) => {
-        const bt = i === 0 ? T_BUBBLE + .6 : B(368 + i) , kk = backOut(seg(t, bt, bt + .35)); if (kk < .01) return;
-        const a = i / LOVES.length * TAU + t * .3, lx = x + Math.cos(a) * bw * .32, ly = y + Math.sin(a) * bh * .25 + Math.sin(t * 2.1 + i) * 8;
+      LOVES.forEach((kind, i) => {
+        const bt = i === 0 ? T_BUBBLE + .6 : B(368 + i), kk = backOut(seg(t, bt, bt + .35)); if (kk < .01) return;
+        const a = i / LOVES.length * TAU + t * .3, lx = x + Math.cos(a) * bw * .345, ly = y + Math.sin(a) * bh * .29 + Math.sin(t * 2.1 + i) * 8;
         glow(lx, ly, 56 * kk, '#FFF6D8', .55);
-        love(L.k, lx, ly, (.95 + .15 * Math.sin(a)) * kk * 1.8, t, i);
+        love(kind, lx, ly, (.95 + .15 * Math.sin(a)) * kk * 1.62, t, i);
       });
     });
     return k;
   }
   function tiredNotDone(t, lt, dur) {
-    const push_ = easeInOut(seg(lt, -.4, dur + .5)), end = easeIn(seg(t, 224.2, 226.0));
-    const cam = [kf(t, [[218.2, 940], [220.6, 960], [222.2, 1075], [225.0, 1100]], easeInOut) + 50 * end, kf(t, [[218.2, 760], [220.6, 745], [222.2, 640], [225.0, 622]], easeInOut) - 36 * end,
-      kf(t, [[218.2, 1.5], [220.6, 1.42], [222.2, 1.08], [225.0, 1.13]], easeInOut) + .09 * end];
+    const end = easeIn(seg(t, 224.2, 226.0));
+    const cam = [kf(t, [[218.2, 940], [220.45, 958], [222.65, 1075], [225.0, 1100]], easeInOut) + 50 * end, kf(t, [[218.2, 760], [220.45, 746], [222.65, 640], [225.0, 622]], easeInOut) - 36 * end,
+      kf(t, [[218.2, 1.5], [220.45, 1.43], [222.65, 1.08], [225.0, 1.13]], easeInOut) + .09 * end];
     camBegin(cam[0], cam[1], cam[2]);
     roomReverse(t, { night: 1, lamp: .2, screen: .6, clock: 3.2 });
     // her chair behind her
@@ -872,12 +866,6 @@
     flash(.62 * easeIn(gk), '#FFF6E8');
     vignette(.4 * (1 - gk), '#0A0C22');
   }
-
-  // =====================================================================================================
-  // placeholders (to be painted)
-  // =====================================================================================================
-  const todo = name => (t, lt) => { cover('#1B2147'); letter(name + ' ' + lt.toFixed(1), 960, 500, 60, PAL.cream, { font: 'kai', ink: false }); };
-  
 
   chapter('bridge', 192.156, 225.756, [[192.156, blank], [196.956, doubts], [201.756, reheat], [206.556, careForMe], [213.756, restStop], [218.556, tiredNotDone]]);
   transition(192.156, 'dark', 1.2);

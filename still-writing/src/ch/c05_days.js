@@ -212,6 +212,14 @@
       pop();
     });
   }
+  function wallExtras(t, day, hours) {          // the clock and calendar on the wall above the monitor (as in the time-lapse)
+    wallClock(1175, 172, 66, hours + (t - 110.556) / 60);
+    const [x, y] = CAL;
+    paint(rrPts(x - 64, y - 88, 128, 176, 10), { wash: '#E9D8C2', fill: '#C9AE8E', fillOp: 60, tex: .4, ink: INK, sw: 1 });
+    paint(rectPts(x - 60, y - 84, 120, 34), { wash: PAL.rose, ink: INK, sw: .8 });
+    for (const dx of [-32, 0, 32]) paint(ellPts(x + dx, y - 50, 4, 7, 8), { wash: PAL.gray, ink: INK, sw: .4 });
+    calPage(x, y, day);
+  }
   const CAT_SPOTS = [[420, 935, 20, 'sleep'], [645, 614, 16, 'loaf'], [790, 702, 16, 'sit'], [660, 1000, 20, 'sleep'], [420, 935, 20, 'loaf'], [575, 614, 16, 'sit'], [785, 702, 16, 'loaf']];
   function tlCat(h) {                            // 团子 jumps between favourite spots, time-lapse style
     const p = clamp(Math.floor((h + 6) / 12), 0, 6), [x, y, s, pose] = CAT_SPOTS[p];
@@ -313,6 +321,7 @@
     const cx = lerp(1000, 1205, k), cy = lerp(625, 690, k), z = lerp(1.22, 1.78, k), cr = lerp(-.025, .02, k);
     camBegin(cx, cy, z, cr);
     room(t, { lamp: 1, night: 1, rain: 1, screen: cozyScreen, clutter: .1, book: 'open' });
+    wallExtras(t, 15, 22);
     clipTo(rectPts(172, 112, 656, 496), () => rainStreaks(t, { x: 172, y: 112, w: 656, h: 496 }, 34, '#C9D8FF', .4, { fall: true }));
     // 团子 asleep on the warm laptop
     laptop(752, 702, 170);
@@ -796,6 +805,7 @@
     const z = lerp(3.55, 1.26, back), cx = lerp(MON[0], 1190, back), cy = lerp(MON[1], 610, back);
     camBegin(cx, cy, z);
     room(t, { lamp: 1, night: 1, rain: .4, screen: smallUI, clutter: .3, book: 'open' });
+    wallExtras(t, 18, 23.2);
     const nod = t > B(217.2) ? Math.sin(clamp((t - B(217.2)) / .55) * Math.PI * 2) : 0;
     const x = 1160, fy = 985, s = 34, seat = 3.2, y = fy - (seat - 1.5) * s;
     const ho = { sit: true, back: true, outfit: 'home', noShadow: true, aL: .35, aR: t < B(217) ? .9 : .35, dy: .18 * Math.max(0, nod), tilt: .08 * nod, sq: .03 * Math.max(0, nod), ahoge: back < .15 ? 'none' : 'normal' };
@@ -910,17 +920,18 @@
   // pictures of late nights; each turns golden, then into candy
   // =====================================================================================
   const STEAM = [
-    { t0: B(221) + .02, at: [610, 372], gold: B(222), candy: B(224) },
-    { t0: B(222) - .02, at: [960, 232], gold: B(223), candy: B(224) + .06 },
-    { t0: B(223) - .06, at: [1310, 372], gold: B(223) + .5, candy: B(224) + .12 }
+    { t0: B(221) + .04, at: [610, 372], gold: B(223), candy: B(224) },
+    { t0: B(221.75), at: [960, 232], gold: B(223.25), candy: B(224) + .06 },
+    { t0: B(222.5), at: [1310, 372], gold: B(223.5), candy: B(224) + .12 }
   ];
   function steamPic(i, x, y) {                   // the three little late-night pictures (drawn as pencil lines, tinted later)
-    if (i === 0) {                               // asleep on the keyboard
-      paint(rrPts(x - 115, y + 34, 230, 46, 8), { wash: '#FFFFFF', ink: INK, sw: 1 });
-      for (let r = 0; r < 2; r++) for (let c = 0; c < 8; c++) paint(rectPts(x - 100 + c * 25, y + 41 + r * 18, 19, 12), { ink: INK, sw: .5 });
-      push(); translate(x - 20, y + 36); rotate(-1.45); hero(0, 0, 15, { eyes: 'closed', mouth: 'o', noShadow: true, aL: .3, aR: -1.4, ahoge: 'droop', sit: true }); pop();
-      paint(ellPts(x - 62, y + 6, 11, 11, 12), { ink: INK, sw: .7 });
-      letter('z', x + 40, y - 70, 34, INK, { font: 'cute', ink: false }); letter('z', x + 72, y - 104, 24, INK, { font: 'cute', ink: false });
+    if (i === 0) {                               // asleep on the keyboard, head on folded arms
+      clipTo(rectPts(x - 300, y - 300, 600, 340), () => hero(x - 30, y + 96, 17, { sit: true, tilt: 1.12, eyes: 'closed', mouth: 'o', noShadow: true, aL: .2, aR: .2, ahoge: 'droop', blush: .8 }));
+      paint(rrPts(x - 104, y + 22, 208, 42, 21), { wash: HERO_STYLE.top, ink: INK, sw: .9 });
+      paint(rrPts(x - 124, y + 60, 248, 40, 8), { wash: '#FFFFFF', ink: INK, sw: 1 });
+      for (let c = 0; c < 9; c++) paint(rectPts(x - 110 + c * 25, y + 69, 19, 12), { ink: INK, sw: .5 });
+      paint(ellPts(x + 50, y + 2, 12, 12, 12), { ink: INK, sw: .7 });
+      letter('z', x + 70, y - 60, 34, INK, { font: 'cute', ink: false }); letter('z', x + 100, y - 94, 24, INK, { font: 'cute', ink: false });
     } else if (i === 1) {                        // a hopeless tangle of cables
       const pts = []; for (let k = 0; k < 40; k++) { const a = k * 1.9, r = 60 + 30 * Math.sin(k * 1.3); pts.push([x + Math.cos(a) * r * 1.2, y + Math.sin(a) * r * .8]); }
       inkLine(pts, 1.2, INK, 'ink', .8);
@@ -956,7 +967,7 @@
     }
     STEAM.forEach((S, i) => {
       const age = t - S.t0; if (age < 0) return;
-      const P = toS(S.at), grow = easeOut(clamp(age / .4)), ring = seg(age, .25, .5);
+      const P = toS(S.at), grow = easeOut(clamp(age / .3)), ring = seg(age, .15, .38);
       const gold = seg(t, S.gold, S.gold + .35), gone = seg(t, S.candy, S.candy + .3);
       const col = mixCol('#FFF6E6', '#FFD06B', gold);
       // a curling thread from the cup to the picture
@@ -965,7 +976,7 @@
         const thr = []; for (let j = 0; j <= 24; j++) { const u = j / 24 * grow, v = 1 - u; thr.push([v * v * v * c0[0] + 3 * v * v * u * c1[0] + 3 * v * u * u * c2[0] + u * u * u * bot[0] + Math.sin(u * 9 + t * 2 + i) * 10, v * v * v * c0[1] + 3 * v * v * u * c1[1] + 3 * v * u * u * c2[1] + u * u * u * bot[1]]); }
         inkLine(thr, 2.2, col, 'ink', .6, .75 * (1 - gone));
         if (ring > 0) { const rr = []; for (let j = 0; j <= 30 * ring; j++) { const a = Math.PI / 2 + j / 30 * TAU; rr.push([P[0] + Math.cos(a) * 172 * cam[2] * (1 + .04 * Math.sin(j + t * 3)), P[1] + Math.sin(a) * 148 * cam[2]]); } if (rr.length > 1) inkLine(rr, 2.4, col, 'ink', .6, .85 * (1 - gone)); }
-        const pa = seg(age, .3, .55) * (1 - gone);
+        const pa = seg(age, .2, .42) * (1 - gone);
         if (pa > .01) {
           glow(P[0], P[1], 230 * cam[2], mixCol('#FFF6E6', '#FFD06B', gold), (.28 + .3 * gold) * pa);
           const cv = layer(() => { camBegin(...cam); sketch(.49, () => { push(); translate(S.at[0], S.at[1]); scale(1.55); translate(-S.at[0], -S.at[1] - 10); steamPic(i, S.at[0], S.at[1]); pop(); }); camEnd(); X.globalCompositeOperation = 'source-in'; X.fillStyle = col; X.fillRect(0, 0, W, H); });

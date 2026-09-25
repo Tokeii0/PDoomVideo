@@ -376,7 +376,7 @@
     const S = (x, y) => [960 + (x - cam.cx) * cam.zg, 540 + (y - cam.cy) * cam.zg];
     const [ox0, oy0] = S(OPEN.x, OPEN.y), [ox1, oy1] = S(OPEN.x + OPEN.w, OPEN.y + OPEN.h);
     X.save(); X.beginPath(); X.rect(ox0, oy0, ox1 - ox0, oy1 - oy0); X.clip();
-    camBegin(t < FLY0 ? cam.cx : P[0] + (cam.cx - P[0]), cam.cy, cam.ze); outsideView(t, cam, lampK); camEnd();
+    camBegin(cam.cx, cam.cy, cam.ze); outsideView(t, cam, lampK); camEnd();
     X.restore();
     // on the glass: rain outside, mist and writing inside
     if (glassA > .01) {
@@ -397,7 +397,6 @@
     }
     // grade: near-monochrome blue-grey, until colour seeps out from under the lamp
     const pool = flat(cam, 690, 900), R = 2700 * easeInOut(seg(t, SEEP0, SEEP1));
-    const mono = () => { grade(.3, 'saturation', SC); grade(.3, 'saturation', SC); grade(.3, 'saturation', SC); grade(.2, 'color', '#6D7FA6'); };
     if (R <= 1) { grade(.92, 'saturation', SC); grade(.22, 'color', '#6D7FA6'); }
     else if (t < SEEP1) {
       outside(blob(pool[0], pool[1], R, 1.3), () => { grade(.35, 'saturation', SC); grade(.08, 'color', '#6D7FA6'); });
@@ -529,7 +528,7 @@
       const sx = a[0] + (b[0] - a[0]) * .2;
       paint([[sx, a[1] + 20], [sx + .3 * k, a[1] + 20], [sx - .4 * k, b[1] - 30], [sx - .7 * k, b[1] - 30]], { wash: '#FFFFFF', washOp: 22 * near, ink: null });
       paint([[sx + .5 * k, a[1] + 20], [sx + .6 * k, a[1] + 20], [sx - .1 * k, b[1] - 30], [sx - .2 * k, b[1] - 30]], { wash: '#FFFFFF', washOp: 16 * near, ink: null });
-      fillRectA(a[0], lerp(a[1], b[1], .55), b[0] - a[0], .05 * k, '#E6F2F2', .3 * near);
+      fillRectA(a[0], lerp(a[1], b[1], .8), b[0] - a[0], .04 * k, '#E6F2F2', .22 * near);
       inkLine([[b[0] - .14 * k, lerp(a[1], b[1], .38)], [b[0] - .14 * k, lerp(a[1], b[1], .62)]], 1.6, '#8A93A8', 'marker', 0);
     }
     // the building front: everything outside the doorway
@@ -661,7 +660,7 @@
     const hop = -Math.sin(seg(t, POP, POP + .42) * Math.PI) * .45;
     const sway = t > 17.6 ? move('sway', t) : null;
     const md = mood(t, [[14.3, 'tired', null, 'flat'], [15.0, 'closed', null, 'pout'], [POP, 'sparkle', 'spark', 'open'], [16.45, 'closed', null, 'o'], [16.97, 'happy', 'flower', 'smile'], [18.1, 'normal', null, 'smile'], [18.8, 'happy', null, 'cat']]);
-    const o = { outfit: 'office', badge: t < 15.16, aL, aR, dy: hop + (sway ? 0 : 0), sq: stretch + squash + (t < 15 ? Math.sin(t * 2.2) * .015 : 0), ...md,
+    const o = { outfit: 'office', badge: t < 15.16, aL, aR, dy: hop, sq: stretch + squash + (t < 15 ? Math.sin(t * 2.2) * .015 : 0), ...md,
       tilt: (sway ? sway.tilt : 0) + (t < 15 ? -.05 : 0) + .06 * smooth01(t, 18.8, 19.0, 19.3, 19.5), rot: sway ? sway.rot * .6 : 0,
       blush: .35 + .45 * seg(t, 16.95, 17.4), lookY: t < 15.16 ? .5 * seg(t, 14.95, 15.1) : t < 16.4 && t > POP ? -.5 : 0, lookX: t > 18.95 ? .5 * seg(t, 18.95, 19.2) : 0, ahoge: 'none' };
     o.sq += o.take || 0; o.take = 0;
@@ -889,13 +888,13 @@
     paint(rectPts(-40, -40, W + 80, H + 80), { grad: ['#141A45', '#4A3F80', Math.PI / 2], ink: null });
     glow(960, 900, 1200, '#7A5A9A', .3);
     starField(t, { x: 0, y: 0, w: W, h: 520 }, 40, { seed: 9 });
-    moonFace(1740 - (cam.x - 900) * .03, 130, 56, { rot: -.3 });
+    moonFace(1800 - (cam.x - 900) * .03, 96, 52, { rot: -.3 });
   }
   function farCity(t, cam) {
     camBegin(960 + (cam.x - 960) * .3, 540, 1 + (cam.z - 1) * .5);
     for (let i = 0; i < 16; i++) {
       const bx = -200 + i * 160 + hash(i * 3.3) * 50, bw = 110 + hash(i * 5.1) * 70, bh = 180 + hash(i * 7.7) * 260;
-      paint(rectPts(bx, 800 - bh, bw, bh + 60), { wash: '#3A3A78', washOp: 210, ink: null });
+      paint(rectPts(bx, 800 - bh, bw, bh + 60), { wash: '#45458A', washOp: 220, ink: null });
       for (let r = 0; r < 7; r++) for (let c = 0; c < 3; c++) if (hash(i * 31 + r * 5 + c * 11) > .72) fillRectA(bx + 12 + c * (bw - 24) / 3, 800 - bh + 18 + r * 34, (bw - 24) / 3 - 10, 12, '#FFD98A', .45);
     }
     paint(rectPts(-400, 730, 3000, 400), { wash: '#4A3F80', washOp: 90, ink: null });
@@ -975,8 +974,9 @@
     paint(rrPts(x - 14, 824, 28, 6, 3), { wash: PAL.ink, ink: null });
     paint(rectPts(x - 5, 892, 10, 20), { wash: '#B85A62', ink: PAL.ink, sw: .6 });
   }
+  const TURN = ARRIVE - .08, STEP = ARRIVE + .36;
   function streetHero(t) {
-    const x = heroStreetX(t), S = ST.S, inside = t > ARRIVE + .3;
+    const x = heroStreetX(t), S = ST.S, inside = t > STEP;
     const walking = (t < 25.9) || (t > B(44) && t < ARRIVE);
     const m = walking ? move('walk', t) : move('breathe', t);
     const md = mood(t, [[24.0, 'happy', null, 'smile'], [24.9, 'normal', null, 'smile'], [B(43), 'look', '?', 'o'], [26.2, 'closed', null, 'cat'], [26.62, 'happy', null, 'smile'], [ARRIVE - .2, 'normal', null, 'smile']]);
@@ -985,11 +985,16 @@
       lookX: lerp(.55, -1, lookBack), tilt: m.tilt + lookBack * .12 - shrug * .08, ahoge: lookBack > .5 ? 'question' : 'normal',
       aL: walking ? m.aL : lerp(-1.15, -.25, shrug), aR: walking ? m.aR : lerp(-1.15, -.35, shrug), dy: (m.dy || 0) - shrug * .15,
       draw: (u, sw) => tote(u, sw, 1, Math.sin(bpOf(t) * Math.PI) * .06 * (walking ? 1 : .2)),
-      handL: (u, sw) => { push(); rotate(-(walking ? m.aL : lerp(-1.15, -.25, shrug))); sodaCan(0, .55 * u, u * .0125, { drops: .6 }); pop(); paint(ellPts(0, 0, .36 * u, .33 * u, 10), { wash: SKIN, ink: PAL.ink, sw: sw * .6 }); } };
-    if (!inside) { hero(x, ST.g, S, o); return; }
+      handL: (u, sw) => { push(); scale(-1, 1); rotate(-(walking ? m.aL : lerp(-1.15, -.25, shrug))); sodaCan(0, .55 * u, u * .0125, { drops: .6 }); paint(ellPts(0, 0, .36 * u, .33 * u, 10), { wash: SKIN, ink: PAL.ink, sw: sw * .6 }); pop(); } };
+    if (t < TURN) { hero(x, ST.g, S, o); return; }
+    if (!inside) {                                         // turns to the door with a little hop and reaches for the knob
+      const k = seg(t, TURN, TURN + .14), reach = easeOut(seg(t, TURN + .08, ARRIVE + .2));
+      hero(x, ST.g, S, { outfit: 'office', badge: false, back: true, sq: .08 * Math.sin(k * Math.PI), dy: -.25 * Math.sin(k * Math.PI), aR: lerp(-1.15, -.25, reach), aL: -1.15, draw: (u, sw) => tote(u, sw, -1, 0) });
+      return;
+    }
     // going in: back to us, stepping up into the warm doorway
-    const k = seg(t, ARRIVE + .3, 27.85), bx = lerp(ST.door - 36, ST.door, k), by = lerp(ST.g, 878, k), bs = lerp(S, S * .9, k);
-    clipTo(rectPts(DOOR.x0, DOOR.y0 - 200, DOOR.x1 - DOOR.x0, DOOR.y1 - DOOR.y0 + 200), () => hero(bx, by, bs, { ...move('walk', t), back: true, outfit: 'office', badge: false, noShadow: true, draw: (u, sw) => tote(u, sw, -1, 0) }));
+    const k = seg(t, STEP, 27.85), bx = lerp(heroStreetX(STEP), ST.door, k), by = lerp(ST.g, 878, k), bs = lerp(S, S * .9, k);
+    clipTo(rectPts(DOOR.x0 - 6, DOOR.y0 - 200, DOOR.x1 - DOOR.x0 + 12, DOOR.y1 - DOOR.y0 + 200), () => hero(bx, by, bs, { ...move('walk', t), back: true, outfit: 'office', badge: false, noShadow: true, draw: (u, sw) => tote(u, sw, -1, 0) }));
   }
   function street(t, lt, dur) {
     const cam = streetCam(t);
@@ -1021,7 +1026,7 @@
       if (t > 24.25 && t < 24.55) sparkle(640, 360, 34, '#FFF3C0', seg(t, 24.25, 24.55));
       const sx = I.sx ?? 1; push(); translate(I.x, I.y); scale(sx, 1); translate(-I.x, -I.y);
       idea(I.x, I.y, 19, { eyes: I.eyes, sq: I.sq, rot: I.rot || 0, trail: Math.abs(sx - 1) < .05 ? tr : null, glow: 1 }); pop(); };
-    const inside = t > ARRIVE + .3, starIn = I.zip != null && I.zip > .78, doorClip = rectPts(DOOR.x0, DOOR.y0, DOOR.x1 - DOOR.x0, DOOR.y1 - DOOR.y0);
+    const inside = t > STEP, starIn = I.zip != null && I.zip > .78, doorClip = rectPts(DOOR.x0, DOOR.y0, DOOR.x1 - DOOR.x0, DOOR.y1 - DOOR.y0);
     if (inside) { streetHero(t); if (starIn) clipTo(doorClip, drawIdea); doorPanel(t); }
     else { doorPanel(t); streetHero(t); }
     if (!starIn) drawIdea();
@@ -1034,6 +1039,21 @@
     }
     const sh = t - SHUT;
     if (sh > 0 && sh < .7) for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k - 2.5) * .45; sparkle(ST.door + 60 + Math.cos(a) * sh * 90, 760 + Math.sin(a) * sh * 90, 10, '#FFF3C0', sh / .7); }
+    camEnd();
+    // foreground: overhanging leaves drifting past faster than the street (the nearest parallax layer)
+    camBegin(960 + (cam.x - 960) * 1.5, 540, 1.3);
+    for (const [lx, ly, sc, dir] of [[380, 175, 1, 1], [1420, 160, 1.15, -1], [2420, 180, .9, 1]]) {
+      const sway = Math.sin(t * 1.3 + lx) * .04, br = [];
+      for (let k = 0; k <= 8; k++) { const u = k / 8; br.push([lx + dir * (u - .3) * 420 * sc, ly - 60 + Math.sin(u * Math.PI) * 110 * sc + u * 30]); }
+      push(); translate(lx, ly - 60); rotate(sway); translate(-lx, -(ly - 60));
+      inkLine(br, 2.6, '#1A2238', 'marker', .5);
+      for (let k = 1; k < 16; k++) {
+        const u = k / 16, i = Math.min(7, Math.floor(u * 8)), f = u * 8 - i, bx = lerp(br[i][0], br[i + 1][0], f), by = lerp(br[i][1], br[i + 1][1], f), sd = k % 2 ? 1 : -1;
+        const a = Math.PI / 2 + sd * .7 + (hash(lx + k) - .5) * .5, L = (30 + hash(k * 3.3 + lx) * 16) * sc;
+        paint(ellPts(bx + Math.cos(a) * L * .6, by + Math.sin(a) * L * .6, L * .62, L * .26, 12, 0, a), { wash: k % 3 ? '#20344A' : '#26405A', fill: '#162436', fillOp: 60, tex: .3, ink: '#141B30', sw: .6 });
+      }
+      pop();
+    }
     camEnd();
     const rk = seg(t, 27.9, 29.4);
     if (rk > 0) rainStreaks(t, { x: 0, y: 0, w: W, h: H }, Math.round(10 + 30 * rk), '#C9D6F2', .22 * rk, { fall: true });

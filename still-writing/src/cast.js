@@ -383,10 +383,10 @@ function momoDancer(x, y, s, style, t, extra = {}) { const m = move(style, t, (e
 
 // ---------- 团子, the cat ----------
 // cat(x, y, s, o): ground point under the body. About 5s long (loaf) / 4.5s tall (sit). o.pose: sit | loaf | sleep | walk | pounce.
-// o.eyes: open | closed | happy | wide; o.flip; o.tail (phase override); o.look (-1..1).
+// o.eyes: open | closed | happy | wide (a sleeping cat defaults to happy-closed); o.flip; o.tail (phase override); o.look (-1..1).
 const CAT = '#F6D3A1', CAT_DK = '#E3A15E', CAT_LT = '#FFF1DC';
 function cat(x, y, s, o = {}) {
-  const sw = clamp(s / 14, .35, 2), pose = o.pose || 'sit', e = o.eyes || 'open', tw = Math.sin(T * 2.4 + (o.seed || 0)) * .35 + (o.tail || 0);
+  const sw = clamp(s / 14, .35, 2), pose = o.pose || 'sit', e = o.eyes || (pose === 'sleep' ? 'happy' : 'open'), tw = Math.sin(T * 2.4 + (o.seed || 0)) * .35 + (o.tail || 0);
   if (!o.noShadow) paint(ellPts(x, y + s * .1, s * 2.6, s * .45, 16), { fill: PAL.ink, fillOp: 60, bleed: .2, tex: .2, border: .1, ink: null });
   push(); translate(x, y + (o.dy || 0) * s); if (o.rot) rotate(o.rot); scale((o.flip ? -1 : 1) * (1 + (o.sq || 0) * .4), 1 - (o.sq || 0));
   const head = (hx, hy, hs = 1) => {

@@ -127,7 +127,7 @@
       if (t > S1T.crouch) { aR = aL = lerp(-1.25, -.35, seg(t, S1T.crouch, S1T.jump)); }
     } else if (t < S1T.land) {
       const k = seg(t, S1T.jump, S1T.land), e0 = sawEnds(PHI_DN).end;
-      hx = lerp(700, e0[0] + 4, k); hy = lerp(GY, e0[1] - 26, k) - 250 * 4 * k * (1 - k);
+      hx = lerp(700, e0[0] + 4, k); hy = lerp(GY, e0[1] - 26, k) - 215 * 4 * k * (1 - k);
       hsq = -.16 * Math.sin(k * Math.PI); aR = aL = lerp(.25, .15, k); rot = .1 * Math.sin(k * Math.PI);
     } else {
       const e = sawEnds(sawPhi(t)).end, k = seg(t, S1T.grab0, S1T.grab1);
@@ -139,8 +139,8 @@
     const md = mood(t, [[67.2, 'happy', null, 'open'], [S1T.hover + .02, 'wide', '!', 'o'], [S1T.lay1 + .05, 'normal', null, 'pout'], [S1T.crouch, 'normal', null, 'pout'], [S1T.land + .04, 'happy', null, 'grin'], [71.7, 'happy', null, 'open']]);
     // ---- camera ----
     const cx = kf(t, [[67.356, 560], [68.7, 820], [69.3, 960], [70.4, 985], [71.2, 1010], [72.2, 1180]], easeInOut) + 6 * Math.sin(t * .9);
-    const cy = kf(t, [[67.356, 820], [68.7, 640], [70.2, 625], [70.7, 590], [71.25, 600], [72.2, 640]], easeInOut);
-    const z = kf(t, [[67.356, 2.1], [68.7, 1.3], [69.6, 1.26], [70.3, 1.3], [71.2, 1.26], [72.2, 1.24]], easeInOut) + .012 * hit;
+    const cy = kf(t, [[67.356, 820], [68.7, 640], [70.2, 620], [70.66, 530], [71.2, 590], [72.2, 640]], easeInOut);
+    const z = kf(t, [[67.356, 2.1], [68.7, 1.3], [69.6, 1.26], [70.2, 1.28], [70.66, 1.18], [71.2, 1.24], [72.2, 1.24]], easeInOut) + .012 * hit;
     const [shx, shy] = shakeXY(t, t > S1T.slam && t < S1T.slam + .3 ? 8 * Math.exp(-(t - S1T.slam) * 12) : t > S1T.land && t < S1T.land + .3 ? 10 * Math.exp(-(t - S1T.land) * 10) : 0);
     // ---- backdrop ----
     dreamSky(t, cx);
@@ -214,7 +214,7 @@
     const IS = 32;
     if (t < S1T.hover) { ix = hx + 150 + 16 * Math.sin(t * 2.1); iy = GY - 430 - 30 * Math.abs(Math.sin(bp * Math.PI)); iEyes = 'happy'; }
     else if (t < S1T.jump) { const k = seg(t, S1T.hover, S1T.hover + .3); ix = lerp(hx + 150, hx - 90, easeOut(k)) + 5 * Math.sin(t * 50) * (1 - seg(t, S1T.hover + .2, S1T.hover + .5)); iy = GY - 380 + 40 * seg(t, S1T.crouch, S1T.jump); isq = .22 * seg(t, S1T.crouch, S1T.jump); }
-    else if (t < S1T.land) { const k = seg(t, S1T.jump + .05, S1T.land), e0 = sawEnds(PHI_DN).end; ix = lerp(610, e0[0] + 150, k); iy = lerp(GY - 340, e0[1] - 60, k) - 300 * 4 * k * (1 - k); isq = -.15; irot = k * TAU; }
+    else if (t < S1T.land) { const k = seg(t, S1T.jump, S1T.land); ix = hx - lerp(90, 150, k); iy = hy - 430 + 40 * Math.sin(k * Math.PI); isq = -.15; irot = k * TAU; }
     else if (t < S1T.grab1) { const k = t - S1T.land; ix = sawEnds(PHI_UP).end[0] + 190 + k * 80; iy = LY - 90 - 330 * Math.sin(Math.min(1, k / .9) * Math.PI); irot = k * 9; iEyes = 'happy'; isq = .25 * Math.exp(-k * 8); }
     else { const k = seg(t, S1T.grab1, S1T.grab1 + .45); ix = lerp(sawEnds(PHI_UP).end[0] + 260, hx + 150, k) + 16 * Math.sin(t * 2.1); iy = lerp(LY - 100, GY - 430, easeOut(k)) - 30 * Math.abs(Math.sin(bp * Math.PI)); iEyes = 'happy'; }
     // ---- draw ----
@@ -649,12 +649,12 @@
   // her hand from the bottom-right edge (top-down), pencil tip at (x, y)
   function handTop(x, y, sc = 1) {
     push(); translate(x, y); scale(sc);
-    paint([[120, 96], [330, 300], [420, 210], [210, 10]], { wash: PAL.mint, fill: '#7EA78E', fillOp: 60, tex: .4, ink: PAL.ink, sw: 1, curv: .25 });
-    paint(rrPts(118, 14, 120, 40, 18).map(([px, py]) => [px + (py - 34) * -.9, py + (px - 178) * .95]), { wash: '#C4E6D4', ink: PAL.ink, sw: .9 });
-    paint(ellPts(92, 62, 50, 40, 16, 0, .7), { wash: SKIN, ink: PAL.ink, sw: .9 });
-    pencil(0, 0, .8, -2.35);
-    for (const [fx, fy] of [[52, 36], [44, 58], [52, 80]]) paint(ellPts(fx, fy, 15, 11, 10, 0, .6), { wash: SKIN, ink: PAL.ink, sw: .7 });
-    paint(ellPts(74, 28, 16, 11, 10, 0, -.4), { wash: SKIN, ink: PAL.ink, sw: .7 });
+    paint([[104, 76], [290, 280], [350, 222], [166, 16]], { wash: PAL.mint, fill: '#7EA78E', fillOp: 60, tex: .4, ink: PAL.ink, sw: 1, curv: .2 });
+    paint([[98, 76], [122, 100], [186, 34], [162, 10]], { wash: '#C4E6D4', ink: PAL.ink, sw: .8, curv: .2 });
+    pencil(0, 0, .8, 2.0);
+    paint(ellPts(100, 50, 44, 34, 16, 0, .75), { wash: SKIN, ink: PAL.ink, sw: .9 });
+    for (const [fx, fy, r] of [[50, 30, 13], [44, 50, 12], [54, 68, 11]]) paint(ellPts(fx, fy, r * 1.25, r, 10, 0, .5), { wash: SKIN, ink: PAL.ink, sw: .7 });
+    paint(ellPts(70, 16, 15, 10, 10, 0, -.5), { wash: SKIN, ink: PAL.ink, sw: .7 });
     pop();
   }
   function birthTop(t) {
@@ -691,8 +691,8 @@
     });
     // the idea star above the page (its shadow on the paper tells the height), diving to tap her heart
     const dive = seg(t, S4T.tap - .22, S4T.tap), up = easeOut(seg(t, S4T.tap, S4T.tap + .5));
-    let ix = lerp(1330, tapP[0], easeIn(dive)), iy = lerp(360, tapP[1], easeIn(dive)), ih = lerp(1, 0, easeIn(dive));
-    if (t > S4T.tap) { ix = lerp(tapP[0], 1320, up); iy = lerp(tapP[1], 380, up); ih = up; }
+    let ix = lerp(1080, tapP[0], easeIn(dive)), iy = lerp(330, tapP[1], easeIn(dive)), ih = lerp(1, 0, easeIn(dive));
+    if (t > S4T.tap) { ix = lerp(tapP[0], 1330, up); iy = lerp(tapP[1], 340, up); ih = up; }
     ix += Math.sin(t * 2.2) * 10 * ih; iy += Math.sin(t * 3.1) * 8 * ih;
     paint(ellPts(ix + 36 * ih, iy + 50 * ih + 20, 50 - 18 * ih, 20 - 6 * ih, 14), { wash: PAL.ink, washOp: 50, ink: null });
     idea(ix, iy, 40 * (1 + .25 * ih), { eyes: t > S4T.tap && t < S4T.tap + .4 ? 'happy' : 'normal', sq: t > S4T.tap && t < S4T.tap + .15 ? .3 : 0, glowMul: 1.2 });
@@ -715,11 +715,15 @@
     const hmd = mood(t, [[S4T.sw - 1, 'sparkle', null, 'o'], [S4T.star + .05, 'sparkle', null, 'open'], [S4T.pose + .1, 'happy', 'heart', 'open']]);
     const hx = 470, hyG = 712, hs = 60;
     hero(hx, hyG, hs, { outfit: 'home', ...hmd, lookX: .75, lookY: .55, blush: 1, tilt: .12 + .04 * Math.sin(t * 2), aL: -1.2, aR: -1.2, dy: -.04 * Math.abs(Math.sin(bpOf(t) * Math.PI)), noShadow: true, ahoge: t > S4T.star ? 'heart' : 'perk' });
+    // 团子 peeks over the far edge of the desk, whiskers first
+    const catUp = easeOut(seg(t, S4T.pop - .1, S4T.pop + .4));
+    cat(1790, 600 - 40 * catUp, 44, { pose: 'sit', eyes: t > S4T.star + .1 ? 'happy' : t > S4T.pop ? 'wide' : 'open', look: -.8, noShadow: true, tail: Math.sin(t * 4) * .3 });
     // desk
     paint([[-300, 516], [W + 300, 516], [W + 300, 1400], [-300, 1400]], { wash: '#C99A6A', fill: '#9C6B42', fillOp: 70, bleed: .03, tex: .6, border: .3, ink: PAL.ink, sw: 1.3 });
     inkLine([[-300, 516], [W + 300, 516]], 1.6, PAL.ink, 'ink', 0);
     for (let i = 0; i < 9; i++) inkLine([[960 + (i - 4) * 60, 520], [960 + (i - 4) * 420, 1200]], .5, '#8A5E3C', 'fine', 0, .5);
     glow(700, 640, 700, PAL.lamp, .35);
+    for (const dx of [-40, 40]) paint(ellPts(1790 + dx, 520, 26, 16, 12), { wash: '#F6D3A1', ink: PAL.ink, sw: .9 });
     // her hands resting on the desk edge
     for (const dx of [-130, 130]) { paint(rrPts(hx + dx - 66, 500, 132, 46, 22), { wash: PAL.mint, fill: '#7EA78E', fillOp: 50, tex: .3, ink: PAL.ink, sw: 1 }); paint(ellPts(hx + dx + (dx < 0 ? 56 : -56), 530, 42, 30, 14), { wash: SKIN, ink: PAL.ink, sw: 1 }); }
     // the book
@@ -987,7 +991,7 @@
   // ======================================================================================
   const R7 = 45000, WIN7 = { x: -35, y: -864, w: 70, h: 77 }, NW = 900, NH = 990;       // her window; native interior size
   const W7c = [WIN7.x + WIN7.w / 2, WIN7.y + WIN7.h / 2];
-  const K7 = [[95.556, 2.5], [96.15, 2.36], [96.9, 1.1], [97.6, -.3], [98.3, -1.7], [99.0, -2.95], [99.7, -4.1], [100.4, -4.62], [100.956, -4.72], [101.6, -4.76]];
+  const K7 = [[95.556, 2.36], [96.15, 2.24], [96.9, 1.1], [97.6, -.3], [98.3, -1.7], [99.0, -2.95], [99.7, -4.1], [100.4, -4.62], [100.956, -4.72], [101.6, -4.76]];
   function spline(t, keys) {                                           // Catmull-Rom through (time, value) keys, clamped
     if (t <= keys[0][0]) return keys[0][1]; const n = keys.length; if (t >= keys[n - 1][0]) return keys[n - 1][1];
     let i = 0; while (t >= keys[i + 1][0]) i++;
@@ -1002,7 +1006,7 @@
   function zoomOut(t, lt) {
     const L = spline(t, K7), Z = Math.exp(L), bp = bpOf(t);
     const wE = ease(seg(L, -2.6, -4.72)), th = -.32 * wE;                                // drift to the planet's centre, turning a little
-    const off = [0, 55 / Math.max(Z, 1e-3) * seg(L, 1.2, 2.5)];                          // at the start keep the window clear of the lyric band
+    const off = [0, 70 / Math.max(Z, 1e-3) * seg(L, 1.2, 2.3)];                          // at the start keep the window clear of the lyric band
     const C = [lerp(W7c[0] + off[0], 0, wE), lerp(W7c[1] + off[1], R7, wE)];
     const ct = Math.cos(th), st = Math.sin(th);
     const S = (x, y) => { const dx = x - C[0], dy = y - C[1]; return [960 + Z * (dx * ct - dy * st), 540 + Z * (dx * st + dy * ct)]; };
@@ -1017,11 +1021,15 @@
     if (rs < 4000) {
       glow(E[0], E[1], rs * 1.28, '#7A8CE0', .35 * seg(L, -2.5, -4));
       const pts = []; for (let i = 0; i < 180; i++) { const a = i / 180 * TAU; pts.push([E[0] + Math.cos(a) * rs, E[1] + Math.sin(a) * rs]); }
-      paint(pts, { grad: ['#2A3A78', '#141B44', th + Math.PI / 2 + .6], ink: null });
-      // night-side land and faint cloud swirls (fixed to the planet)
-      const lands = [[-.9, .55, .5], [.35, .6, .42], [2.1, .45, .6], [3.4, .35, .45], [4.6, .55, .5]];
-      for (const [a0, rr, sz] of lands) { const bl = []; for (let j = 0; j < 14; j++) { const a = j / 14 * TAU, q = rs * sz * .45 * (1 + .25 * Math.sin(a * 3 + a0 * 5)); const cx0 = Math.cos(a0 - Math.PI / 2 + th) * rs * rr, cy0 = Math.sin(a0 - Math.PI / 2 + th) * rs * rr; bl.push([E[0] + cx0 + Math.cos(a) * q, E[1] + cy0 + Math.sin(a) * q * .8]); } clipTo(pts, () => paint(bl, { wash: '#223A5E', washOp: 200, ink: null, curv: .5 })); }
-      clipTo(pts, () => { for (let j = 0; j < 4; j++) { const sw = []; for (let k = 0; k <= 10; k++) { const a = -2.2 + j * 1.4 + k * .09 + th; sw.push([E[0] + Math.cos(a) * rs * (.55 + .12 * j), E[1] + Math.sin(a) * rs * (.55 + .12 * j) + Math.sin(k) * rs * .03]); } inkLine(sw, clamp(rs / 200, .3, 2.5), '#8FA0D0', 'marker', .6, .25); } });
+      paint(pts, { grad: ['#34488E', '#141B44', th + Math.PI / 2 + .7], ink: null });
+      clipTo(pts, () => {
+        // night-side land, soft cloud bands, moonlit rim and the shadowed side
+        const lands = [[-.95, .5, .42], [.4, .55, .34], [2.0, .5, .5], [3.3, .38, .36], [4.5, .6, .4], [5.5, .25, .26]];
+        for (const [a0, rr, sz] of lands) { const bl = []; for (let j = 0; j < 16; j++) { const a = j / 16 * TAU, q = rs * sz * .45 * (1 + .22 * Math.sin(a * 3 + a0 * 5) + .1 * Math.sin(a * 7 + a0)); const cx0 = Math.cos(a0 - Math.PI / 2 + th) * rs * rr, cy0 = Math.sin(a0 - Math.PI / 2 + th) * rs * rr; bl.push([E[0] + cx0 + Math.cos(a) * q, E[1] + cy0 + Math.sin(a) * q * .8]); } paint(bl, { wash: '#2B4A72', washOp: 170, ink: '#3E6290', sw: clamp(rs / 500, .2, 1), br: 'fine', curv: .5 }); }
+        for (let j = 0; j < 5; j++) { const a = -2.4 + j * 1.25 + th + t * .02, d = rs * (.3 + .13 * j); paint(cloudPts(E[0] + Math.cos(a) * d, E[1] + Math.sin(a) * d, rs * (.36 - .03 * j), rs * .045, j + 3, 5), { wash: '#DDE6FF', washOp: 26, ink: null, curv: .5 }); }
+        glow(E[0] - rs * .45, E[1] - rs * .5, rs * 1.1, '#9FB4F0', .24);
+        glow(E[0] + rs * .62, E[1] + rs * .7, rs * 1.25, '#070A22', .75);
+      });
       paint(pts, { ink: '#9FB0F0', sw: clamp(rs / 260, .5, 1.6), br: 'fine' });
     } else {
       // close to the ground: only the visible arc, closed far below
@@ -1075,12 +1083,13 @@
         inkLine(Array.from({ length: 8 }, (_, i) => [i * 130, 80 + 26 * Math.sin(i * 1.3) - 8]), .8, PAL.ink, 'fine', .5);
         if (wpx > 120) {
           const wave = Math.sin(bp * Math.PI), md = mood(t, [[95.4, 'happy', null, 'open'], [96.3, 'sparkle', null, 'smile']]);
-          hero(330, 1185, 64, { outfit: 'home', ...md, aR: .35 + .35 * Math.abs(wave), aL: -1.2, lookX: .1, blush: .8, tilt: .06 * wave, noShadow: true });
-          momo(650, 990 + 1.5 * 36, 36, { eyes: 'happy', mouth: 'open', sit: true, walk: t * 1.3, aR: .55 + .45 * Math.abs(Math.sin(bp * Math.PI * 1)), aL: -1.1, tilt: -.1 * wave, blush: 1, noShadow: true });
+          hero(320, 1175, 82, { outfit: 'home', ...md, aR: .2 + .3 * Math.abs(wave), aL: -1.2, lookX: .1, blush: .8, tilt: .06 * wave, noShadow: true });
+          cat(535, 994, 30, { pose: 'loaf', eyes: 'happy', noShadow: true, tail: Math.sin(t * 3) * .4 });
+          momo(690, 990 + 1.5 * 46, 46, { eyes: 'happy', mouth: 'open', sit: true, walk: t * 1.3, aR: .25 + .35 * Math.abs(Math.sin(bp * Math.PI * 1)), aL: -1.1, tilt: -.1 * wave, blush: 1, noShadow: true });
         }
       });
       // curtains, frame and sill
-      for (const sd of [-1, 1]) { const x0 = sd < 0 ? -10 : NW + 10, x1 = sd < 0 ? 120 : NW - 120; paint([[x0, -10], [x1, -10], [x1 - sd * 20, 380], [x0 + sd * 40, 560], [x0, 900]], { wash: '#F29BB8', fill: '#E27A92', fillOp: 70, tex: .3, ink: PAL.ink, sw: 1.2, curv: .35 }); }
+      clipTo(rectPts(0, 0, NW, NH), () => { for (const sd of [-1, 1]) { const x0 = sd < 0 ? -30 : NW + 30, x1 = sd < 0 ? 120 : NW - 120; paint([[x0, -30], [x1, -30], [x1 - sd * 20, 380], [x0 - sd * 40, 560], [x0, 1000]], { wash: '#F29BB8', fill: '#E27A92', fillOp: 70, tex: .3, ink: PAL.ink, sw: 1.2, curv: .35 }); } });
       paint([[-40, -40], [NW + 40, -40], [NW + 40, NH + 40], [-40, NH + 40], [-40, -40], [0, 0], [0, NH], [NW, NH], [NW, 0], [0, 0]], { wash: '#F3E6D2', ink: null });
       paint(rectPts(-40, -40, NW + 80, NH + 80), { ink: PAL.ink, sw: 1.6 }); paint(rectPts(0, 0, NW, NH), { ink: PAL.ink, sw: 1.2 });
       paint(rectPts(-70, NH + 10, NW + 140, 44, 2), { wash: '#F8EEDF', fill: '#D9C6AE', fillOp: 80, tex: .3, ink: PAL.ink, sw: 1.3 });
@@ -1103,10 +1112,127 @@
   }
 
   // ======================================================================================
+  // 8 · 100.956–105.756 (+ held into chapter 5's page turn)  至少这一行 要由我说了算
+  // Top-down on the sketchbook: her hand writes one line that glows gold. The jade 完 seal peeks in hopefully, but she
+  // lifts her own little seal (a tiny 桃桃 knob) and stamps it on the beat: a pink print with 桃桃's face. 桃桃 cheers.
+  // ======================================================================================
+  const S8T = { w0: 101.1, w1: 102.85, swap0: 102.9, swap1: 103.35, peek0: 103.0, lift: 103.7, stamp: B(174), up: B(174) + .35 };
+  const RP8 = { x: 970, y: 225, w: 460, h: 630 }, LINE8 = { x0: 1000, x1: 1268, y: 600 };
+  const PRINT8 = [1356, LINE8.y + 6];
+  // 桃桃's face in seal-print lines (cream on the red square)
+  function momoPrint(x, y, sc, k, rot = 0) {
+    if (k <= .01) return;
+    push(); translate(x, y); rotate(rot); scale(sc);
+    paint(rrPts(-56, -56, 112, 112, 12), { wash: '#E2557F', washOp: 230 * k, fill: '#C63F68', fillOp: 70 * k, tex: .8, ink: null });
+    fadeIn(k, () => {
+      const c = '#FFF3E8';
+      paint(ellPts(0, 6, 28, 26, 22), { ink: c, sw: 1.3 });
+      for (const sd of [-1, 1]) paint(ellPts(sd * 36, 14, 10, 20, 12, 0, sd * .25), { ink: c, sw: 1.1 });
+      for (const sd of [-1, 1]) paint(starPts(sd * 10, 4, 5, .45, 4, 0), { wash: c, ink: null });
+      inkLine([[-8, 16], [0, 21], [8, 16]], .9, c, 'ink', .5);
+      inkLine([[0, -20], [4, -30], [0, -38]], .9, c, 'ink', .5); paint(starPts(0, -42, 7, .45, 5), { wash: c, ink: null });
+      inkLine([[-22, -10], [-10, -18], [0, -12], [10, -18], [22, -10]], .9, c, 'ink', .4);
+    });
+    pop();
+  }
+  // her own little seal, seen from above: pink body, a tiny 桃桃 head as the knob; h = lift height (0 = on the paper)
+  function mySeal(x, y, h, sq = 0) {
+    const sc = 1 + h * .0012;
+    paint(ellPts(x + 22 + h * .35, y + 26 + h * .45, 62 - h * .03, 52 - h * .03, 20), { wash: PAL.ink, washOp: 60 - h * .06, ink: null });
+    push(); translate(x, y - h * .25); scale(sc * (1 + sq * .3), sc * (1 - sq * .3));
+    paint(rrPts(-50, -44, 100, 96, 22), { wash: '#F6B3C6', fill: '#E88AA6', fillOp: 70, tex: .4, ink: PAL.ink, sw: 1.1 });
+    paint(rrPts(-40, -34, 80, 72, 16), { wash: '#FBD3DE', ink: PAL.ink, sw: .7 });
+    momo(0, 36, 7.2, { eyes: 'happy', mouth: 'smile', noShadow: true, blush: 1, aL: -1.2, aR: -1.2 });
+    pop();
+  }
+  function myLine(t, lt) {
+    const bp = bpOf(t), stampAge = t - S8T.stamp;
+    const z = kf(t, [[100.956, 1.42], [S8T.w1, 1.34], [S8T.lift, 1.2], [S8T.stamp, 1.24], [106.4, 1.14]], easeInOut) + (stampAge > 0 && stampAge < .3 ? .03 * Math.exp(-stampAge * 12) : 0) + .008 * pulse(t, 6);
+    const cx = kf(t, [[100.956, 1110], [S8T.w1, 1200], [S8T.lift, 1170], [106.4, 1080]], easeInOut), cy = kf(t, [[100.956, 470], [S8T.w1, 480], [S8T.lift, 500], [106.4, 490]], easeInOut);
+    const [shx, shy] = shakeXY(t, stampAge > 0 && stampAge < .3 ? 7 * Math.exp(-stampAge * 12) : 0);
+    camBegin(cx + shx, cy + shy, z);
+    // the golden line
+    const wk = easeInOut(seg(t, S8T.w0, S8T.w1)), xe = lerp(LINE8.x0, LINE8.x1, wk);
+    const G = scrawl(LINE8.x0, LINE8.x0, xe, LINE8.y, { seed: 8, a: 7.5, b: 12, h: .8, per: 7, gap: .1 });
+    deskTop(t, {
+      lamp: 1,
+      page: (r, sd) => {
+        if (sd < 0) {
+          // her earlier lines, in pencil, and a little 桃桃 study
+          sketch(1, () => { for (let k = 0; k < 7; k++) { const L0 = scrawl(r.x + 36, r.x + 36, r.x + 36 + 300 + 80 * hash(k * 3.3), r.y + 90 + k * 64, { seed: 20 + k, a: 6, b: 8, h: .7, per: 6 }); for (const st of L0.strokes) inkLine(st, .7, PAL.ink, 'pencil', 0); } });
+          return;
+        }
+        // soft ruled lines, then the gold line glowing as it goes
+        for (let k = 0; k < 8; k++) inkLine([[r.x + 24, r.y + 80 + k * 70], [r.x + r.w - 24, r.y + 80 + k * 70]], .45, '#C9DBEE', 'fine', 0, .8);
+        if (G.strokes.length) {
+          const shimmer = t > S8T.w1 ? frac((t - S8T.w1) * .6) : -1;
+          for (const st of G.strokes) { for (let i = 0; i < st.length; i += 5) glow(st[i][0], st[i][1], 44, '#FFC94A', .2); }
+          for (const st of G.strokes) { inkLine(st, 3.2, '#B8741A', 'ink', 0); inkLine(st, 1.6, '#F2B53C', 'marker', 0); inkLine(st, .6, '#FFF6D0', 'fine', 0, .9); }
+          if (shimmer >= 0) { const sx = lerp(LINE8.x0 - 40, LINE8.x1 + 60, shimmer); light(sx, LINE8.y - 8, 90, '#FFE9A8', .55); }
+        }
+        // the print, when it lands
+        if (stampAge > 0) { const k = seg(stampAge, 0, .12); momoPrint(PRINT8[0], PRINT8[1], .95, k, -.05); }
+      },
+      items: tt => {
+        // the soda can from above, eraser crumbs
+        paint(ellPts(330, 330, 70, 70, 24), { wash: '#F8B99A', ink: PAL.ink, sw: 1.1 }); paint(ellPts(330, 330, 56, 56, 22), { wash: '#DADCE6', ink: PAL.ink, sw: .8 });
+        paint(rrPts(314, 300, 32, 20, 8), { wash: '#B8BCCB', ink: PAL.ink, sw: .6 }); paint(ellPts(330, 350, 10, 8, 10), { wash: PAL.ink, washOp: 120, ink: null });
+        for (let i = 0; i < 5; i++) paint(ellPts(1490 + hash(i) * 90, 260 + hash(i + 3) * 70, 7, 4, 8, 0, hash(i) * 3), { wash: '#F6B3C6', ink: PAL.ink, sw: .4 });
+      }
+    });
+    // sparkles riding the pen tip; a burst when the stamp lands
+    if (t > S8T.w0 && t < S8T.w1 + .1) for (let i = 0; i < 3; i++) sparkle(G.tip[0] + 18 * Math.sin(t * 9 + i * 2), G.tip[1] - 20 - 18 * i, 12, '#FFF3C0', frac(t * 2.2 + i * .33));
+    if (stampAge > 0) {
+      const k = seg(stampAge, 0, .5);
+      if (k < 1) { const rr = 60 + 130 * easeOut(k); paint(ellPts(PRINT8[0], PRINT8[1], rr, rr, 40), { ink: '#F58CA8', sw: 2 * (1 - k), br: 'ink' }); }
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + .3; sparkle(PRINT8[0] + Math.cos(a) * 150 * easeOut(k), PRINT8[1] + Math.sin(a) * 150 * easeOut(k), 18, i % 2 ? '#FFF3C0' : '#FFD6E6', k); }
+      confetti(t, S8T.stamp, PRINT8[0], PRINT8[1] - 20, 30, 11, { v: 800, life: 2.4 });
+    }
+    // 桃桃 on the desk beside the page: watches the line, bounces, cheers at the stamp
+    const cheer = stampAge > .05;
+    const mmd = mood(t, [[100.8, 'sparkle', null, 'o'], [S8T.w1 + .1, 'happy', null, 'open'], [S8T.lift, 'star', null, 'o'], [S8T.stamp + .05, 'happy', 'heart', 'open']]);
+    const mh = cheer ? Math.abs(Math.sin((t - S8T.stamp) / BEAT * Math.PI)) * 55 : Math.abs(Math.sin(bp * Math.PI)) * 8;
+    const MX8 = lerp(1110, 1200, easeInOut(seg(t, S8T.w0, S8T.w1))), MY8 = 520;
+    paint(ellPts(MX8, MY8 + 2, 64 - mh * .3, 16 - mh * .08, 16), { wash: PAL.ink, washOp: 55, ink: null });
+    momo(MX8, MY8 - mh, 27, { ...mmd, noShadow: true, blush: 1, lookX: t < S8T.w1 ? .4 : .5, lookY: .6, aL: cheer ? 1.05 + .2 * Math.sin(t * 12) : -.9, aR: cheer ? 1.05 - .2 * Math.sin(t * 12) : -.9 + .4 * Math.abs(Math.sin(bp * Math.PI)) * (t < S8T.w1 ? 1 : 0), sq: cheer ? .08 * pulse(t, 8) : 0, tilt: cheer ? .12 * Math.sin(t * 6) : -.08 });
+    // the jade 完 seal peeks in hopefully from the left, then droops and slides away
+    const peek = smooth01(t, S8T.peek0, S8T.peek0 + .35, S8T.lift + .4, S8T.lift + .9);
+    if (peek > 0) sealStamp(lerp(560, 760, easeOut(peek)), 900, .62, { face: t > S8T.lift ? 'sad' : 'stern', rot: .25 - .1 * peek + (t > S8T.lift ? .15 * Math.sin(t * 3) : 0) });
+    // her hand: writing with the pencil, then coming back with her own seal to stamp it on the beat
+    if (t < S8T.swap0 + .2) {
+      const out = easeIn(seg(t, S8T.swap0 - .05, S8T.swap0 + .2)), inn = 1 - easeOut(seg(t, 100.956, S8T.w0));
+      handTop(G.tip[0] + (out + inn) * 520, G.tip[1] + (out + inn) * 420, 1.05);
+    }
+    if (t > S8T.swap0 + .1) {
+      const inK = easeOut(seg(t, S8T.swap0 + .1, S8T.swap1)), leave = easeInOut(seg(t, S8T.stamp + .12, S8T.up + .9));
+      const sx = PRINT8[0] + (1 - inK) * 520 + leave * 520, sy = PRINT8[1] + (1 - inK) * 420 + leave * 420;
+      let h = lerp(120, 60, inK);
+      if (t > S8T.lift) h = lerp(60, 170, easeOut(seg(t, S8T.lift, S8T.stamp - .18)));
+      if (t > S8T.stamp - .18) h = lerp(170, 0, easeIn(seg(t, S8T.stamp - .18, S8T.stamp)));
+      if (t > S8T.stamp) h = lerp(0, 150, easeOut(seg(t, S8T.up - .2, S8T.up + .3)));
+      const sq = stampAge > 0 && stampAge < .25 ? .25 * Math.exp(-stampAge * 14) : t > S8T.lift && t < S8T.stamp - .18 ? -.06 : 0;
+      if (t < S8T.up + 1.1) {
+        mySeal(sx, sy, h, sq);
+        // the hand holding it
+        push(); translate(sx + 40, sy - h * .25 + 20); scale(1 + h * .0012);
+        paint([[40, 60], [300, 330], [400, 240], [130, -10]], { wash: PAL.mint, fill: '#7EA78E', fillOp: 60, tex: .4, ink: PAL.ink, sw: 1, curv: .25 });
+        paint(ellPts(40, 30, 54, 44, 16, 0, .7), { wash: SKIN, ink: PAL.ink, sw: .9 });
+        for (const [fx, fy] of [[0, -8], [-14, 14], [-6, 38]]) paint(ellPts(fx, fy, 16, 12, 10, 0, .6), { wash: SKIN, ink: PAL.ink, sw: .7 });
+        pop();
+      }
+    }
+    if (stampAge > 0) sfx('咚', PRINT8[0] + 60, PRINT8[1] - 150, 92, '#F58CA8', stampAge - .02, { life: 1.1, rot: .1 });
+    camEnd();
+    // warm light swelling into the hold; a pink bloom carries the Earth's little light in at the cut
+    light(1180, 560, 900, '#FFE2B8', .18 * seg(t, S8T.stamp, S8T.stamp + 1));
+    flash(.7 * (1 - easeOut(seg(t, 100.956, 101.3))), '#FFE3EE');
+  }
+
+  // ======================================================================================
   // placeholders for the shots still to paint
   // ======================================================================================
   const todo = name => (t, lt) => { dreamSky(t, lt * 60); letter(name, 960, 520, 90, PAL.rose, { font: 'kai' }); };
-  const myLine = todo('myLine');
+  
 
   chapter('chorus1', 67.356, 105.756, [[67.356, seal], [72.156, noTrade], [76.956, paintCity], [81.756, momoBorn], [86.556, crescent], [90.756, sighPop], [95.556, zoomOut], [100.956, myLine]]);
   transition(67.356, 'white', .6);
