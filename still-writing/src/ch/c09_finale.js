@@ -419,12 +419,33 @@
     }
     camEnd();
   }
+  // one draft page flies smack into the lens (the cut hides behind it), then peels away to the upper right
+  const TCUT = W0 + 1.92;
+  function pageWipe(t) {
+    const a = seg(t, TCUT - .26, TCUT), b = seg(t, TCUT, TCUT + .34);
+    if (a <= 0 || b >= 1) return;
+    let cx, cy, sz, rot;
+    if (t < TCUT) { const e = Math.pow(a, 2.4); cx = lerp(930, 960, e); cy = lerp(760, 540, e); sz = lerp(90, 2600, e); rot = lerp(-.5, -.12, a) + Math.sin(t * 30) * .06 * (1 - a); }
+    else { const e = easeIn(b); cx = 960 + e * 2300; cy = 540 - e * 1500; sz = 2600 + 500 * b; rot = -.12 + .5 * e; }
+    const ang = [0, 1, 2, 3].map(i => rot + Math.PI / 4 + i * Math.PI / 2), hw = sz * .5, hh = sz * .68;
+    const cr = Math.cos(rot), sr = Math.sin(rot), P = (u, v) => [cx + u * hw * cr - v * hh * sr, cy + u * hw * sr + v * hh * cr];
+    const flut = t < TCUT ? Math.sin(t * 40) * .08 * (1 - a) : Math.sin(t * 25) * .05;
+    const quad = [P(-1, -1), P(1, -1 + flut), P(1, 1), P(-1, 1 - flut)];
+    X.save(); X.setTransform(1, 0, 0, 1, 0, 0);
+    paint(quad.map(q => [q[0] + sz * .03, q[1] + sz * .04]), { wash: PAL.ink, washOp: 40, ink: null });
+    paint(quad, { wash: '#FFFBF2', fill: '#EFE6D6', fillOp: 60, bleed: .02, tex: .3, ink: PAL.ink, sw: clamp(sz / 400, .8, 2.4) });
+    for (let k = 0; k < 16; k++) { const v = -.8 + k * .11; inkLine([P(-.92, v), P(.95, v + flut * (k / 16))], clamp(sz / 700, .5, 1.6), RULE, 'fine', 0, .6); }
+    inkLine([P(-.72, -1), P(-.72, 1)], clamp(sz / 700, .5, 1.6), MARGIN, 'fine', 0, .6);
+    // her pencil doodles on it: a little star and a heart
+    const c1 = P(-.2, -.35), c2 = P(.4, .2);
+    paint(starPts(c1[0], c1[1], sz * .07, .45, 5, rot - Math.PI / 2), { ink: '#7A7F9C', sw: clamp(sz / 600, .5, 2), br: 'fine' });
+    paint(heartPts(c2[0], c2[1], sz * .06, 16), { ink: PAL.rose, sw: clamp(sz / 600, .5, 2), br: 'fine' });
+    X.restore();
+  }
   function wakeFly(t, lt, dur) {
-    const a = W0 + 1.72, b = W0 + 2.12;
-    if (t < a) wakeA(t, lt);
-    else if (t >= b) wakeB(t, lt);
-    else dissolve(seg(t, a, b), () => wakeA(t, lt), () => wakeB(t, lt));
+    if (t < TCUT) wakeA(t, lt); else wakeB(t, lt);
     wakeBirds(t, lt);
+    pageWipe(t);
   }
 
   // =================================================================================================================
