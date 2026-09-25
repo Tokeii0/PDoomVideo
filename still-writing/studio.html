@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>还没写完 studio</title>
+<style>
+  @font-face { font-family: "LXGW WenKai"; src: url(assets/fonts/LXGWWenKai-Medium.ttf); }
+  @font-face { font-family: "ZCOOL KuaiLe"; src: url(assets/fonts/ZCOOLKuaiLe-Regular.ttf); }
+  @font-face { font-family: "Ma Shan Zheng"; src: url(assets/fonts/MaShanZheng-Regular.ttf); }
+  @font-face { font-family: "Long Cang"; src: url(assets/fonts/LongCang-Regular.ttf); }
+  html, body { margin: 0; background: #1b1820; color: #eee; font: 13px system-ui, sans-serif; }
+  main { padding: 12px; display: grid; gap: 8px; }
+  #out { width: min(100%, 1280px); aspect-ratio: 16 / 9; height: auto; background: #F3EBDC; }
+  .bar { display: flex; gap: 10px; align-items: center; max-width: 1280px; }
+  #scrub { flex: 1; }
+  #tt { font-variant-numeric: tabular-nums; min-width: 200px; }
+</style>
+<script>
+  // host environment for the painter (render.mjs provides the same two things in Node)
+  window.ENV = { canvas: (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }, Path2D: window.Path2D };
+</script>
+</head>
+<body>
+<main>
+  <canvas id="out" width="1920" height="1080"></canvas>
+  <div class="bar"><button id="play">▶</button><input id="scrub" type="range" min="0" max="290" step="0.0417" value="0"><span id="tt">loading…</span></div>
+  <audio id="song" src="assets/song.mp3" preload="auto"></audio>
+</main>
+<script src="src/core.js"></script>
+<script src="src/cast.js"></script>
+<script src="src/props.js"></script>
+<script src="src/lyrics.js"></script>
+<script src="src/timeline.js"></script>
+<script src="src/ch/c01_home.js"></script>
+<script src="src/ch/c02_desk.js"></script>
+<script src="src/ch/c03_resolve.js"></script>
+<script src="src/ch/c04_chorus1.js"></script>
+<script src="src/ch/c05_days.js"></script>
+<script src="src/ch/c06_cuteface.js"></script>
+<script src="src/ch/c07_chorus2.js"></script>
+<script src="src/ch/c08_bridge.js"></script>
+<script src="src/ch/c09_finale.js"></script>
+<script src="src/ch/c10_goodnight.js"></script>
+<script>
+  // Scrub to paint a frame; ▶ plays the song and paints frames as fast as this machine can keep up.
+  (async () => {
+    await Promise.all(['LXGW WenKai', 'ZCOOL KuaiLe', 'Ma Shan Zheng', 'Long Cang'].map(f => document.fonts.load(`40px "${f}"`, '还没写完')));
+    const out = document.getElementById('out'), s = document.getElementById('scrub'), lab = document.getElementById('tt'), au = document.getElementById('song'), pl = document.getElementById('play');
+    initCore(out.getContext('2d'));
+    let busy = false, want = null;
+    const go = async () => {
+      if (busy) return; busy = true;
+      while (want != null) { const t = want; want = null; const t0 = performance.now(); renderFrame(t); lab.textContent = `${t.toFixed(2)}s  ·  ${Math.round(performance.now() - t0)} ms/frame`; await new Promise(r => setTimeout(r, 0)); }
+      busy = false;
+    };
+    s.addEventListener('input', () => { au.pause(); pl.textContent = '▶'; au.currentTime = +s.value; want = +s.value; go(); });
+    pl.addEventListener('click', () => { if (au.paused) { au.currentTime = +s.value; au.play(); pl.textContent = '❚❚'; } else { au.pause(); pl.textContent = '▶'; } });
+    const tick = () => { if (!au.paused) { s.value = au.currentTime; want = au.currentTime; go(); } requestAnimationFrame(tick); };
+    tick();
+    want = +(new URLSearchParams(location.search).get('t') || 0); s.value = want; go();
+  })();
+</script>
+</body>
+</html>
